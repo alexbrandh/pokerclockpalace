@@ -1,8 +1,7 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, SkipForward, RotateCcw, Settings, Users } from 'lucide-react';
+import { Play, Pause, SkipForward, RotateCcw, Settings, Users, Wifi, WifiOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useTournament } from '@/contexts/TournamentContext';
@@ -10,7 +9,7 @@ import { TournamentStats } from '@/components/TournamentStats';
 import { TournamentSettings } from '@/components/TournamentSettings';
 
 export function TournamentClock() {
-  const { tournament, updateTournament } = useTournament();
+  const { tournament, updateTournament, isConnected, error } = useTournament();
   const [showSettings, setShowSettings] = useState(false);
   const [lastMinuteAlert, setLastMinuteAlert] = useState(false);
 
@@ -96,7 +95,19 @@ export function TournamentClock() {
   };
 
   if (!tournament) {
-    return <div>Cargando torneo...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="text-2xl font-bold">Configurando torneo...</div>
+          {error && (
+            <div className="text-yellow-400 flex items-center justify-center gap-2">
+              <WifiOff className="w-5 h-5" />
+              {error}
+            </div>
+          )}
+        </div>
+      </div>
+    );
   }
 
   const currentLevel = tournament.structure.levels[tournament.currentLevelIndex];
@@ -118,6 +129,12 @@ export function TournamentClock() {
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">{tournament.structure.name}</h1>
           <div className="flex gap-2">
+            {/* Connection status */}
+            <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${isConnected ? 'bg-green-600' : 'bg-yellow-600'}`}>
+              {isConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+              {isConnected ? 'Online' : 'Offline'}
+            </div>
+            
             <Button variant="outline" onClick={() => setShowSettings(true)}>
               <Settings className="w-4 h-4 mr-2" />
               Configuración

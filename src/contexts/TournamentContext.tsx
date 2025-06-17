@@ -11,6 +11,7 @@ interface TournamentContextType {
   updateTournament: (updates: Partial<TournamentState>) => void;
   createTournament: (structure: TournamentStructure) => void;
   joinTournament: (tournamentId: string) => void;
+  error: string | null;
 }
 
 const TournamentContext = createContext<TournamentContextType | null>(null);
@@ -18,7 +19,8 @@ const TournamentContext = createContext<TournamentContextType | null>(null);
 type TournamentAction = 
   | { type: 'SET_TOURNAMENT'; payload: TournamentState }
   | { type: 'UPDATE_TOURNAMENT'; payload: Partial<TournamentState> }
-  | { type: 'SET_CONNECTION'; payload: boolean };
+  | { type: 'SET_CONNECTION'; payload: boolean }
+  | { type: 'SET_ERROR'; payload: string | null };
 
 function tournamentReducer(state: TournamentState | null, action: TournamentAction): TournamentState | null {
   switch (action.type) {
@@ -27,6 +29,8 @@ function tournamentReducer(state: TournamentState | null, action: TournamentActi
     case 'UPDATE_TOURNAMENT':
       return state ? { ...state, ...action.payload } : null;
     case 'SET_CONNECTION':
+      return state;
+    case 'SET_ERROR':
       return state;
     default:
       return state;
@@ -37,11 +41,21 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
   const [tournament, dispatch] = useReducer(tournamentReducer, null);
   const [isConnected, setIsConnected] = React.useState(false);
   const [currentTournamentId, setCurrentTournamentId] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
 
   useEffect(() => {
-    signInAnonymously(auth).then(() => {
-      setIsConnected(true);
-    }).catch(console.error);
+    // Try to connect to Firebase, but continue without it if it fails
+    signInAnonymously(auth)
+      .then(() => {
+        console.log('Connected to Firebase');
+        setIsConnected(true);
+        setError(null);
+      })
+      .catch((error) => {
+        console.warn('Firebase connection failed, working offline:', error);
+        setIsConnected(false);
+        setError('Trabajando en modo offline');
+      });
   }, []);
 
   useEffect(() => {
@@ -59,17 +73,23 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
   }, [currentTournamentId, isConnected]);
 
   const updateTournament = (updates: Partial<TournamentState>) => {
-    if (!currentTournamentId || !tournament) return;
+    if (!tournament) return;
     
     const updatedTournament = { ...tournament, ...updates };
-    set(ref(database, `tournaments/${currentTournamentId}`), updatedTournament);
+    
+    // Update local state immediately
+    dispatch({ type: 'UPDATE_TOURNAMENT', payload: updates });
+    
+    // Try to sync with Firebase if connected
+    if (currentTournamentId && isConnected) {
+      set(ref(database, `tournaments/${currentTournamentId}`), updatedTournament)
+        .catch(console.error);
+    }
   };
 
   const createTournament = (structure: TournamentStructure) => {
-    if (!isConnected) return;
-
     const newTournament: TournamentState = {
-      id: '',
+      id: Date.now().toString(), // Fallback ID if Firebase is not available
       structure,
       currentLevelIndex: 0,
       timeRemaining: structure.levels[0]?.duration * 60 || 0,
@@ -83,10 +103,21 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
       startTime: Date.now()
     };
 
-    const tournamentRef = push(ref(database, 'tournaments'));
-    newTournament.id = tournamentRef.key!;
-    set(tournamentRef, newTournament);
-    setCurrentTournamentId(newTournament.id);
+    if (isConnected) {
+      // Try to use Firebase
+      const tournamentRef = push(ref(database, 'tournaments'));
+      newTournament.id = tournamentRef.key!;
+      set(tournamentRef, newTournament)
+        .then(() => {
+          setCurrentTournamentId(newTournament.id);
+          dispatch({ type: 'SET_TOURNAMENT', payload: newTournament });
+        })
+        .catch(console.error);
+    } else {
+      // Work offline
+      setCurrentTournamentId(newTournament.id);
+      dispatch({ type: 'SET_TOURNAMENT', payload: newTournament });
+    }
   };
 
   const joinTournament = (tournamentId: string) => {
@@ -99,7 +130,8 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
       isConnected,
       updateTournament,
       createTournament,
-      joinTournament
+      joinTournament,
+      error
     }}>
       {children}
     </TournamentContext.Provider>

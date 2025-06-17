@@ -4,7 +4,7 @@ import { getDatabase } from 'firebase/database';
 import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "QZ9baWvsyVyikIezxsFzfmeNf6is1zF1ijMz2BpY",
+  apiKey: "AIzaSyBkJ8Q5X5X5X5X5X5X5X5X5X5X5X5X5X5X",
   authDomain: "poker-clock-7cd0c.firebaseapp.com",
   databaseURL: "https://poker-clock-7cd0c-default-rtdb.firebaseio.com/",
   projectId: "poker-clock-7cd0c",

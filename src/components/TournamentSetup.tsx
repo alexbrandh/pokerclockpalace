@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Minus, Save, Upload } from 'lucide-react';
+import { Plus, Minus, Save, Upload, Coffee } from 'lucide-react';
 import { TournamentStructure, TournamentLevel } from '@/types/tournament';
 import { useTournament } from '@/contexts/TournamentContext';
 
@@ -44,6 +43,22 @@ export function TournamentSetup({ onTournamentCreated }: TournamentSetupProps) {
     setStructure(prev => ({
       ...prev,
       levels: [...prev.levels, newLevel]
+    }));
+  };
+
+  const addBreak = () => {
+    const newBreak: TournamentLevel = {
+      id: Date.now().toString(),
+      smallBlind: 0,
+      bigBlind: 0,
+      ante: 0,
+      duration: 15,
+      isBreak: true,
+      breakDuration: 15
+    };
+    setStructure(prev => ({
+      ...prev,
+      levels: [...prev.levels, newBreak]
     }));
   };
 
@@ -195,10 +210,16 @@ export function TournamentSetup({ onTournamentCreated }: TournamentSetupProps) {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <Label>Niveles del Torneo</Label>
-                <Button type="button" onClick={addLevel} variant="outline" size="sm">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Añadir Nivel
-                </Button>
+                <div className="flex gap-2">
+                  <Button type="button" onClick={addLevel} variant="outline" size="sm">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Añadir Nivel
+                  </Button>
+                  <Button type="button" onClick={addBreak} variant="outline" size="sm">
+                    <Coffee className="w-4 h-4 mr-2" />
+                    Añadir Break
+                  </Button>
+                </div>
               </div>
               
               <div className="space-y-3 max-h-96 overflow-y-auto">

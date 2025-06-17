@@ -24,14 +24,14 @@ export function TournamentClock() {
       if (newTime <= 0) {
         // Level completed, advance to next
         const nextLevelIndex = tournament.currentLevelIndex + 1;
-        const nextLevel = tournament.structure.levels[nextLevelIndex];
+        const nextLevelData = tournament.structure.levels[nextLevelIndex];
         
-        if (nextLevel) {
+        if (nextLevelData) {
           updateTournament({
             currentLevelIndex: nextLevelIndex,
-            timeRemaining: nextLevel.duration * 60,
-            isOnBreak: nextLevel.isBreak,
-            isPaused: nextLevel.isBreak // Auto-pause on breaks
+            timeRemaining: nextLevelData.duration * 60,
+            isOnBreak: nextLevelData.isBreak,
+            isPaused: nextLevelData.isBreak // Auto-pause on breaks
           });
         } else {
           // Tournament ended
@@ -76,13 +76,13 @@ export function TournamentClock() {
   const nextLevel = () => {
     if (!tournament) return;
     const nextLevelIndex = tournament.currentLevelIndex + 1;
-    const nextLevel = tournament.structure.levels[nextLevelIndex];
+    const nextLevelData = tournament.structure.levels[nextLevelIndex];
     
-    if (nextLevel) {
+    if (nextLevelData) {
       updateTournament({
         currentLevelIndex: nextLevelIndex,
-        timeRemaining: nextLevel.duration * 60,
-        isOnBreak: nextLevel.isBreak
+        timeRemaining: nextLevelData.duration * 60,
+        isOnBreak: nextLevelData.isBreak
       });
     }
   };
@@ -100,7 +100,7 @@ export function TournamentClock() {
   }
 
   const currentLevel = tournament.structure.levels[tournament.currentLevelIndex];
-  const nextLevel = tournament.structure.levels[tournament.currentLevelIndex + 1];
+  const nextLevelData = tournament.structure.levels[tournament.currentLevelIndex + 1];
   
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -200,13 +200,13 @@ export function TournamentClock() {
                       </div>
                     </div>
 
-                    {nextLevel && (
+                    {nextLevelData && (
                       <div className="text-center text-slate-400">
                         <div className="text-sm mb-1">Siguiente Nivel</div>
                         <div className="text-lg">
-                          {nextLevel.isBreak ? 
-                            `Descanso ${nextLevel.duration}min` :
-                            `${nextLevel.smallBlind} / ${nextLevel.bigBlind}`
+                          {nextLevelData.isBreak ? 
+                            `Descanso ${nextLevelData.duration}min` :
+                            `${nextLevelData.smallBlind} / ${nextLevelData.bigBlind}`
                           }
                         </div>
                       </div>

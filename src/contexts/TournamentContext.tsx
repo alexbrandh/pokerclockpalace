@@ -37,6 +37,36 @@ function tournamentReducer(state: TournamentState | null, action: TournamentActi
   }
 }
 
+// Default tournament structure
+const createDefaultTournament = (): TournamentState => ({
+  id: 'default-tournament',
+  structure: {
+    id: 'default-structure',
+    name: 'Garage Poker League',
+    buyIn: 50,
+    reentryFee: 25,
+    guaranteedPrizePool: 300,
+    levels: [
+      { id: '1', smallBlind: 50, bigBlind: 100, ante: 0, duration: 20, isBreak: false },
+      { id: '2', smallBlind: 75, bigBlind: 150, ante: 0, duration: 20, isBreak: false },
+      { id: '3', smallBlind: 100, bigBlind: 200, ante: 0, duration: 20, isBreak: false },
+      { id: 'break1', smallBlind: 0, bigBlind: 0, ante: 0, duration: 15, isBreak: true, breakDuration: 15 }
+    ],
+    breakAfterLevels: 3,
+    payoutStructure: [50, 30, 20]
+  },
+  currentLevelIndex: 0,
+  timeRemaining: 20 * 60, // 20 minutes in seconds
+  isRunning: false,
+  isPaused: false,
+  isOnBreak: false,
+  players: 8,
+  entries: 8,
+  reentries: 0,
+  currentPrizePool: 300,
+  startTime: Date.now()
+});
+
 export function TournamentProvider({ children }: { children: React.ReactNode }) {
   const [tournament, dispatch] = useReducer(tournamentReducer, null);
   const [isConnected, setIsConnected] = React.useState(false);
@@ -44,6 +74,10 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
   const [error, setError] = React.useState<string | null>(null);
 
   useEffect(() => {
+    // Initialize with default tournament
+    const defaultTournament = createDefaultTournament();
+    dispatch({ type: 'SET_TOURNAMENT', payload: defaultTournament });
+    
     // Try to connect to Firebase, but continue without it if it fails
     signInAnonymously(auth)
       .then(() => {

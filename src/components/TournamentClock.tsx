@@ -66,10 +66,19 @@ export function TournamentClock() {
 
   const toggleTimer = () => {
     if (!tournament) return;
-    updateTournament({
-      isRunning: !tournament.isPaused,
-      isPaused: !tournament.isPaused
-    });
+    
+    if (tournament.isPaused) {
+      // Start the timer
+      updateTournament({
+        isRunning: true,
+        isPaused: false
+      });
+    } else {
+      // Pause the timer
+      updateTournament({
+        isPaused: true
+      });
+    }
   };
 
   const nextLevel = () => {

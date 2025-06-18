@@ -31,11 +31,11 @@ export function ClockControls({
           <><Play className="w-5 h-5 mr-2" />Iniciar</>
         )}
       </Button>
-      <Button onClick={onNextLevel} variant="outline" size="lg">
+      <Button onClick={onNextLevel} variant="secondary" size="lg">
         <SkipForward className="w-5 h-5 mr-2" />
         Siguiente
       </Button>
-      <Button onClick={onResetLevel} variant="outline" size="lg">
+      <Button onClick={onResetLevel} variant="secondary" size="lg">
         <RotateCcw className="w-5 h-5 mr-2" />
         Reset
       </Button>

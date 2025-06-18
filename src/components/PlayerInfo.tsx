@@ -33,15 +33,6 @@ export function PlayerInfo({ players, entries, reentries, currentPrizePool }: Pl
         <div className="text-blue-400 text-3xl font-bold">${currentPrizePool}.00</div>
       </div>
 
-      {/* Logo/Club Section */}
-      <div className="pt-8 text-center">
-        <div className="w-24 h-24 mx-auto mb-2 border-2 border-white rounded-full flex items-center justify-center">
-          <div className="text-2xl">♠</div>
-        </div>
-        <div className="text-sm font-semibold">ACE-HIGH-CLUB</div>
-        <div className="text-xs text-gray-400">POKER CLUB</div>
-      </div>
-
       {/* Chip Info */}
       <div className="pt-8">
         <div>

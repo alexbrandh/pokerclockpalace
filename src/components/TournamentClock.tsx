@@ -1,12 +1,16 @@
+
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, SkipForward, RotateCcw, Settings, Users, Wifi, WifiOff } from 'lucide-react';
+import { Settings, Wifi, WifiOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useTournament } from '@/contexts/TournamentContext';
-import { TournamentStats } from '@/components/TournamentStats';
 import { TournamentSettings } from '@/components/TournamentSettings';
+import { CircularTimer } from '@/components/CircularTimer';
+import { PlayerInfo } from '@/components/PlayerInfo';
+import { PrizeInfo } from '@/components/PrizeInfo';
+import { LevelInfo } from '@/components/LevelInfo';
+import { ClockControls } from '@/components/ClockControls';
 
 export function TournamentClock() {
   const { tournament, updateTournament, isConnected, error } = useTournament();
@@ -122,12 +126,6 @@ export function TournamentClock() {
   const currentLevel = tournament.structure.levels[tournament.currentLevelIndex];
   const nextLevelData = tournament.structure.levels[tournament.currentLevelIndex + 1];
   
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
   const progress = currentLevel ? 
     ((currentLevel.duration * 60 - tournament.timeRemaining) / (currentLevel.duration * 60)) * 100 : 0;
 
@@ -145,184 +143,42 @@ export function TournamentClock() {
         {/* Main Layout */}
         <div className="grid grid-cols-12 gap-8 items-center">
           {/* Left Side Info */}
-          <div className="col-span-3 space-y-8">
-            {/* Players Info */}
-            <div className="space-y-4">
-              <div>
-                <div className="text-blue-400 text-lg font-semibold">Players</div>
-                <div className="text-4xl font-bold">{tournament.players}</div>
-              </div>
-              <div>
-                <div className="text-blue-400 text-lg font-semibold">Entries</div>
-                <div className="text-4xl font-bold">{tournament.entries}</div>
-              </div>
-              <div>
-                <div className="text-blue-400 text-lg font-semibold">Incl. Re-Entries</div>
-                <div className="text-4xl font-bold">{tournament.reentries}</div>
-              </div>
-            </div>
-
-            {/* Prize Pool */}
-            <div className="pt-8">
-              <div className="text-blue-400 text-lg font-semibold">Total Prize Pool</div>
-              <div className="text-blue-400 text-3xl font-bold">${tournament.currentPrizePool}.00</div>
-            </div>
-
-            {/* Logo/Club Section */}
-            <div className="pt-8 text-center">
-              <div className="w-24 h-24 mx-auto mb-2 border-2 border-white rounded-full flex items-center justify-center">
-                <div className="text-2xl">♠</div>
-              </div>
-              <div className="text-sm font-semibold">ACE-HIGH-CLUB</div>
-              <div className="text-xs text-gray-400">POKER CLUB</div>
-            </div>
-
-            {/* Chip Info */}
-            <div className="pt-8">
-              <div>
-                <span className="text-blue-400 text-lg font-semibold">Total</span>
-                <span className="ml-8 text-blue-400 text-lg font-semibold">Average</span>
-              </div>
-              <div className="text-2xl font-bold">120,000  15,000 / 150BBs</div>
-            </div>
+          <div className="col-span-3">
+            <PlayerInfo 
+              players={tournament.players}
+              entries={tournament.entries}
+              reentries={tournament.reentries}
+              currentPrizePool={tournament.currentPrizePool}
+            />
           </div>
 
           {/* Center - Clock */}
-          <div className="col-span-6 flex justify-center">
-            <div className="relative">
-              {/* Circular Timer */}
-              <div className="relative w-96 h-96">
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="45"
-                    stroke="rgba(255,255,255,0.2)"
-                    strokeWidth="1"
-                    fill="none"
-                  />
-                  {/* Progress dots around the circle */}
-                  {Array.from({ length: 60 }, (_, i) => {
-                    const angle = (i * 6) * Math.PI / 180;
-                    const isActive = i < (progress / 100) * 60;
-                    const x = 50 + 45 * Math.cos(angle - Math.PI / 2);
-                    const y = 50 + 45 * Math.sin(angle - Math.PI / 2);
-                    return (
-                      <circle
-                        key={i}
-                        cx={x}
-                        cy={y}
-                        r="0.5"
-                        fill={isActive ? "#fbbf24" : "rgba(255,255,255,0.3)"}
-                      />
-                    );
-                  })}
-                </svg>
-                
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <div className="text-lg text-gray-300 mb-2">
-                    {currentLevel?.isBreak ? 'Descanso' : `Level ${tournament.currentLevelIndex + 1}`}
-                  </div>
-                  <motion.div
-                    key={tournament.timeRemaining}
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className={`text-7xl font-bold font-mono ${lastMinuteAlert ? 'text-red-500' : 'text-white'}`}
-                  >
-                    {formatTime(tournament.timeRemaining)}
-                  </motion.div>
-                  <div className="text-lg text-gray-300 mt-2">
-                    Next Break
-                  </div>
-                  <div className="text-xl text-gray-300">
-                    {nextBreakTime}
-                  </div>
-                </div>
-              </div>
-
-              {/* Controls below clock */}
-              <div className="flex justify-center gap-4 mt-8">
-                <Button
-                  onClick={toggleTimer}
-                  size="lg"
-                  className={tournament.isRunning && !tournament.isPaused ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}
-                >
-                  {tournament.isRunning && !tournament.isPaused ? (
-                    <><Pause className="w-5 h-5 mr-2" />Pausar</>
-                  ) : (
-                    <><Play className="w-5 h-5 mr-2" />Iniciar</>
-                  )}
-                </Button>
-                <Button onClick={nextLevel} variant="outline" size="lg">
-                  <SkipForward className="w-5 h-5 mr-2" />
-                  Siguiente
-                </Button>
-                <Button onClick={resetLevel} variant="outline" size="lg">
-                  <RotateCcw className="w-5 h-5 mr-2" />
-                  Reset
-                </Button>
-              </div>
-            </div>
+          <div className="col-span-6 flex flex-col items-center">
+            <CircularTimer
+              timeRemaining={tournament.timeRemaining}
+              currentLevel={currentLevel}
+              progress={progress}
+              lastMinuteAlert={lastMinuteAlert}
+              nextBreakTime={nextBreakTime}
+              currentLevelIndex={tournament.currentLevelIndex}
+            />
+            <ClockControls
+              isRunning={tournament.isRunning}
+              isPaused={tournament.isPaused}
+              onToggleTimer={toggleTimer}
+              onNextLevel={nextLevel}
+              onResetLevel={resetLevel}
+            />
           </div>
 
           {/* Right Side Info */}
           <div className="col-span-3 space-y-8">
-            {/* Current Level */}
-            <div>
-              <div className="text-blue-400 text-lg font-semibold">Level {tournament.currentLevelIndex + 1}</div>
-              <div className="text-2xl font-bold">
-                {currentLevel?.isBreak ? 
-                  `${currentLevel.duration} minutos` :
-                  `${currentLevel?.smallBlind} / ${currentLevel?.bigBlind}`
-                }
-                {!currentLevel?.isBreak && currentLevel?.ante > 0 && (
-                  <div className="text-xl text-gray-300">({currentLevel.ante})</div>
-                )}
-              </div>
-            </div>
-
-            {/* Prizes */}
-            <div>
-              <div className="text-blue-400 text-lg font-semibold mb-4">Prizes</div>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>1st</span>
-                  <span className="font-bold">$90.00</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>2nd</span>
-                  <span className="font-bold">$60.00</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>3rd</span>
-                  <span className="font-bold">$45.00</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>4th</span>
-                  <span className="font-bold">$36.00</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>5th</span>
-                  <span className="font-bold">$30.00</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Next Level */}
-            {nextLevelData && (
-              <div>
-                <div className="text-blue-400 text-lg font-semibold">Next Level</div>
-                <div className="text-2xl font-bold">
-                  {nextLevelData.isBreak ? 
-                    `Descanso ${nextLevelData.duration}min` :
-                    `${nextLevelData.smallBlind} / ${nextLevelData.bigBlind}`
-                  }
-                  {!nextLevelData.isBreak && nextLevelData.ante > 0 && (
-                    <div className="text-xl text-gray-300">({nextLevelData.ante})</div>
-                  )}
-                </div>
-              </div>
-            )}
+            <LevelInfo
+              currentLevel={currentLevel}
+              nextLevelData={nextLevelData}
+              currentLevelIndex={tournament.currentLevelIndex}
+            />
+            <PrizeInfo />
           </div>
         </div>
 

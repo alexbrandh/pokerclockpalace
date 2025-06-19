@@ -10,10 +10,10 @@ interface LevelInfoProps {
 
 export function LevelInfo({ currentLevel, nextLevelData, currentLevelIndex }: LevelInfoProps) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 relative">
       {/* Current Level */}
       <div>
-        <div className="text-blue-400 text-lg font-semibold">Level {currentLevelIndex + 1}</div>
+        <div className="text-yellow-400 text-lg font-semibold">Level {currentLevelIndex + 1}</div>
         <div className="text-2xl font-bold">
           {currentLevel?.isBreak ? 
             `${currentLevel.duration} minutos` :
@@ -28,7 +28,7 @@ export function LevelInfo({ currentLevel, nextLevelData, currentLevelIndex }: Le
       {/* Next Level */}
       {nextLevelData && (
         <div>
-          <div className="text-blue-400 text-lg font-semibold">Next Level</div>
+          <div className="text-yellow-400 text-lg font-semibold">Next Level</div>
           <div className="text-2xl font-bold">
             {nextLevelData.isBreak ? 
               `Descanso ${nextLevelData.duration}min` :
@@ -40,6 +40,9 @@ export function LevelInfo({ currentLevel, nextLevelData, currentLevelIndex }: Le
           </div>
         </div>
       )}
+      
+      {/* Decorative golden line */}
+      <div className="absolute -right-4 top-0 w-px h-full bg-gradient-to-b from-transparent via-yellow-400 to-transparent opacity-50"></div>
     </div>
   );
 }

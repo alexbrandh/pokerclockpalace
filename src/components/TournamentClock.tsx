@@ -10,7 +10,6 @@ import { PlayerInfo } from '@/components/PlayerInfo';
 import { PrizeInfo } from '@/components/PrizeInfo';
 import { LevelInfo } from '@/components/LevelInfo';
 import { ClockControls } from '@/components/ClockControls';
-import { Separator } from '@/components/ui/separator';
 
 export function TournamentClock() {
   const { tournament, updateTournament, isConnected, error } = useTournament();
@@ -142,26 +141,48 @@ export function TournamentClock() {
 
         {/* Main Layout */}
         <div className="grid grid-cols-12 gap-8 items-start">
-          {/* Left Side Info */}
+          {/* Left Side Info - Level, Prizes, Next Level */}
           <div className="col-span-3 space-y-8">
-            <PlayerInfo 
-              players={tournament.players}
-              entries={tournament.entries}
-              reentries={tournament.reentries}
-              currentPrizePool={tournament.currentPrizePool}
-            />
-            
-            {/* Golden separator line */}
-            <div className="relative">
-              <Separator className="bg-gradient-to-r from-transparent via-yellow-400 to-transparent h-px opacity-50" />
-            </div>
-            
+            {/* Current Level */}
             <LevelInfo
               currentLevel={currentLevel}
               nextLevelData={null}
               currentLevelIndex={tournament.currentLevelIndex}
               showNextLevel={false}
             />
+            
+            {/* Golden separator line */}
+            <div className="relative">
+              <div className="w-full h-px bg-gradient-to-r from-transparent via-yellow-400 to-transparent opacity-60"></div>
+              <div className="absolute left-0 top-0 w-8 h-px bg-yellow-400 opacity-80"></div>
+              <div className="absolute right-0 top-0 w-8 h-px bg-yellow-400 opacity-80"></div>
+            </div>
+            
+            {/* Prizes */}
+            <PrizeInfo />
+            
+            {/* Golden separator line */}
+            <div className="relative">
+              <div className="w-full h-px bg-gradient-to-r from-transparent via-yellow-400 to-transparent opacity-60"></div>
+              <div className="absolute left-0 top-0 w-8 h-px bg-yellow-400 opacity-80"></div>
+              <div className="absolute right-0 top-0 w-8 h-px bg-yellow-400 opacity-80"></div>
+            </div>
+            
+            {/* Next Level */}
+            {nextLevelData && (
+              <div>
+                <div className="text-yellow-400 text-lg font-semibold mb-4">Next Level</div>
+                <div className="text-2xl font-bold">
+                  {nextLevelData.isBreak ? 
+                    `Descanso ${nextLevelData.duration}min` :
+                    `${nextLevelData.smallBlind} / ${nextLevelData.bigBlind}`
+                  }
+                  {!nextLevelData.isBreak && nextLevelData.ante > 0 && (
+                    <div className="text-xl text-gray-300">({nextLevelData.ante})</div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Center - Clock */}
@@ -183,30 +204,14 @@ export function TournamentClock() {
             />
           </div>
 
-          {/* Right Side Info */}
+          {/* Right Side Info - Players */}
           <div className="col-span-3 space-y-8">
-            <PrizeInfo />
-            
-            {/* Golden separator line */}
-            <div className="relative">
-              <Separator className="bg-gradient-to-r from-transparent via-yellow-400 to-transparent h-px opacity-50" />
-            </div>
-            
-            {/* Next Level Section */}
-            {nextLevelData && (
-              <div>
-                <div className="text-yellow-400 text-lg font-semibold mb-4">Next Level</div>
-                <div className="text-2xl font-bold">
-                  {nextLevelData.isBreak ? 
-                    `Descanso ${nextLevelData.duration}min` :
-                    `${nextLevelData.smallBlind} / ${nextLevelData.bigBlind}`
-                  }
-                  {!nextLevelData.isBreak && nextLevelData.ante > 0 && (
-                    <div className="text-xl text-gray-300">({nextLevelData.ante})</div>
-                  )}
-                </div>
-              </div>
-            )}
+            <PlayerInfo 
+              players={tournament.players}
+              entries={tournament.entries}
+              reentries={tournament.reentries}
+              currentPrizePool={tournament.currentPrizePool}
+            />
           </div>
         </div>
 

@@ -142,7 +142,7 @@ export function TournamentClock() {
         {/* Main Layout */}
         <div className="grid grid-cols-12 gap-8 items-start">
           {/* Left Side Info - Players */}
-          <div className="col-span-3 space-y-8">
+          <div className="col-span-3">
             <PlayerInfo 
               players={tournament.players}
               entries={tournament.entries}
@@ -171,7 +171,7 @@ export function TournamentClock() {
           </div>
 
           {/* Right Side Info - Level, Prizes, Next Level */}
-          <div className="col-span-3 space-y-8">
+          <div className="col-span-3 space-y-6">
             {/* Current Level */}
             <LevelInfo
               currentLevel={currentLevel}
@@ -181,12 +181,12 @@ export function TournamentClock() {
             />
             
             {/* Golden separator line */}
-            <div className="relative py-4">
+            <div className="relative py-3">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gradient-to-r from-transparent via-yellow-400 to-transparent"></div>
+                <div className="w-full h-px bg-gradient-to-r from-transparent via-yellow-400/60 to-transparent"></div>
               </div>
               <div className="relative flex justify-center">
-                <div className="w-8 h-0.5 bg-gradient-to-r from-yellow-300 to-yellow-500 shadow-lg shadow-yellow-400/50"></div>
+                <div className="w-16 h-0.5 bg-gradient-to-r from-yellow-300 to-yellow-500 shadow-md shadow-yellow-400/40 rounded-full"></div>
               </div>
             </div>
             
@@ -194,19 +194,19 @@ export function TournamentClock() {
             <PrizeInfo />
             
             {/* Golden separator line */}
-            <div className="relative py-4">
+            <div className="relative py-3">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gradient-to-r from-transparent via-yellow-400 to-transparent"></div>
+                <div className="w-full h-px bg-gradient-to-r from-transparent via-yellow-400/60 to-transparent"></div>
               </div>
               <div className="relative flex justify-center">
-                <div className="w-8 h-0.5 bg-gradient-to-r from-yellow-300 to-yellow-500 shadow-lg shadow-yellow-400/50"></div>
+                <div className="w-16 h-0.5 bg-gradient-to-r from-yellow-300 to-yellow-500 shadow-md shadow-yellow-400/40 rounded-full"></div>
               </div>
             </div>
             
             {/* Next Level */}
             {nextLevelData && (
               <div>
-                <div className="text-yellow-400 text-lg font-semibold mb-4">Next Level</div>
+                <div className="text-yellow-400 text-lg font-semibold mb-2">Next Level</div>
                 <div className="text-2xl font-bold">
                   {nextLevelData.isBreak ? 
                     `Descanso ${nextLevelData.duration}min` :

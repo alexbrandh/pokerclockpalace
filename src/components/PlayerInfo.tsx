@@ -10,8 +10,8 @@ interface PlayerInfoProps {
 
 export function PlayerInfo({ players, entries, reentries, currentPrizePool }: PlayerInfoProps) {
   return (
-    <div className="space-y-8">
-      {/* Players Info - En la misma fila como la imagen */}
+    <div className="space-y-6">
+      {/* Players Info - En la misma fila */}
       <div className="grid grid-cols-3 gap-4 text-center">
         <div>
           <div className="text-yellow-400 text-sm font-semibold mb-1">Players</div>
@@ -28,12 +28,12 @@ export function PlayerInfo({ players, entries, reentries, currentPrizePool }: Pl
       </div>
 
       {/* Golden separator line */}
-      <div className="relative py-2">
+      <div className="relative py-3">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full h-px bg-gradient-to-r from-transparent via-yellow-400 to-transparent opacity-60"></div>
+          <div className="w-full h-px bg-gradient-to-r from-transparent via-yellow-400/60 to-transparent"></div>
         </div>
         <div className="relative flex justify-center">
-          <div className="w-12 h-px bg-gradient-to-r from-yellow-300 to-yellow-500 shadow-lg shadow-yellow-400/30"></div>
+          <div className="w-16 h-0.5 bg-gradient-to-r from-yellow-300 to-yellow-500 shadow-md shadow-yellow-400/40 rounded-full"></div>
         </div>
       </div>
 
@@ -44,12 +44,12 @@ export function PlayerInfo({ players, entries, reentries, currentPrizePool }: Pl
       </div>
 
       {/* Golden separator line */}
-      <div className="relative py-2">
+      <div className="relative py-3">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full h-px bg-gradient-to-r from-transparent via-yellow-400 to-transparent opacity-60"></div>
+          <div className="w-full h-px bg-gradient-to-r from-transparent via-yellow-400/60 to-transparent"></div>
         </div>
         <div className="relative flex justify-center">
-          <div className="w-12 h-px bg-gradient-to-r from-yellow-300 to-yellow-500 shadow-lg shadow-yellow-400/30"></div>
+          <div className="w-16 h-0.5 bg-gradient-to-r from-yellow-300 to-yellow-500 shadow-md shadow-yellow-400/40 rounded-full"></div>
         </div>
       </div>
 

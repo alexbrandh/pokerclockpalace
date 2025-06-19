@@ -141,48 +141,14 @@ export function TournamentClock() {
 
         {/* Main Layout */}
         <div className="grid grid-cols-12 gap-8 items-start">
-          {/* Left Side Info - Level, Prizes, Next Level */}
+          {/* Left Side Info - Players */}
           <div className="col-span-3 space-y-8">
-            {/* Current Level */}
-            <LevelInfo
-              currentLevel={currentLevel}
-              nextLevelData={null}
-              currentLevelIndex={tournament.currentLevelIndex}
-              showNextLevel={false}
+            <PlayerInfo 
+              players={tournament.players}
+              entries={tournament.entries}
+              reentries={tournament.reentries}
+              currentPrizePool={tournament.currentPrizePool}
             />
-            
-            {/* Golden separator line */}
-            <div className="relative">
-              <div className="w-full h-px bg-gradient-to-r from-transparent via-yellow-400 to-transparent opacity-60"></div>
-              <div className="absolute left-0 top-0 w-8 h-px bg-yellow-400 opacity-80"></div>
-              <div className="absolute right-0 top-0 w-8 h-px bg-yellow-400 opacity-80"></div>
-            </div>
-            
-            {/* Prizes */}
-            <PrizeInfo />
-            
-            {/* Golden separator line */}
-            <div className="relative">
-              <div className="w-full h-px bg-gradient-to-r from-transparent via-yellow-400 to-transparent opacity-60"></div>
-              <div className="absolute left-0 top-0 w-8 h-px bg-yellow-400 opacity-80"></div>
-              <div className="absolute right-0 top-0 w-8 h-px bg-yellow-400 opacity-80"></div>
-            </div>
-            
-            {/* Next Level */}
-            {nextLevelData && (
-              <div>
-                <div className="text-yellow-400 text-lg font-semibold mb-4">Next Level</div>
-                <div className="text-2xl font-bold">
-                  {nextLevelData.isBreak ? 
-                    `Descanso ${nextLevelData.duration}min` :
-                    `${nextLevelData.smallBlind} / ${nextLevelData.bigBlind}`
-                  }
-                  {!nextLevelData.isBreak && nextLevelData.ante > 0 && (
-                    <div className="text-xl text-gray-300">({nextLevelData.ante})</div>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Center - Clock */}
@@ -204,14 +170,54 @@ export function TournamentClock() {
             />
           </div>
 
-          {/* Right Side Info - Players */}
+          {/* Right Side Info - Level, Prizes, Next Level */}
           <div className="col-span-3 space-y-8">
-            <PlayerInfo 
-              players={tournament.players}
-              entries={tournament.entries}
-              reentries={tournament.reentries}
-              currentPrizePool={tournament.currentPrizePool}
+            {/* Current Level */}
+            <LevelInfo
+              currentLevel={currentLevel}
+              nextLevelData={null}
+              currentLevelIndex={tournament.currentLevelIndex}
+              showNextLevel={false}
             />
+            
+            {/* Golden separator line */}
+            <div className="relative py-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gradient-to-r from-transparent via-yellow-400 to-transparent"></div>
+              </div>
+              <div className="relative flex justify-center">
+                <div className="w-8 h-0.5 bg-gradient-to-r from-yellow-300 to-yellow-500 shadow-lg shadow-yellow-400/50"></div>
+              </div>
+            </div>
+            
+            {/* Prizes */}
+            <PrizeInfo />
+            
+            {/* Golden separator line */}
+            <div className="relative py-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gradient-to-r from-transparent via-yellow-400 to-transparent"></div>
+              </div>
+              <div className="relative flex justify-center">
+                <div className="w-8 h-0.5 bg-gradient-to-r from-yellow-300 to-yellow-500 shadow-lg shadow-yellow-400/50"></div>
+              </div>
+            </div>
+            
+            {/* Next Level */}
+            {nextLevelData && (
+              <div>
+                <div className="text-yellow-400 text-lg font-semibold mb-4">Next Level</div>
+                <div className="text-2xl font-bold">
+                  {nextLevelData.isBreak ? 
+                    `Descanso ${nextLevelData.duration}min` :
+                    `${nextLevelData.smallBlind} / ${nextLevelData.bigBlind}`
+                  }
+                  {!nextLevelData.isBreak && nextLevelData.ante > 0 && (
+                    <div className="text-xl text-gray-300">({nextLevelData.ante})</div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

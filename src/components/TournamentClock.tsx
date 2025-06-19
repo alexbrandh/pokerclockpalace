@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Settings, Wifi, WifiOff } from 'lucide-react';
@@ -11,6 +10,7 @@ import { PlayerInfo } from '@/components/PlayerInfo';
 import { PrizeInfo } from '@/components/PrizeInfo';
 import { LevelInfo } from '@/components/LevelInfo';
 import { ClockControls } from '@/components/ClockControls';
+import { Separator } from '@/components/ui/separator';
 
 export function TournamentClock() {
   const { tournament, updateTournament, isConnected, error } = useTournament();
@@ -141,14 +141,26 @@ export function TournamentClock() {
         </div>
 
         {/* Main Layout */}
-        <div className="grid grid-cols-12 gap-8 items-center">
+        <div className="grid grid-cols-12 gap-8 items-start">
           {/* Left Side Info */}
-          <div className="col-span-3">
+          <div className="col-span-3 space-y-8">
             <PlayerInfo 
               players={tournament.players}
               entries={tournament.entries}
               reentries={tournament.reentries}
               currentPrizePool={tournament.currentPrizePool}
+            />
+            
+            {/* Golden separator line */}
+            <div className="relative">
+              <Separator className="bg-gradient-to-r from-transparent via-yellow-400 to-transparent h-px opacity-50" />
+            </div>
+            
+            <LevelInfo
+              currentLevel={currentLevel}
+              nextLevelData={null}
+              currentLevelIndex={tournament.currentLevelIndex}
+              showNextLevel={false}
             />
           </div>
 
@@ -173,12 +185,28 @@ export function TournamentClock() {
 
           {/* Right Side Info */}
           <div className="col-span-3 space-y-8">
-            <LevelInfo
-              currentLevel={currentLevel}
-              nextLevelData={nextLevelData}
-              currentLevelIndex={tournament.currentLevelIndex}
-            />
             <PrizeInfo />
+            
+            {/* Golden separator line */}
+            <div className="relative">
+              <Separator className="bg-gradient-to-r from-transparent via-yellow-400 to-transparent h-px opacity-50" />
+            </div>
+            
+            {/* Next Level Section */}
+            {nextLevelData && (
+              <div>
+                <div className="text-yellow-400 text-lg font-semibold mb-4">Next Level</div>
+                <div className="text-2xl font-bold">
+                  {nextLevelData.isBreak ? 
+                    `Descanso ${nextLevelData.duration}min` :
+                    `${nextLevelData.smallBlind} / ${nextLevelData.bigBlind}`
+                  }
+                  {!nextLevelData.isBreak && nextLevelData.ante > 0 && (
+                    <div className="text-xl text-gray-300">({nextLevelData.ante})</div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

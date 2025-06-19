@@ -6,9 +6,10 @@ interface LevelInfoProps {
   currentLevel: TournamentLevel;
   nextLevelData?: TournamentLevel;
   currentLevelIndex: number;
+  showNextLevel?: boolean;
 }
 
-export function LevelInfo({ currentLevel, nextLevelData, currentLevelIndex }: LevelInfoProps) {
+export function LevelInfo({ currentLevel, nextLevelData, currentLevelIndex, showNextLevel = true }: LevelInfoProps) {
   return (
     <div className="space-y-8 relative">
       {/* Current Level */}
@@ -25,8 +26,8 @@ export function LevelInfo({ currentLevel, nextLevelData, currentLevelIndex }: Le
         </div>
       </div>
 
-      {/* Next Level */}
-      {nextLevelData && (
+      {/* Next Level - only show if showNextLevel is true */}
+      {showNextLevel && nextLevelData && (
         <div>
           <div className="text-yellow-400 text-lg font-semibold">Next Level</div>
           <div className="text-2xl font-bold">
@@ -40,9 +41,6 @@ export function LevelInfo({ currentLevel, nextLevelData, currentLevelIndex }: Le
           </div>
         </div>
       )}
-      
-      {/* Decorative golden line */}
-      <div className="absolute -right-4 top-0 w-px h-full bg-gradient-to-b from-transparent via-yellow-400 to-transparent opacity-50"></div>
     </div>
   );
 }

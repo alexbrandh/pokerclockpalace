@@ -171,7 +171,7 @@ export function TournamentClock() {
           </div>
 
           {/* Right Side Info - Level, Prizes, Next Level */}
-          <div className="col-span-3 space-y-6">
+          <div className="col-span-3 space-y-8">
             {/* Current Level */}
             <LevelInfo
               currentLevel={currentLevel}
@@ -180,26 +180,22 @@ export function TournamentClock() {
               showNextLevel={false}
             />
             
-            {/* Golden separator line */}
-            <div className="relative py-3">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full h-px bg-gradient-to-r from-transparent via-yellow-400/60 to-transparent"></div>
-              </div>
-              <div className="relative flex justify-center">
-                <div className="w-16 h-0.5 bg-gradient-to-r from-yellow-300 to-yellow-500 shadow-md shadow-yellow-400/40 rounded-full"></div>
+            {/* Enhanced Golden separator line */}
+            <div className="relative flex items-center justify-center py-4">
+              <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-400/40 to-transparent"></div>
+              <div className="relative bg-black px-4">
+                <div className="h-1 w-20 bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 rounded-full shadow-lg shadow-yellow-400/50"></div>
               </div>
             </div>
             
             {/* Prizes */}
             <PrizeInfo />
             
-            {/* Golden separator line */}
-            <div className="relative py-3">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full h-px bg-gradient-to-r from-transparent via-yellow-400/60 to-transparent"></div>
-              </div>
-              <div className="relative flex justify-center">
-                <div className="w-16 h-0.5 bg-gradient-to-r from-yellow-300 to-yellow-500 shadow-md shadow-yellow-400/40 rounded-full"></div>
+            {/* Enhanced Golden separator line */}
+            <div className="relative flex items-center justify-center py-4">
+              <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-400/40 to-transparent"></div>
+              <div className="relative bg-black px-4">
+                <div className="h-1 w-20 bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 rounded-full shadow-lg shadow-yellow-400/50"></div>
               </div>
             </div>
             

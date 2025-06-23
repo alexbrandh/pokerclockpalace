@@ -1,16 +1,17 @@
-
 import React from 'react';
-
 interface PlayerInfoProps {
   players: number;
   entries: number;
   reentries: number;
   currentPrizePool: number;
 }
-
-export function PlayerInfo({ players, entries, reentries, currentPrizePool }: PlayerInfoProps) {
-  return (
-    <div className="h-full flex flex-col justify-between space-y-4">
+export function PlayerInfo({
+  players,
+  entries,
+  reentries,
+  currentPrizePool
+}: PlayerInfoProps) {
+  return <div className="col-span-3 space-y-4">
       {/* Players Info - En la misma fila */}
       <div className="grid grid-cols-3 gap-4 text-center">
         <div>
@@ -60,6 +61,5 @@ export function PlayerInfo({ players, entries, reentries, currentPrizePool }: Pl
           <div className="text-lg font-bold">15,000 / 150BBs</div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }

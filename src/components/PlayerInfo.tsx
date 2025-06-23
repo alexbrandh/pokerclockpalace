@@ -10,7 +10,7 @@ interface PlayerInfoProps {
 
 export function PlayerInfo({ players, entries, reentries, currentPrizePool }: PlayerInfoProps) {
   return (
-    <div className="space-y-4">
+    <div className="h-full flex flex-col justify-between space-y-4">
       {/* Players Info - En la misma fila */}
       <div className="grid grid-cols-3 gap-4 text-center">
         <div>

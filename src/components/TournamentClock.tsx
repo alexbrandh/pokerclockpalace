@@ -171,7 +171,7 @@ export function TournamentClock() {
           </div>
 
           {/* Right Side Info - Level, Prizes, Next Level */}
-          <div className="col-span-3 space-y-6">
+          <div className="col-span-3 space-y-4">
             {/* Current Level */}
             <LevelInfo
               currentLevel={currentLevel}
@@ -181,7 +181,7 @@ export function TournamentClock() {
             />
             
             {/* Enhanced Golden separator line */}
-            <div className="relative flex items-center justify-center py-3">
+            <div className="relative flex items-center justify-center py-2">
               <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-400/20 to-transparent"></div>
               <div className="relative bg-black px-4">
                 <div className="h-1 w-16 bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 rounded-full shadow-lg shadow-yellow-400/30"></div>
@@ -192,7 +192,7 @@ export function TournamentClock() {
             <PrizeInfo />
             
             {/* Enhanced Golden separator line */}
-            <div className="relative flex items-center justify-center py-3">
+            <div className="relative flex items-center justify-center py-2">
               <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-400/20 to-transparent"></div>
               <div className="relative bg-black px-4">
                 <div className="h-1 w-16 bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 rounded-full shadow-lg shadow-yellow-400/30"></div>

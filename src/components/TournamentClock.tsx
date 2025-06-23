@@ -1,6 +1,7 @@
+
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Settings, Wifi, WifiOff } from 'lucide-react';
+import { Settings, Wifi, WifiOff, Play, Pause, SkipForward, RotateCcw, UserPlus, UserMinus, RotateCcw as ReEntry } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useTournament } from '@/contexts/TournamentContext';
@@ -9,12 +10,13 @@ import { CircularTimer } from '@/components/CircularTimer';
 import { PlayerInfo } from '@/components/PlayerInfo';
 import { PrizeInfo } from '@/components/PrizeInfo';
 import { LevelInfo } from '@/components/LevelInfo';
-import { ClockControls } from '@/components/ClockControls';
 
 export function TournamentClock() {
   const { tournament, updateTournament, isConnected, error } = useTournament();
   const [showSettings, setShowSettings] = useState(false);
   const [lastMinuteAlert, setLastMinuteAlert] = useState(false);
+  const [showControlsPopup, setShowControlsPopup] = useState(false);
+  const [actionHistory, setActionHistory] = useState<Array<Partial<any>>>([]);
 
   // Timer logic
   useEffect(() => {
@@ -61,14 +63,36 @@ export function TournamentClock() {
     return () => clearInterval(interval);
   }, [tournament, updateTournament, lastMinuteAlert]);
 
+  // Show/hide controls popup based on pause state
+  useEffect(() => {
+    if (tournament?.isPaused) {
+      setShowControlsPopup(true);
+    } else {
+      setShowControlsPopup(false);
+    }
+  }, [tournament?.isPaused]);
+
+  // Helper function to save state for undo
+  const saveStateForUndo = () => {
+    if (tournament) {
+      setActionHistory(prev => [...prev.slice(-9), { ...tournament }]); // Keep last 10 actions
+    }
+  };
+
   // Hotkeys
   useHotkeys('space', () => toggleTimer(), { preventDefault: true });
   useHotkeys('n', () => nextLevel(), { preventDefault: true });
   useHotkeys('r', () => resetLevel(), { preventDefault: true });
   useHotkeys('s', () => setShowSettings(!showSettings), { preventDefault: true });
+  useHotkeys('ctrl+b', () => addPlayer(), { preventDefault: true });
+  useHotkeys('x', () => eliminatePlayer(), { preventDefault: true });
+  useHotkeys('ctrl+z', () => undoLastAction(), { preventDefault: true });
+  useHotkeys('ctrl+r', () => addReentry(), { preventDefault: true });
 
   const toggleTimer = () => {
     if (!tournament) return;
+    
+    saveStateForUndo();
     
     if (tournament.isPaused) {
       // Start the timer
@@ -86,6 +110,9 @@ export function TournamentClock() {
 
   const nextLevel = () => {
     if (!tournament) return;
+    
+    saveStateForUndo();
+    
     const nextLevelIndex = tournament.currentLevelIndex + 1;
     const nextLevelData = tournament.structure.levels[nextLevelIndex];
     
@@ -100,10 +127,58 @@ export function TournamentClock() {
 
   const resetLevel = () => {
     if (!tournament) return;
+    
+    saveStateForUndo();
+    
     const currentLevel = tournament.structure.levels[tournament.currentLevelIndex];
     updateTournament({
       timeRemaining: currentLevel.duration * 60
     });
+  };
+
+  const addPlayer = () => {
+    if (!tournament) return;
+    
+    saveStateForUndo();
+    
+    updateTournament({
+      players: tournament.players + 1,
+      entries: tournament.entries + 1,
+      currentPrizePool: tournament.currentPrizePool + tournament.structure.buyIn
+    });
+  };
+
+  const eliminatePlayer = () => {
+    if (!tournament || tournament.players <= 0) return;
+    
+    saveStateForUndo();
+    
+    updateTournament({
+      players: tournament.players - 1
+    });
+  };
+
+  const addReentry = () => {
+    if (!tournament) return;
+    
+    saveStateForUndo();
+    
+    updateTournament({
+      players: tournament.players + 1,
+      reentries: tournament.reentries + 1,
+      currentPrizePool: tournament.currentPrizePool + tournament.structure.reentryFee
+    });
+  };
+
+  const undoLastAction = () => {
+    if (actionHistory.length === 0) return;
+    
+    const lastState = actionHistory[actionHistory.length - 1];
+    setActionHistory(prev => prev.slice(0, -1));
+    
+    if (lastState) {
+      updateTournament(lastState);
+    }
   };
 
   if (!tournament) {
@@ -161,17 +236,10 @@ export function TournamentClock() {
               nextBreakTime={nextBreakTime}
               currentLevelIndex={tournament.currentLevelIndex}
             />
-            <ClockControls
-              isRunning={tournament.isRunning}
-              isPaused={tournament.isPaused}
-              onToggleTimer={toggleTimer}
-              onNextLevel={nextLevel}
-              onResetLevel={resetLevel}
-            />
           </div>
 
           {/* Right Side Info - Level, Prizes, Next Level */}
-          <div className="col-span-3 space-y-4">
+          <div className="col-span-3 space-y-6">
             {/* Current Level */}
             <LevelInfo
               currentLevel={currentLevel}
@@ -181,7 +249,7 @@ export function TournamentClock() {
             />
             
             {/* Enhanced Golden separator line */}
-            <div className="relative flex items-center justify-center py-2">
+            <div className="relative flex items-center justify-center py-3">
               <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-400/20 to-transparent"></div>
               <div className="relative bg-black px-4">
                 <div className="h-1 w-16 bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 rounded-full shadow-lg shadow-yellow-400/30"></div>
@@ -192,7 +260,7 @@ export function TournamentClock() {
             <PrizeInfo />
             
             {/* Enhanced Golden separator line */}
-            <div className="relative flex items-center justify-center py-2">
+            <div className="relative flex items-center justify-center py-3">
               <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-400/20 to-transparent"></div>
               <div className="relative bg-black px-4">
                 <div className="h-1 w-16 bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 rounded-full shadow-lg shadow-yellow-400/30"></div>
@@ -241,8 +309,66 @@ export function TournamentClock() {
           <span>N: Siguiente</span>
           <span>R: Reset</span>
           <span>S: Configuración</span>
+          <span>CTRL+B: +Jugador</span>
+          <span>X: -Jugador</span>
+          <span>CTRL+R: Re-entry</span>
+          <span>CTRL+Z: Deshacer</span>
         </div>
       </div>
+
+      {/* Controls Popup - Only shown when paused */}
+      <AnimatePresence>
+        {showControlsPopup && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            onClick={() => setShowControlsPopup(false)}
+          >
+            <motion.div
+              className="bg-gray-900 border border-yellow-400/30 rounded-lg p-6 space-y-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-xl font-bold text-yellow-400 text-center mb-4">Controles del Torneo</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  onClick={toggleTimer}
+                  size="lg"
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Play className="w-5 h-5 mr-2" />
+                  Iniciar
+                </Button>
+                <Button onClick={nextLevel} variant="secondary" size="lg">
+                  <SkipForward className="w-5 h-5 mr-2" />
+                  Siguiente
+                </Button>
+                <Button onClick={resetLevel} variant="secondary" size="lg">
+                  <RotateCcw className="w-5 h-5 mr-2" />
+                  Reset
+                </Button>
+                <Button onClick={addPlayer} variant="secondary" size="lg">
+                  <UserPlus className="w-5 h-5 mr-2" />
+                  +Jugador
+                </Button>
+                <Button onClick={eliminatePlayer} variant="secondary" size="lg">
+                  <UserMinus className="w-5 h-5 mr-2" />
+                  -Jugador
+                </Button>
+                <Button onClick={addReentry} variant="secondary" size="lg">
+                  <ReEntry className="w-5 h-5 mr-2" />
+                  Re-entry
+                </Button>
+              </div>
+              <div className="text-xs text-gray-400 text-center mt-4">
+                <div>ESPACIO: Play/Pause • N: Siguiente • R: Reset</div>
+                <div>CTRL+B: +Jugador • X: -Jugador • CTRL+R: Re-entry • CTRL+Z: Deshacer</div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Settings Modal */}
       <AnimatePresence>

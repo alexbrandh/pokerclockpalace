@@ -36,21 +36,23 @@ export function MobileControls({
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, y: 50 }}
+        initial={{ opacity: 0, y: 100 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 50 }}
-        className="fixed bottom-4 left-4 right-4 z-50"
+        exit={{ opacity: 0, y: 100 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className="fixed bottom-0 left-0 right-0 z-50 pb-safe"
       >
-        <div className="bg-black/90 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-4">
+        <div className="bg-black/95 backdrop-blur-xl border-t border-gray-700/50">
+          
           {/* Primary Controls Row */}
-          <div className="flex justify-center gap-4 mb-4">
+          <div className="flex justify-center items-center gap-6 px-6 py-4">
             <Button
               onClick={onToggleTimer}
               size="lg"
-              className={`h-16 w-16 rounded-full ${
+              className={`h-16 w-16 rounded-full shadow-lg transition-all duration-200 ${
                 isPaused 
-                  ? 'bg-green-600 hover:bg-green-700 text-white' 
-                  : 'bg-yellow-600 hover:bg-yellow-700 text-white'
+                  ? 'bg-green-600 hover:bg-green-700 text-white shadow-green-600/25' 
+                  : 'bg-yellow-600 hover:bg-yellow-700 text-white shadow-yellow-600/25'
               }`}
             >
               {isPaused ? <Play className="w-8 h-8" /> : <Pause className="w-8 h-8" />}
@@ -60,7 +62,7 @@ export function MobileControls({
               onClick={onNextLevel}
               size="lg"
               variant="outline"
-              className="h-16 w-16 rounded-full border-gray-600 hover:bg-gray-800"
+              className="h-14 w-14 rounded-full border-2 border-gray-600 hover:bg-gray-800 hover:border-gray-500 transition-all"
             >
               <SkipForward className="w-6 h-6" />
             </Button>
@@ -69,33 +71,35 @@ export function MobileControls({
               onClick={onResetLevel}
               size="lg"
               variant="outline"
-              className="h-16 w-16 rounded-full border-gray-600 hover:bg-gray-800"
+              className="h-14 w-14 rounded-full border-2 border-gray-600 hover:bg-gray-800 hover:border-gray-500 transition-all"
             >
               <RotateCcw className="w-6 h-6" />
             </Button>
           </div>
 
           {/* Secondary Controls Row */}
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center px-6 pb-4">
             {/* Player Controls */}
-            <div className="flex gap-2">
+            <div className="flex items-center gap-3">
               <Button
                 onClick={onEliminatePlayer}
                 size="sm"
                 variant="outline"
                 disabled={playersCount <= 0}
-                className="border-red-600 text-red-400 hover:bg-red-900/20"
+                className="h-10 w-10 rounded-full border-red-600/60 text-red-400 hover:bg-red-900/20 hover:border-red-500 disabled:opacity-30"
               >
                 <UserMinus className="w-4 h-4" />
               </Button>
-              <span className="flex items-center px-3 py-2 text-sm text-white bg-gray-800 rounded">
+              
+              <div className="flex items-center justify-center min-w-[60px] h-10 px-4 text-lg font-bold text-white bg-gray-800/80 rounded-full border border-gray-600/50">
                 {playersCount}
-              </span>
+              </div>
+              
               <Button
                 onClick={onAddPlayer}
                 size="sm"
                 variant="outline"
-                className="border-green-600 text-green-400 hover:bg-green-900/20"
+                className="h-10 w-10 rounded-full border-green-600/60 text-green-400 hover:bg-green-900/20 hover:border-green-500"
               >
                 <UserPlus className="w-4 h-4" />
               </Button>
@@ -106,7 +110,7 @@ export function MobileControls({
               onClick={onToggleFullscreen}
               size="sm"
               variant="ghost"
-              className="text-gray-400 hover:text-white"
+              className="h-10 w-10 rounded-full text-gray-400 hover:text-white hover:bg-gray-800/50 transition-all"
             >
               {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
             </Button>

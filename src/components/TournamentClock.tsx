@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Settings, Wifi, WifiOff, Play, Pause, SkipForward, RotateCcw, UserPlus, UserMinus, RotateCcw as ReEntry } from 'lucide-react';
@@ -278,34 +279,39 @@ export function TournamentClock() {
 
   return (
     <div className={`min-h-screen h-screen bg-black text-white overflow-hidden ${
-      mobileOpt.isMobile && mobileOpt.isFullscreen ? 'touch-none' : ''
+      mobileOpt.isMobile && mobileOpt.isFullscreen ? 'select-none' : ''
     }`}>
-      {/* Sticky Stats Bar - Enhanced mobile behavior */}
-      {!(mobileOpt.isFullscreen && mobileOpt.isMobile) && (
+      {/* Conditional Stats Bar - Only show on desktop or mobile non-fullscreen */}
+      {!mobileOpt.isMobile || !mobileOpt.isFullscreen ? (
         <StickyStatsBar tournament={tournament} />
-      )}
+      ) : null}
 
-      {/* Main Content - Dynamic padding based on mobile state */}
-      <div className={`${
-        !(mobileOpt.isFullscreen && mobileOpt.isMobile) ? 'pt-16' : 'pt-0'
-      } h-full flex flex-col`} style={{
-        paddingTop: mobileOpt.isMobile && mobileOpt.isFullscreen ? `${mobileOpt.safeAreaInsets.top}px` : undefined,
-        paddingBottom: mobileOpt.isMobile && showMobileControls ? '120px' : undefined
-      }}>
+      {/* Main Content Container */}
+      <div 
+        className={`h-full flex flex-col ${
+          (!mobileOpt.isMobile || !mobileOpt.isFullscreen) ? 'pt-16' : ''
+        }`} 
+        style={{
+          paddingTop: mobileOpt.isMobile && mobileOpt.isFullscreen ? 
+            `${mobileOpt.safeAreaInsets.top}px` : undefined,
+          paddingBottom: mobileOpt.isMobile && showMobileControls ? 
+            '140px' : (mobileOpt.isMobile ? '20px' : undefined)
+        }}
+      >
         
-        {/* Title - Enhanced mobile behavior */}
-        {!(mobileOpt.isFullscreen && mobileOpt.isMobile) && (
-          <div className="text-center py-2 md:py-4">
-            <h1 className={`${
-              mobileOpt.isMobile ? 'text-lg' : 'text-xl md:text-3xl lg:text-4xl'
-            } font-bold text-white px-4`}>
+        {/* Tournament Title - Hide in mobile fullscreen */}
+        {(!mobileOpt.isMobile || !mobileOpt.isFullscreen) && (
+          <div className="text-center py-2 md:py-4 flex-shrink-0">
+            <h1 className={`font-bold text-white px-4 ${
+              mobileOpt.isMobile ? 'text-xl' : 'text-2xl md:text-3xl lg:text-4xl'
+            }`}>
               {tournament.structure.name}
             </h1>
           </div>
         )}
 
-        {/* Main Layout - Enhanced responsive behavior */}
-        <div className="flex-1 px-2 md:px-4 lg:px-8">
+        {/* Main Content Area */}
+        <div className="flex-1 px-2 md:px-4 lg:px-8 min-h-0">
           
           {/* Desktop Layout */}
           <div className="hidden md:grid md:grid-cols-12 gap-4 lg:gap-8 h-full items-center">
@@ -381,16 +387,16 @@ export function TournamentClock() {
             </div>
           </div>
 
-          {/* Enhanced Mobile Layout */}
+          {/* Mobile Layout - Completely redesigned */}
           <div className="md:hidden h-full flex flex-col">
             
-            {/* Mobile Timer - Optimized sizing */}
-            <div className="flex-1 flex items-center justify-center min-h-0">
+            {/* Mobile Timer - Centered and optimized */}
+            <div className="flex-1 flex items-center justify-center">
               <div className={`${
                 mobileOpt.isFullscreen 
-                  ? mobileOpt.orientation === 'landscape' ? 'scale-90' : 'scale-125'
-                  : 'scale-110 sm:scale-125'
-              }`}>
+                  ? (mobileOpt.orientation === 'landscape' ? 'scale-75' : 'scale-110')
+                  : 'scale-100'
+              } transition-transform duration-300`}>
                 <AdvancedTimer
                   timeRemaining={tournament.timeRemaining}
                   currentLevel={currentLevel}
@@ -404,55 +410,95 @@ export function TournamentClock() {
               </div>
             </div>
 
-            {/* Mobile Info - Hide in fullscreen landscape */}
-            {!(mobileOpt.isFullscreen && mobileOpt.orientation === 'landscape') && (
-              <div className="flex-shrink-0 px-2 pb-4">
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  
-                  {/* Current Level */}
-                  <div className="space-y-1">
-                    <div className={`text-sm font-semibold ${
-                      currentLevel?.isBreak ? 'text-cyan-400' : 'text-yellow-400'
-                    }`}>
-                      {currentLevel?.isBreak ? 'Break' : `Level ${tournament.currentLevelIndex + 1}`}
+            {/* Mobile Level Info - Simplified and clean */}
+            {!mobileOpt.isFullscreen && (
+              <div className="flex-shrink-0 px-4 pb-6">
+                <div className="bg-gray-900/50 backdrop-blur rounded-2xl p-4">
+                  <div className="grid grid-cols-2 gap-4 text-center">
+                    
+                    {/* Current Level */}
+                    <div className="space-y-2">
+                      <div className={`text-sm font-semibold ${
+                        currentLevel?.isBreak ? 'text-cyan-400' : 'text-yellow-400'
+                      }`}>
+                        {currentLevel?.isBreak ? 'BREAK' : `LEVEL ${tournament.currentLevelIndex + 1}`}
+                      </div>
+                      <div className="text-xl font-bold text-white">
+                        {currentLevel?.isBreak ? 
+                          `${currentLevel.duration}min` :
+                          `${currentLevel?.smallBlind}/${currentLevel?.bigBlind}`
+                        }
+                        {!currentLevel?.isBreak && currentLevel?.ante > 0 && (
+                          <div className="text-sm text-gray-300">({currentLevel.ante})</div>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-lg font-bold">
-                      {currentLevel?.isBreak ? 
-                        `${currentLevel.duration}min` :
-                        `${currentLevel?.smallBlind}/${currentLevel?.bigBlind}`
-                      }
-                    </div>
-                  </div>
 
-                  {/* Next Level or Break Action */}
-                  {currentLevel?.isBreak ? (
-                    <div className="space-y-1">
-                      <button
-                        onClick={skipBreak}
-                        className="w-full bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1 rounded text-sm font-medium"
-                      >
-                        Skip Break
-                      </button>
+                    {/* Next Level or Break Action */}
+                    {currentLevel?.isBreak ? (
+                      <div className="space-y-2">
+                        <div className="text-sm font-semibold text-cyan-400">ACTION</div>
+                        <button
+                          onClick={skipBreak}
+                          className="w-full bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                        >
+                          Skip Break
+                        </button>
+                      </div>
+                    ) : nextLevelData && (
+                      <div className="space-y-2">
+                        <div className="text-sm font-semibold text-yellow-400">NEXT LEVEL</div>
+                        <div className="text-xl font-bold text-white">
+                          {nextLevelData.isBreak ? 
+                            `Break ${nextLevelData.duration}min` :
+                            `${nextLevelData.smallBlind}/${nextLevelData.bigBlind}`
+                          }
+                          {!nextLevelData.isBreak && nextLevelData.ante > 0 && (
+                            <div className="text-sm text-gray-300">({nextLevelData.ante})</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Mobile Fullscreen Info - Minimal overlay */}
+            {mobileOpt.isFullscreen && mobileOpt.orientation === 'landscape' && (
+              <div className="absolute bottom-4 left-4 right-4 z-20">
+                <div className="bg-black/80 backdrop-blur rounded-xl p-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className={`font-semibold ${
+                        currentLevel?.isBreak ? 'text-cyan-400' : 'text-yellow-400'
+                      }`}>
+                        {currentLevel?.isBreak ? 'BREAK' : `LVL ${tournament.currentLevelIndex + 1}`}
+                      </div>
+                      <div className="text-white font-bold">
+                        {currentLevel?.isBreak ? 
+                          `${currentLevel.duration}min` :
+                          `${currentLevel?.smallBlind}/${currentLevel?.bigBlind}`
+                        }
+                      </div>
                     </div>
-                  ) : nextLevelData && (
-                    <div className="space-y-1">
-                      <div className="text-yellow-400 text-sm font-semibold">Next</div>
-                      <div className="text-lg font-bold">
-                        {nextLevelData.isBreak ? 
+                    {nextLevelData && !currentLevel?.isBreak && (
+                      <div className="text-gray-300 text-xs">
+                        Next: {nextLevelData.isBreak ? 
                           `Break ${nextLevelData.duration}min` :
                           `${nextLevelData.smallBlind}/${nextLevelData.bigBlind}`
                         }
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Bottom Tournament Info */}
-        {!(mobileOpt.isFullscreen && mobileOpt.isMobile) && (
+        {/* Bottom Tournament Info - Hide in mobile fullscreen */}
+        {(!mobileOpt.isMobile || !mobileOpt.isFullscreen) && (
           <div className="flex-shrink-0 text-center py-2 px-4">
             <div className="text-xs md:text-sm text-gray-400">
               Entry until the end of LVL 8 -- Day 1 will end at completion of LVL 8 (approx 21:50)
@@ -460,13 +506,16 @@ export function TournamentClock() {
           </div>
         )}
 
-        {/* Connection status and settings */}
-        <div className={`fixed ${
-          !(mobileOpt.isFullscreen && mobileOpt.isMobile) ? 'top-16' : 'top-2'
-        } right-2 flex gap-2 z-40`} style={{
-          top: mobileOpt.isMobile && mobileOpt.isFullscreen ? `${mobileOpt.safeAreaInsets.top + 8}px` : undefined
+        {/* Connection Status and Settings */}
+        <div className={`fixed right-2 flex gap-2 z-40 ${
+          (!mobileOpt.isMobile || !mobileOpt.isFullscreen) ? 'top-16' : 'top-2'
+        }`} style={{
+          top: mobileOpt.isMobile && mobileOpt.isFullscreen ? 
+            `${mobileOpt.safeAreaInsets.top + 8}px` : undefined
         }}>
-          <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${isConnected ? 'bg-green-600' : 'bg-yellow-600'}`}>
+          <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${
+            isConnected ? 'bg-green-600' : 'bg-yellow-600'
+          }`}>
             {isConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
             <span className="hidden sm:inline">{isConnected ? 'Online' : 'Offline'}</span>
           </div>
@@ -475,7 +524,7 @@ export function TournamentClock() {
           </Button>
         </div>
 
-        {/* Desktop Hotkeys info */}
+        {/* Desktop Hotkeys Info */}
         {!mobileOpt.isMobile && !mobileOpt.isFullscreen && (
           <div className="fixed bottom-2 left-2 text-xs text-gray-500 hidden xl:block">
             <div className="space-x-4">
@@ -492,12 +541,16 @@ export function TournamentClock() {
           </div>
         )}
 
-        {/* Mobile Controls Toggle Hint */}
-        {mobileOpt.isMobile && !showMobileControls && (
+        {/* Mobile Controls Hint */}
+        {mobileOpt.isMobile && !showMobileControls && !mobileOpt.isFullscreen && (
           <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-30">
-            <div className="bg-black/80 text-gray-400 px-3 py-1 rounded-full text-sm border border-gray-600/50">
-              Toca <span className="text-white font-semibold">M</span> o desliza hacia arriba para controles
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-black/90 text-gray-300 px-4 py-2 rounded-full text-sm border border-gray-700/50 backdrop-blur"
+            >
+              Presiona <span className="text-white font-semibold">M</span> para controles
+            </motion.div>
           </div>
         )}
       </div>
@@ -556,9 +609,9 @@ export function TournamentClock() {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className={`fixed ${
+            className={`fixed right-4 bg-red-600 text-white p-3 md:p-4 rounded-lg shadow-lg z-40 max-w-xs ${
               mobileOpt.isMobile ? 'bottom-32' : 'bottom-4'
-            } right-4 bg-red-600 text-white p-3 md:p-4 rounded-lg shadow-lg z-40 max-w-xs`}
+            }`}
           >
             <div className="font-bold text-sm md:text-base">¡ÚLTIMO MINUTO!</div>
             <div className="text-xs md:text-sm">El nivel termina en menos de 1 minuto</div>

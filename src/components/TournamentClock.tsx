@@ -19,7 +19,7 @@ export function TournamentClock() {
   const [actionHistory, setActionHistory] = useState<Array<Partial<any>>>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Timer logic
+  // Timer logic with enhanced break handling
   useEffect(() => {
     if (!tournament || !tournament.isRunning || tournament.isPaused) return;
 
@@ -32,12 +32,20 @@ export function TournamentClock() {
         const nextLevelData = tournament.structure.levels[nextLevelIndex];
         
         if (nextLevelData) {
+          // Auto-pause if entering a break
+          const shouldAutoPause = nextLevelData.isBreak;
+          
           updateTournament({
             currentLevelIndex: nextLevelIndex,
             timeRemaining: nextLevelData.duration * 60,
             isOnBreak: nextLevelData.isBreak,
-            isPaused: nextLevelData.isBreak // Auto-pause on breaks
+            isPaused: shouldAutoPause // Auto-pause on breaks
           });
+          
+          // Show break notification or sound
+          if (nextLevelData.isBreak) {
+            console.log('🎵 Break time! Taking a pause...');
+          }
         } else {
           // Tournament ended
           updateTournament({
@@ -49,8 +57,8 @@ export function TournamentClock() {
       } else {
         updateTournament({ timeRemaining: newTime });
         
-        // Last minute alert
-        if (newTime === 60 && !lastMinuteAlert) {
+        // Last minute alert (only for non-break levels)
+        if (newTime === 60 && !lastMinuteAlert && !tournament.isOnBreak) {
           setLastMinuteAlert(true);
           // Play alert sound
           const audio = new Audio('/alert.mp3');
@@ -64,14 +72,14 @@ export function TournamentClock() {
     return () => clearInterval(interval);
   }, [tournament, updateTournament, lastMinuteAlert]);
 
-  // Show/hide controls popup based on pause state
+  // Show/hide controls popup based on pause state or break
   useEffect(() => {
-    if (tournament?.isPaused) {
+    if (tournament?.isPaused || tournament?.isOnBreak) {
       setShowControlsPopup(true);
     } else {
       setShowControlsPopup(false);
     }
-  }, [tournament?.isPaused]);
+  }, [tournament?.isPaused, tournament?.isOnBreak]);
 
   // Helper function to save state for undo
   const saveStateForUndo = () => {
@@ -131,7 +139,27 @@ export function TournamentClock() {
       updateTournament({
         currentLevelIndex: nextLevelIndex,
         timeRemaining: nextLevelData.duration * 60,
-        isOnBreak: nextLevelData.isBreak
+        isOnBreak: nextLevelData.isBreak,
+        isPaused: nextLevelData.isBreak // Auto-pause if it's a break
+      });
+    }
+  };
+
+  const skipBreak = () => {
+    if (!tournament || !tournament.isOnBreak) return;
+    
+    saveStateForUndo();
+    
+    // Skip to the next non-break level
+    const nextLevelIndex = tournament.currentLevelIndex + 1;
+    const nextLevelData = tournament.structure.levels[nextLevelIndex];
+    
+    if (nextLevelData && !nextLevelData.isBreak) {
+      updateTournament({
+        currentLevelIndex: nextLevelIndex,
+        timeRemaining: nextLevelData.duration * 60,
+        isOnBreak: false,
+        isPaused: false
       });
     }
   };
@@ -260,8 +288,8 @@ export function TournamentClock() {
                   </div>
                 </div>
                 
-                {/* Next Level Info */}
-                {nextLevelData && (
+                {/* Next Level Info - hide during breaks */}
+                {nextLevelData && !currentLevel?.isBreak && (
                   <div>
                     <div className="text-yellow-400 text-lg font-semibold mb-2">Next Level</div>
                     <div className="text-xl lg:text-2xl font-bold">
@@ -273,6 +301,19 @@ export function TournamentClock() {
                         <div className="text-lg text-gray-300">({nextLevelData.ante})</div>
                       )}
                     </div>
+                  </div>
+                )}
+
+                {/* Break Actions - show only during breaks */}
+                {currentLevel?.isBreak && (
+                  <div className="space-y-4">
+                    <div className="text-cyan-400 text-lg font-semibold">Break Actions</div>
+                    <button
+                      onClick={skipBreak}
+                      className="w-full bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    >
+                      Skip Break
+                    </button>
                   </div>
                 )}
               </div>
@@ -326,7 +367,11 @@ export function TournamentClock() {
                   
                   {/* Current Level */}
                   <div className="space-y-1">
-                    <div className="text-yellow-400 text-sm font-semibold">Level {tournament.currentLevelIndex + 1}</div>
+                    <div className={`text-sm font-semibold ${
+                      currentLevel?.isBreak ? 'text-cyan-400' : 'text-yellow-400'
+                    }`}>
+                      {currentLevel?.isBreak ? 'Break' : `Level ${tournament.currentLevelIndex + 1}`}
+                    </div>
                     <div className="text-lg font-bold">
                       {currentLevel?.isBreak ? 
                         `${currentLevel.duration}min` :
@@ -335,8 +380,17 @@ export function TournamentClock() {
                     </div>
                   </div>
 
-                  {/* Next Level */}
-                  {nextLevelData && (
+                  {/* Next Level or Break Action */}
+                  {currentLevel?.isBreak ? (
+                    <div className="space-y-1">
+                      <button
+                        onClick={skipBreak}
+                        className="w-full bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1 rounded text-sm font-medium"
+                      >
+                        Skip Break
+                      </button>
+                    </div>
+                  ) : nextLevelData && (
                     <div className="space-y-1">
                       <div className="text-yellow-400 text-sm font-semibold">Next</div>
                       <div className="text-lg font-bold">
@@ -390,7 +444,7 @@ export function TournamentClock() {
         )}
       </div>
 
-      {/* Controls Popup - Responsive sizing */}
+      {/* Controls Popup - Enhanced for breaks */}
       <AnimatePresence>
         {showControlsPopup && (
           <motion.div
@@ -404,20 +458,44 @@ export function TournamentClock() {
               className="bg-gray-900 border border-yellow-400/30 rounded-lg p-4 md:p-6 w-full max-w-md"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-lg md:text-xl font-bold text-yellow-400 text-center mb-4">Controles del Torneo</h3>
+              <h3 className={`text-lg md:text-xl font-bold text-center mb-4 ${
+                currentLevel?.isBreak ? 'text-cyan-400' : 'text-yellow-400'
+              }`}>
+                {currentLevel?.isBreak ? 'Controles de Descanso' : 'Controles del Torneo'}
+              </h3>
               <div className="grid grid-cols-2 gap-2 md:gap-3">
                 <Button
                   onClick={toggleTimer}
                   size="lg"
-                  className="bg-green-600 hover:bg-green-700 text-sm md:text-base"
+                  className={`text-sm md:text-base ${
+                    currentLevel?.isBreak 
+                      ? 'bg-cyan-600 hover:bg-cyan-700' 
+                      : 'bg-green-600 hover:bg-green-700'
+                  }`}
                 >
                   <Play className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
-                  Iniciar
+                  {currentLevel?.isBreak ? 'Continuar Break' : 'Iniciar'}
                 </Button>
-                <Button onClick={nextLevel} variant="secondary" size="lg" className="text-sm md:text-base">
-                  <SkipForward className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
-                  Siguiente
-                </Button>
+                
+                {currentLevel?.isBreak && (
+                  <Button 
+                    onClick={skipBreak} 
+                    variant="secondary" 
+                    size="lg" 
+                    className="text-sm md:text-base bg-cyan-700 hover:bg-cyan-800 text-white"
+                  >
+                    <SkipForward className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
+                    Skip Break
+                  </Button>
+                )}
+                
+                {!currentLevel?.isBreak && (
+                  <Button onClick={nextLevel} variant="secondary" size="lg" className="text-sm md:text-base">
+                    <SkipForward className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
+                    Siguiente
+                  </Button>
+                )}
+                
                 <Button onClick={resetLevel} variant="secondary" size="lg" className="text-sm md:text-base">
                   <RotateCcw className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
                   Reset

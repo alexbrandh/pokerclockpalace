@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, AlertTriangle } from 'lucide-react';
+import { Clock, AlertTriangle, Coffee, Play } from 'lucide-react';
 import { TournamentLevel } from '@/types/tournament';
 
 interface AdvancedTimerProps {
@@ -37,15 +37,16 @@ export function AdvancedTimer({
   const strokeDasharray = circumference;
   const strokeDashoffset = circumference - (progress / 100) * circumference;
 
-  // Dynamic color based on time remaining
+  // Dynamic color based on time remaining and break status
   const getTimerColor = () => {
+    if (currentLevel?.isBreak) return '#06B6D4'; // cyan-500 for breaks
     if (lastMinuteAlert) return '#EF4444'; // red-500
     if (timeRemaining <= 300) return '#F59E0B'; // amber-500
     return '#D4AF37'; // gold
   };
 
-  // Pulse animation for critical times
-  const shouldPulse = timeRemaining <= 60 || lastMinuteAlert;
+  // Pulse animation for critical times or breaks
+  const shouldPulse = timeRemaining <= 60 || lastMinuteAlert || currentLevel?.isBreak;
 
   return (
     <div className="relative">
@@ -69,7 +70,7 @@ export function AdvancedTimer({
             cx="50"
             cy="50"
             r="47"
-            stroke="rgba(212, 175, 55, 0.2)"
+            stroke={currentLevel?.isBreak ? "rgba(6, 182, 212, 0.2)" : "rgba(212, 175, 55, 0.2)"}
             strokeWidth="1"
             fill="none"
           />
@@ -145,14 +146,23 @@ export function AdvancedTimer({
         
         {/* Timer Content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          {/* Level indicator with animation */}
+          {/* Level indicator with special break styling */}
           <motion.div
-            key={currentLevelIndex}
+            key={`${currentLevelIndex}-${currentLevel?.isBreak}`}
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className={`text-lg font-semibold mb-2 ${currentLevel?.isBreak ? 'text-blue-400' : 'text-yellow-400'}`}
+            className={`text-lg font-semibold mb-2 flex items-center gap-2 ${
+              currentLevel?.isBreak ? 'text-cyan-400' : 'text-yellow-400'
+            }`}
           >
-            {currentLevel?.isBreak ? 'Descanso' : `Level ${currentLevelIndex + 1}`}
+            {currentLevel?.isBreak ? (
+              <>
+                <Coffee className="w-5 h-5" />
+                <span>DESCANSO</span>
+              </>
+            ) : (
+              `Level ${currentLevelIndex + 1}`
+            )}
           </motion.div>
           
           {/* Main time display with enhanced styling */}
@@ -162,6 +172,7 @@ export function AdvancedTimer({
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.2 }}
             className={`text-7xl font-bold font-mono ${
+              currentLevel?.isBreak ? 'text-cyan-400' :
               lastMinuteAlert ? 'text-red-500' : 'text-white'
             }`}
             style={{
@@ -174,7 +185,7 @@ export function AdvancedTimer({
           
           {/* Status indicator */}
           <div className="flex items-center gap-2 mt-2">
-            {isPaused && (
+            {isPaused && !currentLevel?.isBreak && (
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
@@ -184,7 +195,30 @@ export function AdvancedTimer({
                 <span className="text-sm font-medium">PAUSADO</span>
               </motion.div>
             )}
-            {lastMinuteAlert && (
+            
+            {currentLevel?.isBreak && isPaused && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="flex items-center gap-1 text-cyan-400"
+              >
+                <Coffee className="w-4 h-4" />
+                <span className="text-sm font-medium">EN DESCANSO</span>
+              </motion.div>
+            )}
+            
+            {currentLevel?.isBreak && !isPaused && (
+              <motion.div
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="flex items-center gap-1 text-cyan-300"
+              >
+                <Play className="w-4 h-4" />
+                <span className="text-sm font-bold">DESCANSO ACTIVO</span>
+              </motion.div>
+            )}
+            
+            {lastMinuteAlert && !currentLevel?.isBreak && (
               <motion.div
                 animate={{ scale: [1, 1.1, 1] }}
                 transition={{ duration: 0.5, repeat: Infinity }}
@@ -196,18 +230,34 @@ export function AdvancedTimer({
             )}
           </div>
           
-          {/* Next break info */}
-          <div className="mt-3 text-center">
-            <div className="text-sm text-yellow-400 font-medium">Next Break</div>
-            <div className="text-lg text-yellow-300 font-semibold">{nextBreakTime}</div>
-          </div>
+          {/* Next break info - only show when not in break */}
+          {!currentLevel?.isBreak && (
+            <div className="mt-3 text-center">
+              <div className="text-sm text-yellow-400 font-medium">Next Break</div>
+              <div className="text-lg text-yellow-300 font-semibold">{nextBreakTime}</div>
+            </div>
+          )}
+          
+          {/* Break duration info when in break */}
+          {currentLevel?.isBreak && (
+            <div className="mt-3 text-center">
+              <div className="text-sm text-cyan-400 font-medium">Break Duration</div>
+              <div className="text-lg text-cyan-300 font-semibold">
+                {currentLevel.duration} minutos
+              </div>
+            </div>
+          )}
         </div>
       </div>
       
-      {/* Enhanced decorative elements */}
+      {/* Enhanced decorative elements with break colors */}
       <div className="absolute top-0 left-1/2 transform -translate-x-1/2">
         <motion.div
-          className="w-px h-12 bg-gradient-to-b from-yellow-400 via-yellow-300 to-transparent"
+          className={`w-px h-12 bg-gradient-to-b ${
+            currentLevel?.isBreak 
+              ? 'from-cyan-400 via-cyan-300 to-transparent' 
+              : 'from-yellow-400 via-yellow-300 to-transparent'
+          }`}
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -215,7 +265,11 @@ export function AdvancedTimer({
       
       <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2">
         <motion.div
-          className="w-px h-12 bg-gradient-to-t from-yellow-400 via-yellow-300 to-transparent"
+          className={`w-px h-12 bg-gradient-to-t ${
+            currentLevel?.isBreak 
+              ? 'from-cyan-400 via-cyan-300 to-transparent' 
+              : 'from-yellow-400 via-yellow-300 to-transparent'
+          }`}
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
         />
@@ -223,7 +277,11 @@ export function AdvancedTimer({
       
       <div className="absolute left-0 top-1/2 transform -translate-y-1/2">
         <motion.div
-          className="h-px w-12 bg-gradient-to-r from-yellow-400 via-yellow-300 to-transparent"
+          className={`h-px w-12 bg-gradient-to-r ${
+            currentLevel?.isBreak 
+              ? 'from-cyan-400 via-cyan-300 to-transparent' 
+              : 'from-yellow-400 via-yellow-300 to-transparent'
+          }`}
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
         />
@@ -231,7 +289,11 @@ export function AdvancedTimer({
       
       <div className="absolute right-0 top-1/2 transform -translate-y-1/2">
         <motion.div
-          className="h-px w-12 bg-gradient-to-l from-yellow-400 via-yellow-300 to-transparent"
+          className={`h-px w-12 bg-gradient-to-l ${
+            currentLevel?.isBreak 
+              ? 'from-cyan-400 via-cyan-300 to-transparent' 
+              : 'from-yellow-400 via-yellow-300 to-transparent'
+          }`}
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
         />
@@ -239,7 +301,7 @@ export function AdvancedTimer({
 
       {/* Critical time overlay */}
       <AnimatePresence>
-        {timeRemaining <= 10 && timeRemaining > 0 && (
+        {timeRemaining <= 10 && timeRemaining > 0 && !currentLevel?.isBreak && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ 
@@ -253,6 +315,26 @@ export function AdvancedTimer({
               ease: "easeInOut"
             }}
             className="absolute inset-0 border-4 border-red-500 rounded-full pointer-events-none"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Break mode overlay */}
+      <AnimatePresence>
+        {currentLevel?.isBreak && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ 
+              opacity: [0, 0.2, 0],
+              scale: [0.9, 1.05, 0.9]
+            }}
+            exit={{ opacity: 0 }}
+            transition={{ 
+              duration: 3,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute inset-0 border-4 border-cyan-400 rounded-full pointer-events-none"
           />
         )}
       </AnimatePresence>

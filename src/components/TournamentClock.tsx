@@ -11,16 +11,19 @@ import { PrizeInfo } from '@/components/PrizeInfo';
 import { LevelInfo } from '@/components/LevelInfo';
 import { StickyStatsBar } from '@/components/StickyStatsBar';
 import { FloatingControls } from '@/components/FloatingControls';
+import { useSoundSystem } from '@/hooks/useSoundSystem';
 
 export function TournamentClock() {
   const { tournament, updateTournament, isConnected, error } = useTournament();
+  const { playSound } = useSoundSystem();
   const [showSettings, setShowSettings] = useState(false);
   const [lastMinuteAlert, setLastMinuteAlert] = useState(false);
   const [showControlsPopup, setShowControlsPopup] = useState(false);
   const [actionHistory, setActionHistory] = useState<Array<Partial<any>>>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showFloatingControls, setShowFloatingControls] = useState(false);
 
-  // Timer logic with enhanced break handling
+  // Timer logic with enhanced break handling and sound integration
   useEffect(() => {
     if (!tournament || !tournament.isRunning || tournament.isPaused) return;
 
@@ -43,9 +46,12 @@ export function TournamentClock() {
             isPaused: shouldAutoPause // Auto-pause on breaks
           });
           
-          // Show break notification or sound
+          // Play appropriate sound
           if (nextLevelData.isBreak) {
+            playSound('breakStart');
             console.log('🎵 Break time! Taking a pause...');
+          } else {
+            playSound('levelChange');
           }
         } else {
           // Tournament ended
@@ -61,9 +67,7 @@ export function TournamentClock() {
         // Last minute alert (only for non-break levels)
         if (newTime === 60 && !lastMinuteAlert && !tournament.isOnBreak) {
           setLastMinuteAlert(true);
-          // Play alert sound
-          const audio = new Audio('/alert.mp3');
-          audio.play().catch(() => {}); // Fail silently if no audio file
+          playSound('lastMinute');
         } else if (newTime > 60) {
           setLastMinuteAlert(false);
         }
@@ -71,7 +75,7 @@ export function TournamentClock() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [tournament, updateTournament, lastMinuteAlert]);
+  }, [tournament, updateTournament, lastMinuteAlert, playSound]);
 
   // Show/hide controls popup based on pause state or break
   useEffect(() => {
@@ -108,11 +112,14 @@ export function TournamentClock() {
   useHotkeys('x', () => eliminatePlayer(), { preventDefault: true });
   useHotkeys('ctrl+z', () => undoLastAction(), { preventDefault: true });
   useHotkeys('ctrl+r', () => addReentry(), { preventDefault: true });
+  useHotkeys('m', () => setShowFloatingControls(!showFloatingControls), { preventDefault: true });
 
+  // Enhanced handler functions with sound integration
   const toggleTimer = () => {
     if (!tournament) return;
     
     saveStateForUndo();
+    playSound('buttonClick');
     
     if (tournament.isPaused) {
       // Start the timer
@@ -132,6 +139,7 @@ export function TournamentClock() {
     if (!tournament) return;
     
     saveStateForUndo();
+    playSound('buttonClick');
     
     const nextLevelIndex = tournament.currentLevelIndex + 1;
     const nextLevelData = tournament.structure.levels[nextLevelIndex];
@@ -143,6 +151,13 @@ export function TournamentClock() {
         isOnBreak: nextLevelData.isBreak,
         isPaused: nextLevelData.isBreak // Auto-pause if it's a break
       });
+
+      // Play appropriate sound
+      if (nextLevelData.isBreak) {
+        playSound('breakStart');
+      } else {
+        playSound('levelChange');
+      }
     }
   };
 
@@ -150,6 +165,7 @@ export function TournamentClock() {
     if (!tournament || !tournament.isOnBreak) return;
     
     saveStateForUndo();
+    playSound('buttonClick');
     
     // Skip to the next non-break level
     const nextLevelIndex = tournament.currentLevelIndex + 1;
@@ -162,6 +178,7 @@ export function TournamentClock() {
         isOnBreak: false,
         isPaused: false
       });
+      playSound('levelChange');
     }
   };
 
@@ -169,6 +186,7 @@ export function TournamentClock() {
     if (!tournament) return;
     
     saveStateForUndo();
+    playSound('buttonClick');
     
     const currentLevel = tournament.structure.levels[tournament.currentLevelIndex];
     updateTournament({
@@ -180,6 +198,7 @@ export function TournamentClock() {
     if (!tournament) return;
     
     saveStateForUndo();
+    playSound('buttonClick');
     
     updateTournament({
       players: tournament.players + 1,
@@ -192,6 +211,7 @@ export function TournamentClock() {
     if (!tournament || tournament.players <= 0) return;
     
     saveStateForUndo();
+    playSound('buttonClick');
     
     updateTournament({
       players: tournament.players - 1
@@ -202,6 +222,7 @@ export function TournamentClock() {
     if (!tournament) return;
     
     saveStateForUndo();
+    playSound('buttonClick');
     
     updateTournament({
       players: tournament.players + 1,
@@ -440,12 +461,22 @@ export function TournamentClock() {
               <span>X: -Jugador</span>
               <span>CTRL+R: Re-entry</span>
               <span>CTRL+Z: Deshacer</span>
+              <span>M: Mostrar/Ocultar Controles</span>
+            </div>
+          </div>
+        )}
+
+        {/* Controls visibility indicator */}
+        {!showFloatingControls && (
+          <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-30">
+            <div className="bg-black/80 text-gray-400 px-3 py-1 rounded-full text-sm border border-gray-600/50">
+              Presiona <span className="text-white font-semibold">M</span> para mostrar controles
             </div>
           </div>
         )}
       </div>
 
-      {/* Enhanced Floating Controls */}
+      {/* Enhanced Floating Controls - Now toggleable */}
       <FloatingControls
         isRunning={tournament.isRunning}
         isPaused={tournament.isPaused}
@@ -459,7 +490,7 @@ export function TournamentClock() {
         onUndo={undoLastAction}
         canUndo={actionHistory.length > 0}
         playersCount={tournament.players}
-        isVisible={true}
+        isVisible={showFloatingControls}
       />
 
       {/* Settings Modal */}

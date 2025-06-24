@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Settings, Wifi, WifiOff, Play, Pause, SkipForward, RotateCcw, UserPlus, UserMinus, RotateCcw as ReEntry } from 'lucide-react';
@@ -27,7 +26,7 @@ export function TournamentClock() {
   const [actionHistory, setActionHistory] = useState<Array<Partial<any>>>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showFloatingControls, setShowFloatingControls] = useState(false);
-  const [showMobileControls, setShowMobileControls] = useState(false);
+  const [showMobileControls, setShowMobileControls] = useState(true); // Always show on mobile
 
   useEffect(() => {
     if (!tournament || !tournament.isRunning || tournament.isPaused) return;
@@ -108,24 +107,21 @@ export function TournamentClock() {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  // Hotkeys
-  useHotkeys('space', () => toggleTimer(), { preventDefault: true });
-  useHotkeys('n', () => nextLevel(), { preventDefault: true });
-  useHotkeys('r', () => resetLevel(), { preventDefault: true });
-  useHotkeys('s', () => setShowSettings(!showSettings), { preventDefault: true });
-  useHotkeys('ctrl+b', () => addPlayer(), { preventDefault: true });
-  useHotkeys('x', () => eliminatePlayer(), { preventDefault: true });
-  useHotkeys('ctrl+z', () => undoLastAction(), { preventDefault: true });
-  useHotkeys('ctrl+r', () => addReentry(), { preventDefault: true });
+  // Hotkeys - only for desktop
+  useHotkeys('space', () => !mobileOpt.isMobile && toggleTimer(), { preventDefault: true });
+  useHotkeys('n', () => !mobileOpt.isMobile && nextLevel(), { preventDefault: true });
+  useHotkeys('r', () => !mobileOpt.isMobile && resetLevel(), { preventDefault: true });
+  useHotkeys('s', () => !mobileOpt.isMobile && setShowSettings(!showSettings), { preventDefault: true });
+  useHotkeys('ctrl+b', () => !mobileOpt.isMobile && addPlayer(), { preventDefault: true });
+  useHotkeys('x', () => !mobileOpt.isMobile && eliminatePlayer(), { preventDefault: true });
+  useHotkeys('ctrl+z', () => !mobileOpt.isMobile && undoLastAction(), { preventDefault: true });
+  useHotkeys('ctrl+r', () => !mobileOpt.isMobile && addReentry(), { preventDefault: true });
   useHotkeys('m', () => {
-    if (mobileOpt.isMobile) {
-      setShowMobileControls(!showMobileControls);
-    } else {
+    if (!mobileOpt.isMobile) {
       setShowFloatingControls(!showFloatingControls);
     }
   }, { preventDefault: true });
 
-  // Enhanced handler functions with sound integration
   const toggleTimer = () => {
     if (!tournament) return;
     
@@ -281,225 +277,198 @@ export function TournamentClock() {
     <div className={`min-h-screen h-screen bg-black text-white overflow-hidden ${
       mobileOpt.isMobile && mobileOpt.isFullscreen ? 'select-none' : ''
     }`}>
-      {/* Conditional Stats Bar - Only show on desktop or mobile non-fullscreen */}
-      {!mobileOpt.isMobile || !mobileOpt.isFullscreen ? (
+      {/* Stats Bar - Only show on desktop */}
+      {!mobileOpt.isMobile && (
         <StickyStatsBar tournament={tournament} />
-      ) : null}
+      )}
 
-      {/* Main Content Container with proper mobile spacing */}
+      {/* Main Content Container */}
       <div 
         className={`h-full flex flex-col ${
-          (!mobileOpt.isMobile || !mobileOpt.isFullscreen) ? 'pt-16 md:pt-20' : ''
+          !mobileOpt.isMobile ? 'pt-16 md:pt-20' : ''
         }`} 
         style={{
           paddingTop: mobileOpt.isMobile && mobileOpt.isFullscreen ? 
-            `${mobileOpt.safeAreaInsets.top}px` : 
-            (mobileOpt.isMobile ? '64px' : undefined),
-          paddingBottom: mobileOpt.isMobile && showMobileControls ? 
-            '140px' : (mobileOpt.isMobile ? '20px' : undefined)
+            `${mobileOpt.safeAreaInsets.top}px` : undefined,
+          paddingBottom: mobileOpt.isMobile ? '180px' : undefined
         }}
       >
         
-        {/* Tournament Title - Hide in mobile fullscreen and smaller mobile */}
-        {(!mobileOpt.isMobile || !mobileOpt.isFullscreen) && (
-          <div className="text-center py-2 md:py-4 flex-shrink-0">
-            <h1 className={`font-bold text-white px-4 ${
-              mobileOpt.isMobile ? 'text-xl' : 'text-2xl md:text-3xl lg:text-4xl'
-            }`}>
+        {/* Desktop Layout */}
+        <div className="hidden md:grid md:grid-cols-12 gap-4 lg:gap-8 h-full items-center">
+          
+          {/* Left Side Info */}
+          <div className="col-span-3 h-full flex flex-col justify-center">
+            <div className="space-y-6 lg:space-y-8">
+              <LevelInfo
+                currentLevel={currentLevel}
+                nextLevelData={null}
+                currentLevelIndex={tournament.currentLevelIndex}
+                showNextLevel={false}
+              />
+              
+              {/* Golden separator */}
+              <div className="relative flex items-center justify-center py-2">
+                <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-400/20 to-transparent"></div>
+                <div className="relative bg-black px-4">
+                  <div className="h-1 w-16 bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 rounded-full shadow-lg shadow-yellow-400/30"></div>
+                </div>
+              </div>
+              
+              {/* Next Level Info */}
+              {nextLevelData && !currentLevel?.isBreak && (
+                <div>
+                  <div className="text-yellow-400 text-lg font-semibold mb-2">Next Level</div>
+                  <div className="text-xl lg:text-2xl font-bold">
+                    {nextLevelData.isBreak ? 
+                      `Descanso ${nextLevelData.duration}min` :
+                      `${nextLevelData.smallBlind} / ${nextLevelData.bigBlind}`
+                    }
+                    {!nextLevelData.isBreak && nextLevelData.ante > 0 && (
+                      <div className="text-lg text-gray-300">({nextLevelData.ante})</div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Break Actions */}
+              {currentLevel?.isBreak && (
+                <div className="space-y-4">
+                  <div className="text-cyan-400 text-lg font-semibold">Break Actions</div>
+                  <button
+                    onClick={skipBreak}
+                    className="w-full bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Skip Break
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Center Timer */}
+          <div className="col-span-6 h-full flex items-center justify-center">
+            <div className="scale-125 lg:scale-150 xl:scale-175">
+              <AdvancedTimer
+                timeRemaining={tournament.timeRemaining}
+                currentLevel={currentLevel}
+                progress={progress}
+                lastMinuteAlert={lastMinuteAlert}
+                nextBreakTime={nextBreakTime}
+                currentLevelIndex={tournament.currentLevelIndex}
+                isRunning={tournament.isRunning}
+                isPaused={tournament.isPaused}
+              />
+            </div>
+          </div>
+
+          {/* Right Side - Prizes */}
+          <div className="col-span-3 h-full flex flex-col justify-center">
+            <PrizeInfo />
+          </div>
+        </div>
+
+        {/* Mobile Layout - New vertical structure */}
+        <div className="md:hidden h-full flex flex-col px-4">
+          
+          {/* Tournament Title */}
+          <div className="text-center py-4 flex-shrink-0">
+            <h1 className="text-xl font-bold text-white">
               {tournament.structure.name}
             </h1>
           </div>
-        )}
 
-        {/* Main Content Area */}
-        <div className="flex-1 px-2 md:px-4 lg:px-8 min-h-0">
-          
-          {/* Desktop Layout */}
-          <div className="hidden md:grid md:grid-cols-12 gap-4 lg:gap-8 h-full items-center">
-            
-            {/* Left Side Info */}
-            <div className="col-span-3 h-full flex flex-col justify-center">
-              <div className="space-y-6 lg:space-y-8">
-                <LevelInfo
-                  currentLevel={currentLevel}
-                  nextLevelData={null}
-                  currentLevelIndex={tournament.currentLevelIndex}
-                  showNextLevel={false}
-                />
+          {/* Mobile Stats Bar */}
+          <div className="flex-shrink-0 mb-4">
+            <div className="bg-gray-900/50 backdrop-blur rounded-lg p-3">
+              <div className="grid grid-cols-3 gap-3 text-center text-sm">
+                <div>
+                  <div className="text-yellow-400 font-semibold">Players</div>
+                  <div className="text-white font-bold">{tournament.players}</div>
+                </div>
+                <div>
+                  <div className="text-yellow-400 font-semibold">Prize Pool</div>
+                  <div className="text-yellow-400 font-bold">${tournament.currentPrizePool}</div>
+                </div>
+                <div>
+                  <div className="text-yellow-400 font-semibold">Entries</div>
+                  <div className="text-white font-bold">{tournament.entries + tournament.reentries}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Timer - Centered */}
+          <div className="flex-1 flex items-center justify-center">
+            <div className="scale-75">
+              <AdvancedTimer
+                timeRemaining={tournament.timeRemaining}
+                currentLevel={currentLevel}
+                progress={progress}
+                lastMinuteAlert={lastMinuteAlert}
+                nextBreakTime={nextBreakTime}
+                currentLevelIndex={tournament.currentLevelIndex}
+                isRunning={tournament.isRunning}
+                isPaused={tournament.isPaused}
+              />
+            </div>
+          </div>
+
+          {/* Mobile Level Info */}
+          <div className="flex-shrink-0 pb-4">
+            <div className="bg-gray-900/50 backdrop-blur rounded-lg p-3">
+              <div className="grid grid-cols-2 gap-3 text-center">
                 
-                {/* Golden separator */}
-                <div className="relative flex items-center justify-center py-2">
-                  <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-400/20 to-transparent"></div>
-                  <div className="relative bg-black px-4">
-                    <div className="h-1 w-16 bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 rounded-full shadow-lg shadow-yellow-400/30"></div>
+                {/* Current Level */}
+                <div className="space-y-1">
+                  <div className={`text-xs font-semibold ${
+                    currentLevel?.isBreak ? 'text-cyan-400' : 'text-yellow-400'
+                  }`}>
+                    {currentLevel?.isBreak ? 'BREAK' : `LEVEL ${tournament.currentLevelIndex + 1}`}
+                  </div>
+                  <div className="text-lg font-bold text-white">
+                    {currentLevel?.isBreak ? 
+                      `${currentLevel.duration}min` :
+                      `${currentLevel?.smallBlind}/${currentLevel?.bigBlind}`
+                    }
+                    {!currentLevel?.isBreak && currentLevel?.ante > 0 && (
+                      <div className="text-xs text-gray-300">({currentLevel.ante})</div>
+                    )}
                   </div>
                 </div>
-                
-                {/* Next Level Info */}
-                {nextLevelData && !currentLevel?.isBreak && (
-                  <div>
-                    <div className="text-yellow-400 text-lg font-semibold mb-2">Next Level</div>
-                    <div className="text-xl lg:text-2xl font-bold">
-                      {nextLevelData.isBreak ? 
-                        `Descanso ${nextLevelData.duration}min` :
-                        `${nextLevelData.smallBlind} / ${nextLevelData.bigBlind}`
-                      }
-                      {!nextLevelData.isBreak && nextLevelData.ante > 0 && (
-                        <div className="text-lg text-gray-300">({nextLevelData.ante})</div>
-                      )}
-                    </div>
-                  </div>
-                )}
 
-                {/* Break Actions */}
-                {currentLevel?.isBreak && (
-                  <div className="space-y-4">
-                    <div className="text-cyan-400 text-lg font-semibold">Break Actions</div>
+                {/* Next Level or Break Action */}
+                {currentLevel?.isBreak ? (
+                  <div className="space-y-1">
+                    <div className="text-xs font-semibold text-cyan-400">ACTION</div>
                     <button
                       onClick={skipBreak}
-                      className="w-full bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                      className="w-full bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1.5 rounded-lg font-medium transition-colors text-sm"
                     >
                       Skip Break
                     </button>
                   </div>
+                ) : nextLevelData && (
+                  <div className="space-y-1">
+                    <div className="text-xs font-semibold text-yellow-400">NEXT LEVEL</div>
+                    <div className="text-lg font-bold text-white">
+                      {nextLevelData.isBreak ? 
+                        `Break ${nextLevelData.duration}min` :
+                        `${nextLevelData.smallBlind}/${nextLevelData.bigBlind}`
+                      }
+                      {!nextLevelData.isBreak && nextLevelData.ante > 0 && (
+                        <div className="text-xs text-gray-300">({nextLevelData.ante})</div>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
-
-            {/* Center Timer */}
-            <div className="col-span-6 h-full flex items-center justify-center">
-              <div className="scale-125 lg:scale-150 xl:scale-175">
-                <AdvancedTimer
-                  timeRemaining={tournament.timeRemaining}
-                  currentLevel={currentLevel}
-                  progress={progress}
-                  lastMinuteAlert={lastMinuteAlert}
-                  nextBreakTime={nextBreakTime}
-                  currentLevelIndex={tournament.currentLevelIndex}
-                  isRunning={tournament.isRunning}
-                  isPaused={tournament.isPaused}
-                />
-              </div>
-            </div>
-
-            {/* Right Side - Prizes */}
-            <div className="col-span-3 h-full flex flex-col justify-center">
-              <PrizeInfo />
-            </div>
-          </div>
-
-          {/* Mobile Layout - Completely redesigned */}
-          <div className="md:hidden h-full flex flex-col">
-            
-            {/* Mobile Timer - Centered and optimized with more space */}
-            <div className="flex-1 flex items-center justify-center">
-              <div className={`${
-                mobileOpt.isFullscreen 
-                  ? (mobileOpt.orientation === 'landscape' ? 'scale-75' : 'scale-100')
-                  : 'scale-90'
-              } transition-transform duration-300`}>
-                <AdvancedTimer
-                  timeRemaining={tournament.timeRemaining}
-                  currentLevel={currentLevel}
-                  progress={progress}
-                  lastMinuteAlert={lastMinuteAlert}
-                  nextBreakTime={nextBreakTime}
-                  currentLevelIndex={tournament.currentLevelIndex}
-                  isRunning={tournament.isRunning}
-                  isPaused={tournament.isPaused}
-                />
-              </div>
-            </div>
-
-            {/* Mobile Level Info - Simplified and clean */}
-            {!mobileOpt.isFullscreen && (
-              <div className="flex-shrink-0 px-4 pb-4">
-                <div className="bg-gray-900/50 backdrop-blur rounded-2xl p-3">
-                  <div className="grid grid-cols-2 gap-3 text-center">
-                    
-                    {/* Current Level */}
-                    <div className="space-y-1">
-                      <div className={`text-xs font-semibold ${
-                        currentLevel?.isBreak ? 'text-cyan-400' : 'text-yellow-400'
-                      }`}>
-                        {currentLevel?.isBreak ? 'BREAK' : `LEVEL ${tournament.currentLevelIndex + 1}`}
-                      </div>
-                      <div className="text-lg font-bold text-white">
-                        {currentLevel?.isBreak ? 
-                          `${currentLevel.duration}min` :
-                          `${currentLevel?.smallBlind}/${currentLevel?.bigBlind}`
-                        }
-                        {!currentLevel?.isBreak && currentLevel?.ante > 0 && (
-                          <div className="text-xs text-gray-300">({currentLevel.ante})</div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Next Level or Break Action */}
-                    {currentLevel?.isBreak ? (
-                      <div className="space-y-1">
-                        <div className="text-xs font-semibold text-cyan-400">ACTION</div>
-                        <button
-                          onClick={skipBreak}
-                          className="w-full bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1.5 rounded-lg font-medium transition-colors text-sm"
-                        >
-                          Skip Break
-                        </button>
-                      </div>
-                    ) : nextLevelData && (
-                      <div className="space-y-1">
-                        <div className="text-xs font-semibold text-yellow-400">NEXT LEVEL</div>
-                        <div className="text-lg font-bold text-white">
-                          {nextLevelData.isBreak ? 
-                            `Break ${nextLevelData.duration}min` :
-                            `${nextLevelData.smallBlind}/${nextLevelData.bigBlind}`
-                          }
-                          {!nextLevelData.isBreak && nextLevelData.ante > 0 && (
-                            <div className="text-xs text-gray-300">({nextLevelData.ante})</div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Mobile Fullscreen Info - Minimal overlay */}
-            {mobileOpt.isFullscreen && mobileOpt.orientation === 'landscape' && (
-              <div className="absolute bottom-4 left-4 right-4 z-20">
-                <div className="bg-black/80 backdrop-blur rounded-xl p-3">
-                  <div className="flex justify-between items-center text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className={`font-semibold ${
-                        currentLevel?.isBreak ? 'text-cyan-400' : 'text-yellow-400'
-                      }`}>
-                        {currentLevel?.isBreak ? 'BREAK' : `LVL ${tournament.currentLevelIndex + 1}`}
-                      </div>
-                      <div className="text-white font-bold">
-                        {currentLevel?.isBreak ? 
-                          `${currentLevel.duration}min` :
-                          `${currentLevel?.smallBlind}/${currentLevel?.bigBlind}`
-                        }
-                      </div>
-                    </div>
-                    {nextLevelData && !currentLevel?.isBreak && (
-                      <div className="text-gray-300 text-xs">
-                        Next: {nextLevelData.isBreak ? 
-                          `Break ${nextLevelData.duration}min` :
-                          `${nextLevelData.smallBlind}/${nextLevelData.bigBlind}`
-                        }
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Bottom Tournament Info - Hide in mobile fullscreen */}
-        {(!mobileOpt.isMobile || !mobileOpt.isFullscreen) && (
+        {/* Bottom Tournament Info - Desktop only */}
+        {!mobileOpt.isMobile && (
           <div className="flex-shrink-0 text-center py-1 md:py-2 px-4">
             <div className="text-xs text-gray-400">
               Entry until the end of LVL 8 -- Day 1 will end at completion of LVL 8 (approx 21:50)
@@ -509,11 +478,11 @@ export function TournamentClock() {
 
         {/* Connection Status and Settings */}
         <div className={`fixed right-2 flex gap-2 z-50 ${
-          (!mobileOpt.isMobile || !mobileOpt.isFullscreen) ? 'top-16 md:top-20' : 'top-2'
+          !mobileOpt.isMobile ? 'top-16 md:top-20' : 'top-2'
         }`} style={{
           top: mobileOpt.isMobile && mobileOpt.isFullscreen ? 
             `${mobileOpt.safeAreaInsets.top + 8}px` : 
-            (mobileOpt.isMobile ? '64px' : undefined)
+            (mobileOpt.isMobile ? '8px' : undefined)
         }}>
           <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${
             isConnected ? 'bg-green-600' : 'bg-yellow-600'
@@ -542,19 +511,6 @@ export function TournamentClock() {
             </div>
           </div>
         )}
-
-        {/* Mobile Controls Hint */}
-        {mobileOpt.isMobile && !showMobileControls && !mobileOpt.isFullscreen && (
-          <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-30">
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-black/90 text-gray-300 px-4 py-2 rounded-full text-sm border border-gray-700/50 backdrop-blur"
-            >
-              Presiona <span className="text-white font-semibold">M</span> para controles
-            </motion.div>
-          </div>
-        )}
       </div>
 
       {/* Desktop Floating Controls */}
@@ -576,7 +532,7 @@ export function TournamentClock() {
         />
       )}
 
-      {/* Mobile Controls */}
+      {/* Mobile Controls - Always visible */}
       {mobileOpt.isMobile && (
         <MobileControls
           isRunning={tournament.isRunning}
@@ -612,7 +568,7 @@ export function TournamentClock() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
             className={`fixed right-4 bg-red-600 text-white p-3 md:p-4 rounded-lg shadow-lg z-40 max-w-xs ${
-              mobileOpt.isMobile ? 'bottom-32' : 'bottom-4'
+              mobileOpt.isMobile ? 'bottom-48' : 'bottom-4'
             }`}
           >
             <div className="font-bold text-sm md:text-base">¡ÚLTIMO MINUTO!</div>

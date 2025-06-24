@@ -286,15 +286,15 @@ export function TournamentClock() {
         <StickyStatsBar tournament={tournament} />
       ) : null}
 
-      {/* Main Content Container with adjusted mobile spacing */}
+      {/* Main Content Container with proper mobile spacing */}
       <div 
         className={`h-full flex flex-col ${
-          (!mobileOpt.isMobile || !mobileOpt.isFullscreen) ? 'pt-12 md:pt-16' : ''
+          (!mobileOpt.isMobile || !mobileOpt.isFullscreen) ? 'pt-16 md:pt-20' : ''
         }`} 
         style={{
           paddingTop: mobileOpt.isMobile && mobileOpt.isFullscreen ? 
             `${mobileOpt.safeAreaInsets.top}px` : 
-            (mobileOpt.isMobile ? '48px' : undefined),
+            (mobileOpt.isMobile ? '64px' : undefined),
           paddingBottom: mobileOpt.isMobile && showMobileControls ? 
             '140px' : (mobileOpt.isMobile ? '20px' : undefined)
         }}
@@ -302,9 +302,9 @@ export function TournamentClock() {
         
         {/* Tournament Title - Hide in mobile fullscreen and smaller mobile */}
         {(!mobileOpt.isMobile || !mobileOpt.isFullscreen) && (
-          <div className="text-center py-1 md:py-4 flex-shrink-0">
+          <div className="text-center py-2 md:py-4 flex-shrink-0">
             <h1 className={`font-bold text-white px-4 ${
-              mobileOpt.isMobile ? 'text-lg' : 'text-2xl md:text-3xl lg:text-4xl'
+              mobileOpt.isMobile ? 'text-xl' : 'text-2xl md:text-3xl lg:text-4xl'
             }`}>
               {tournament.structure.name}
             </h1>
@@ -392,7 +392,7 @@ export function TournamentClock() {
           <div className="md:hidden h-full flex flex-col">
             
             {/* Mobile Timer - Centered and optimized with more space */}
-            <div className="flex-1 flex items-center justify-center pt-4">
+            <div className="flex-1 flex items-center justify-center">
               <div className={`${
                 mobileOpt.isFullscreen 
                   ? (mobileOpt.orientation === 'landscape' ? 'scale-75' : 'scale-100')
@@ -509,11 +509,11 @@ export function TournamentClock() {
 
         {/* Connection Status and Settings */}
         <div className={`fixed right-2 flex gap-2 z-50 ${
-          (!mobileOpt.isMobile || !mobileOpt.isFullscreen) ? 'top-12 md:top-16' : 'top-2'
+          (!mobileOpt.isMobile || !mobileOpt.isFullscreen) ? 'top-16 md:top-20' : 'top-2'
         }`} style={{
           top: mobileOpt.isMobile && mobileOpt.isFullscreen ? 
             `${mobileOpt.safeAreaInsets.top + 8}px` : 
-            (mobileOpt.isMobile ? '48px' : undefined)
+            (mobileOpt.isMobile ? '64px' : undefined)
         }}>
           <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${
             isConnected ? 'bg-green-600' : 'bg-yellow-600'

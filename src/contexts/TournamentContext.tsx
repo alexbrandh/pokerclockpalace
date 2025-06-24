@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { ref, onValue, set, push } from 'firebase/database';
 import { signInAnonymously } from 'firebase/auth';
@@ -46,6 +45,7 @@ const createDefaultTournament = (): TournamentState => ({
     buyIn: 50,
     reentryFee: 25,
     guaranteedPrizePool: 300,
+    initialStack: 10000, // Default initial stack
     levels: [
       { id: '1', smallBlind: 50, bigBlind: 100, ante: 0, duration: 20, isBreak: false },
       { id: '2', smallBlind: 75, bigBlind: 150, ante: 0, duration: 20, isBreak: false },

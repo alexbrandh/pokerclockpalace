@@ -15,6 +15,7 @@ export interface TournamentStructure {
   buyIn: number;
   reentryFee: number;
   guaranteedPrizePool: number;
+  initialStack: number; // New field for initial stack per player
   levels: TournamentLevel[];
   breakAfterLevels: number;
   payoutStructure: number[]; // percentages

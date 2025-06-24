@@ -1,30 +1,48 @@
+
 import React from 'react';
+
 interface PlayerInfoProps {
   players: number;
   entries: number;
   reentries: number;
   currentPrizePool: number;
+  initialStack: number;
+  currentLevel?: {
+    smallBlind: number;
+    bigBlind: number;
+    isBreak: boolean;
+  };
 }
+
 export function PlayerInfo({
   players,
   entries,
   reentries,
-  currentPrizePool
+  currentPrizePool,
+  initialStack,
+  currentLevel
 }: PlayerInfoProps) {
-  return <div className="col-span-3 space-y-4">
+  // Dynamic calculation: (entries + reentries) × initialStack ÷ activePlayers
+  const totalChips = (entries + reentries) * initialStack;
+  const averageStack = players > 0 ? totalChips / players : 0;
+  const averageStackInBBs = currentLevel && !currentLevel.isBreak ? 
+    Math.round(averageStack / currentLevel.bigBlind) : 0;
+
+  return (
+    <div className="h-full flex flex-col justify-between space-y-6">
       {/* Players Info - En la misma fila */}
-      <div className="grid grid-cols-3 gap-4 text-center">
+      <div className="grid grid-cols-3 gap-3 text-center">
         <div>
           <div className="text-yellow-400 text-sm font-semibold mb-1">Players</div>
-          <div className="text-2xl font-bold">{players}</div>
+          <div className="text-3xl font-bold">{players}</div>
         </div>
         <div>
           <div className="text-yellow-400 text-sm font-semibold mb-1">Entries</div>
-          <div className="text-2xl font-bold">{entries}</div>
+          <div className="text-3xl font-bold">{entries}</div>
         </div>
         <div>
           <div className="text-yellow-400 text-sm font-semibold mb-1">Re-Entries</div>
-          <div className="text-2xl font-bold">{reentries}</div>
+          <div className="text-3xl font-bold">{reentries}</div>
         </div>
       </div>
 
@@ -39,7 +57,7 @@ export function PlayerInfo({
       {/* Prize Pool */}
       <div className="text-center">
         <div className="text-yellow-400 text-lg font-semibold mb-2">Total Prize Pool</div>
-        <div className="text-yellow-400 text-3xl font-bold">${currentPrizePool}.00</div>
+        <div className="text-yellow-400 text-4xl font-bold">${currentPrizePool}.00</div>
       </div>
 
       {/* Enhanced Golden separator line */}
@@ -50,16 +68,22 @@ export function PlayerInfo({
         </div>
       </div>
 
-      {/* Chip Info - Total y Average en filas separadas */}
-      <div className="text-center space-y-3">
+      {/* Chip Info - Total y Average en filas separadas con cálculo dinámico */}
+      <div className="text-center space-y-4">
         <div>
           <div className="text-yellow-400 text-sm font-semibold mb-1">Total</div>
-          <div className="text-lg font-bold">120,000</div>
+          <div className="text-2xl font-bold">{totalChips.toLocaleString()}</div>
         </div>
         <div>
           <div className="text-yellow-400 text-sm font-semibold mb-1">Average</div>
-          <div className="text-lg font-bold">15,000 / 150BBs</div>
+          <div className="text-xl font-bold">
+            {Math.round(averageStack).toLocaleString()}
+            {!currentLevel?.isBreak && averageStackInBBs > 0 && (
+              <div className="text-lg text-gray-300">({averageStackInBBs} BBs)</div>
+            )}
+          </div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 }

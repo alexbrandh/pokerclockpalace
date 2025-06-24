@@ -207,39 +207,43 @@ export function TournamentClock() {
   const nextBreakTime = "35:09";
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Title */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white">{tournament.structure.name}</h1>
+    <div className="min-h-screen h-screen bg-black text-white overflow-hidden">
+      <div className="h-full max-w-none mx-auto p-4 flex flex-col">
+        {/* Title - Reduced spacing */}
+        <div className="text-center mb-4">
+          <h1 className="text-3xl md:text-5xl font-bold text-white">{tournament.structure.name}</h1>
         </div>
 
-        {/* Main Layout */}
-        <div className="grid grid-cols-12 gap-8 items-start">
+        {/* Main Layout - Optimized for full screen */}
+        <div className="flex-1 grid grid-cols-12 gap-4 lg:gap-8 items-center">
           {/* Left Side Info - Players */}
-          <div className="col-span-3">
+          <div className="col-span-12 md:col-span-3 order-2 md:order-1">
             <PlayerInfo 
               players={tournament.players}
               entries={tournament.entries}
               reentries={tournament.reentries}
               currentPrizePool={tournament.currentPrizePool}
+              initialStack={tournament.structure.initialStack}
+              currentLevel={currentLevel}
             />
           </div>
 
-          {/* Center - Clock */}
-          <div className="col-span-6 flex flex-col items-center">
-            <CircularTimer
-              timeRemaining={tournament.timeRemaining}
-              currentLevel={currentLevel}
-              progress={progress}
-              lastMinuteAlert={lastMinuteAlert}
-              nextBreakTime={nextBreakTime}
-              currentLevelIndex={tournament.currentLevelIndex}
-            />
+          {/* Center - Clock - Enlarged */}
+          <div className="col-span-12 md:col-span-6 order-1 md:order-2 flex flex-col items-center justify-center">
+            <div className="scale-110 md:scale-125 lg:scale-150">
+              <CircularTimer
+                timeRemaining={tournament.timeRemaining}
+                currentLevel={currentLevel}
+                progress={progress}
+                lastMinuteAlert={lastMinuteAlert}
+                nextBreakTime={nextBreakTime}
+                currentLevelIndex={tournament.currentLevelIndex}
+              />
+            </div>
           </div>
 
           {/* Right Side Info - Level, Prizes, Next Level */}
-          <div className="col-span-3 space-y-6">
+          <div className="col-span-12 md:col-span-3 order-3 space-y-4 lg:space-y-6">
             {/* Current Level */}
             <LevelInfo
               currentLevel={currentLevel}
@@ -249,7 +253,7 @@ export function TournamentClock() {
             />
             
             {/* Enhanced Golden separator line */}
-            <div className="relative flex items-center justify-center py-3">
+            <div className="relative flex items-center justify-center py-2">
               <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-400/20 to-transparent"></div>
               <div className="relative bg-black px-4">
                 <div className="h-1 w-16 bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 rounded-full shadow-lg shadow-yellow-400/30"></div>
@@ -260,7 +264,7 @@ export function TournamentClock() {
             <PrizeInfo />
             
             {/* Enhanced Golden separator line */}
-            <div className="relative flex items-center justify-center py-3">
+            <div className="relative flex items-center justify-center py-2">
               <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-400/20 to-transparent"></div>
               <div className="relative bg-black px-4">
                 <div className="h-1 w-16 bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 rounded-full shadow-lg shadow-yellow-400/30"></div>
@@ -271,13 +275,13 @@ export function TournamentClock() {
             {nextLevelData && (
               <div>
                 <div className="text-yellow-400 text-lg font-semibold mb-2">Next Level</div>
-                <div className="text-2xl font-bold">
+                <div className="text-xl lg:text-2xl font-bold">
                   {nextLevelData.isBreak ? 
                     `Descanso ${nextLevelData.duration}min` :
                     `${nextLevelData.smallBlind} / ${nextLevelData.bigBlind}`
                   }
                   {!nextLevelData.isBreak && nextLevelData.ante > 0 && (
-                    <div className="text-xl text-gray-300">({nextLevelData.ante})</div>
+                    <div className="text-lg text-gray-300">({nextLevelData.ante})</div>
                   )}
                 </div>
               </div>
@@ -285,15 +289,15 @@ export function TournamentClock() {
           </div>
         </div>
 
-        {/* Bottom Info */}
-        <div className="mt-12 text-center">
-          <div className="text-sm text-gray-400">
+        {/* Bottom Info - Reduced margin */}
+        <div className="mt-4 text-center">
+          <div className="text-xs md:text-sm text-gray-400">
             Entry until the end of LVL 8 -- Day 1 will end at completion of LVL 8 (approx 21:50)
           </div>
         </div>
 
         {/* Connection status and settings */}
-        <div className="fixed top-4 right-4 flex gap-2">
+        <div className="fixed top-2 right-2 flex gap-2">
           <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${isConnected ? 'bg-green-600' : 'bg-yellow-600'}`}>
             {isConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
             {isConnected ? 'Online' : 'Offline'}
@@ -303,16 +307,18 @@ export function TournamentClock() {
           </Button>
         </div>
 
-        {/* Hotkeys info */}
-        <div className="fixed bottom-4 left-4 text-xs text-gray-500 space-x-4">
-          <span>ESPACIO: Play/Pause</span>
-          <span>N: Siguiente</span>
-          <span>R: Reset</span>
-          <span>S: Configuración</span>
-          <span>CTRL+B: +Jugador</span>
-          <span>X: -Jugador</span>
-          <span>CTRL+R: Re-entry</span>
-          <span>CTRL+Z: Deshacer</span>
+        {/* Hotkeys info - Made responsive */}
+        <div className="fixed bottom-2 left-2 text-xs text-gray-500 hidden md:block">
+          <div className="space-x-2 lg:space-x-4">
+            <span>ESPACIO: Play/Pause</span>
+            <span>N: Siguiente</span>
+            <span>R: Reset</span>
+            <span>S: Configuración</span>
+            <span>CTRL+B: +Jugador</span>
+            <span>X: -Jugador</span>
+            <span>CTRL+R: Re-entry</span>
+            <span>CTRL+Z: Deshacer</span>
+          </div>
         </div>
       </div>
 

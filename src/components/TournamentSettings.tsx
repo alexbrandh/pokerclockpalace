@@ -18,12 +18,17 @@ export function TournamentSettings({ tournament, onClose, onUpdate }: Tournament
   const [players, setPlayers] = useState(tournament.players);
   const [entries, setEntries] = useState(tournament.entries);
   const [reentries, setReentries] = useState(tournament.reentries);
+  const [initialStack, setInitialStack] = useState(tournament.structure.initialStack);
 
   const handleSave = () => {
     onUpdate({
       players,
       entries,
       reentries,
+      structure: {
+        ...tournament.structure,
+        initialStack
+      },
       currentPrizePool: tournament.structure.guaranteedPrizePool + (reentries * tournament.structure.reentryFee)
     });
     onClose();
@@ -79,6 +84,16 @@ export function TournamentSettings({ tournament, onClose, onUpdate }: Tournament
                 type="number"
                 value={reentries}
                 onChange={(e) => setReentries(+e.target.value)}
+                className="bg-slate-700 border-slate-600 text-white"
+              />
+            </div>
+            <div>
+              <Label htmlFor="initialStack" className="text-slate-300">Stack Inicial</Label>
+              <Input
+                id="initialStack"
+                type="number"
+                value={initialStack}
+                onChange={(e) => setInitialStack(+e.target.value)}
                 className="bg-slate-700 border-slate-600 text-white"
               />
             </div>

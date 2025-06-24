@@ -286,24 +286,25 @@ export function TournamentClock() {
         <StickyStatsBar tournament={tournament} />
       ) : null}
 
-      {/* Main Content Container */}
+      {/* Main Content Container with adjusted mobile spacing */}
       <div 
         className={`h-full flex flex-col ${
-          (!mobileOpt.isMobile || !mobileOpt.isFullscreen) ? 'pt-16' : ''
+          (!mobileOpt.isMobile || !mobileOpt.isFullscreen) ? 'pt-12 md:pt-16' : ''
         }`} 
         style={{
           paddingTop: mobileOpt.isMobile && mobileOpt.isFullscreen ? 
-            `${mobileOpt.safeAreaInsets.top}px` : undefined,
+            `${mobileOpt.safeAreaInsets.top}px` : 
+            (mobileOpt.isMobile ? '48px' : undefined),
           paddingBottom: mobileOpt.isMobile && showMobileControls ? 
             '140px' : (mobileOpt.isMobile ? '20px' : undefined)
         }}
       >
         
-        {/* Tournament Title - Hide in mobile fullscreen */}
+        {/* Tournament Title - Hide in mobile fullscreen and smaller mobile */}
         {(!mobileOpt.isMobile || !mobileOpt.isFullscreen) && (
-          <div className="text-center py-2 md:py-4 flex-shrink-0">
+          <div className="text-center py-1 md:py-4 flex-shrink-0">
             <h1 className={`font-bold text-white px-4 ${
-              mobileOpt.isMobile ? 'text-xl' : 'text-2xl md:text-3xl lg:text-4xl'
+              mobileOpt.isMobile ? 'text-lg' : 'text-2xl md:text-3xl lg:text-4xl'
             }`}>
               {tournament.structure.name}
             </h1>
@@ -390,12 +391,12 @@ export function TournamentClock() {
           {/* Mobile Layout - Completely redesigned */}
           <div className="md:hidden h-full flex flex-col">
             
-            {/* Mobile Timer - Centered and optimized */}
-            <div className="flex-1 flex items-center justify-center">
+            {/* Mobile Timer - Centered and optimized with more space */}
+            <div className="flex-1 flex items-center justify-center pt-4">
               <div className={`${
                 mobileOpt.isFullscreen 
-                  ? (mobileOpt.orientation === 'landscape' ? 'scale-75' : 'scale-110')
-                  : 'scale-100'
+                  ? (mobileOpt.orientation === 'landscape' ? 'scale-75' : 'scale-100')
+                  : 'scale-90'
               } transition-transform duration-300`}>
                 <AdvancedTimer
                   timeRemaining={tournament.timeRemaining}
@@ -412,49 +413,49 @@ export function TournamentClock() {
 
             {/* Mobile Level Info - Simplified and clean */}
             {!mobileOpt.isFullscreen && (
-              <div className="flex-shrink-0 px-4 pb-6">
-                <div className="bg-gray-900/50 backdrop-blur rounded-2xl p-4">
-                  <div className="grid grid-cols-2 gap-4 text-center">
+              <div className="flex-shrink-0 px-4 pb-4">
+                <div className="bg-gray-900/50 backdrop-blur rounded-2xl p-3">
+                  <div className="grid grid-cols-2 gap-3 text-center">
                     
                     {/* Current Level */}
-                    <div className="space-y-2">
-                      <div className={`text-sm font-semibold ${
+                    <div className="space-y-1">
+                      <div className={`text-xs font-semibold ${
                         currentLevel?.isBreak ? 'text-cyan-400' : 'text-yellow-400'
                       }`}>
                         {currentLevel?.isBreak ? 'BREAK' : `LEVEL ${tournament.currentLevelIndex + 1}`}
                       </div>
-                      <div className="text-xl font-bold text-white">
+                      <div className="text-lg font-bold text-white">
                         {currentLevel?.isBreak ? 
                           `${currentLevel.duration}min` :
                           `${currentLevel?.smallBlind}/${currentLevel?.bigBlind}`
                         }
                         {!currentLevel?.isBreak && currentLevel?.ante > 0 && (
-                          <div className="text-sm text-gray-300">({currentLevel.ante})</div>
+                          <div className="text-xs text-gray-300">({currentLevel.ante})</div>
                         )}
                       </div>
                     </div>
 
                     {/* Next Level or Break Action */}
                     {currentLevel?.isBreak ? (
-                      <div className="space-y-2">
-                        <div className="text-sm font-semibold text-cyan-400">ACTION</div>
+                      <div className="space-y-1">
+                        <div className="text-xs font-semibold text-cyan-400">ACTION</div>
                         <button
                           onClick={skipBreak}
-                          className="w-full bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                          className="w-full bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1.5 rounded-lg font-medium transition-colors text-sm"
                         >
                           Skip Break
                         </button>
                       </div>
                     ) : nextLevelData && (
-                      <div className="space-y-2">
-                        <div className="text-sm font-semibold text-yellow-400">NEXT LEVEL</div>
-                        <div className="text-xl font-bold text-white">
+                      <div className="space-y-1">
+                        <div className="text-xs font-semibold text-yellow-400">NEXT LEVEL</div>
+                        <div className="text-lg font-bold text-white">
                           {nextLevelData.isBreak ? 
                             `Break ${nextLevelData.duration}min` :
                             `${nextLevelData.smallBlind}/${nextLevelData.bigBlind}`
                           }
                           {!nextLevelData.isBreak && nextLevelData.ante > 0 && (
-                            <div className="text-sm text-gray-300">({nextLevelData.ante})</div>
+                            <div className="text-xs text-gray-300">({nextLevelData.ante})</div>
                           )}
                         </div>
                       </div>
@@ -499,19 +500,20 @@ export function TournamentClock() {
 
         {/* Bottom Tournament Info - Hide in mobile fullscreen */}
         {(!mobileOpt.isMobile || !mobileOpt.isFullscreen) && (
-          <div className="flex-shrink-0 text-center py-2 px-4">
-            <div className="text-xs md:text-sm text-gray-400">
+          <div className="flex-shrink-0 text-center py-1 md:py-2 px-4">
+            <div className="text-xs text-gray-400">
               Entry until the end of LVL 8 -- Day 1 will end at completion of LVL 8 (approx 21:50)
             </div>
           </div>
         )}
 
         {/* Connection Status and Settings */}
-        <div className={`fixed right-2 flex gap-2 z-40 ${
-          (!mobileOpt.isMobile || !mobileOpt.isFullscreen) ? 'top-16' : 'top-2'
+        <div className={`fixed right-2 flex gap-2 z-50 ${
+          (!mobileOpt.isMobile || !mobileOpt.isFullscreen) ? 'top-12 md:top-16' : 'top-2'
         }`} style={{
           top: mobileOpt.isMobile && mobileOpt.isFullscreen ? 
-            `${mobileOpt.safeAreaInsets.top + 8}px` : undefined
+            `${mobileOpt.safeAreaInsets.top + 8}px` : 
+            (mobileOpt.isMobile ? '48px' : undefined)
         }}>
           <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${
             isConnected ? 'bg-green-600' : 'bg-yellow-600'

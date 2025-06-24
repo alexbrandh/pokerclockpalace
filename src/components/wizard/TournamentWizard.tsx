@@ -9,6 +9,12 @@ import { useTournament } from '@/contexts/TournamentContext';
 import { TournamentInfoStep } from './steps/TournamentInfoStep';
 import { ReentriesStep } from './steps/ReentriesStep';
 import { BlindStructureStep } from './steps/BlindStructureStep';
+import { PrizeDistributionStep } from './steps/PrizeDistributionStep';
+import { ChipDenominationsStep } from './steps/ChipDenominationsStep';
+import { ClockDesignStep } from './steps/ClockDesignStep';
+import { PlayersStep } from './steps/PlayersStep';
+import { SoundsStep } from './steps/SoundsStep';
+import { FinalStep } from './steps/FinalStep';
 
 interface TournamentWizardProps {
   onTournamentCreated: () => void;
@@ -49,7 +55,13 @@ export function TournamentWizard({ onTournamentCreated }: TournamentWizardProps)
       { id: 'break1', smallBlind: 0, bigBlind: 0, ante: 0, duration: 15, isBreak: true, breakDuration: 15 }
     ],
     breakAfterLevels: 3,
-    payoutStructure: [50, 30, 20]
+    payoutStructure: [50, 30, 20],
+    distributionType: 'Fixed',
+    clockTheme: 'classic',
+    trackPlayers: false,
+    enableBounties: false,
+    enableSounds: false,
+    voiceAnnouncements: false
   });
 
   const updateWizardData = (stepData: any) => {
@@ -93,6 +105,18 @@ export function TournamentWizard({ onTournamentCreated }: TournamentWizardProps)
         return <ReentriesStep data={wizardData} onUpdate={updateWizardData} />;
       case 2:
         return <BlindStructureStep data={wizardData} onUpdate={updateWizardData} />;
+      case 3:
+        return <PrizeDistributionStep data={wizardData} onUpdate={updateWizardData} />;
+      case 4:
+        return <ChipDenominationsStep data={wizardData} onUpdate={updateWizardData} />;
+      case 5:
+        return <ClockDesignStep data={wizardData} onUpdate={updateWizardData} />;
+      case 6:
+        return <PlayersStep data={wizardData} onUpdate={updateWizardData} />;
+      case 7:
+        return <SoundsStep data={wizardData} onUpdate={updateWizardData} />;
+      case 8:
+        return <FinalStep data={wizardData} onUpdate={updateWizardData} onFinish={finishWizard} />;
       default:
         return (
           <div className="text-center py-8">
@@ -131,9 +155,9 @@ export function TournamentWizard({ onTournamentCreated }: TournamentWizardProps)
             </Button>
             
             {currentStep === WIZARD_STEPS.length - 1 ? (
-              <Button onClick={finishWizard} className="ml-auto">
-                Crear Torneo
-              </Button>
+              <div className="ml-auto">
+                {/* El botón "Iniciar Torneo" está en el FinalStep */}
+              </div>
             ) : (
               <Button onClick={goToNextStep}>
                 Siguiente

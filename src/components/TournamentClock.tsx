@@ -9,6 +9,7 @@ import { AdvancedTimer } from '@/components/timer/AdvancedTimer';
 import { PlayerInfo } from '@/components/PlayerInfo';
 import { PrizeInfo } from '@/components/PrizeInfo';
 import { LevelInfo } from '@/components/LevelInfo';
+import { StickyStatsBar } from '@/components/StickyStatsBar';
 
 export function TournamentClock() {
   const { tournament, updateTournament, isConnected, error } = useTournament();
@@ -207,29 +208,58 @@ export function TournamentClock() {
 
   return (
     <div className="min-h-screen h-screen bg-black text-white overflow-hidden">
-      <div className="h-full max-w-none mx-auto p-4 flex flex-col">
-        {/* Title - Reduced spacing */}
-        <div className="text-center mb-4">
-          <h1 className="text-3xl md:text-5xl font-bold text-white">{tournament.structure.name}</h1>
+      {/* Sticky Stats Bar */}
+      <StickyStatsBar tournament={tournament} />
+
+      {/* Main Content with top padding for sticky bar */}
+      <div className="pt-16 h-full max-w-none mx-auto p-4 flex flex-col">
+        {/* Title - More compact */}
+        <div className="text-center mb-2">
+          <h1 className="text-2xl md:text-4xl font-bold text-white">{tournament.structure.name}</h1>
         </div>
 
-        {/* Main Layout - Optimized for full screen */}
+        {/* Main Layout - Optimized for full screen with sticky bar */}
         <div className="flex-1 grid grid-cols-12 gap-4 lg:gap-8 items-center">
-          {/* Left Side Info - Players */}
+          {/* Left Side Info - Simplified since stats moved to top */}
           <div className="col-span-12 md:col-span-3 order-2 md:order-1">
-            <PlayerInfo 
-              players={tournament.players}
-              entries={tournament.entries}
-              reentries={tournament.reentries}
-              currentPrizePool={tournament.currentPrizePool}
-              initialStack={tournament.structure.initialStack}
-              currentLevel={currentLevel}
-            />
+            <div className="space-y-6">
+              {/* Current Level */}
+              <LevelInfo
+                currentLevel={currentLevel}
+                nextLevelData={null}
+                currentLevelIndex={tournament.currentLevelIndex}
+                showNextLevel={false}
+              />
+              
+              {/* Enhanced Golden separator line */}
+              <div className="relative flex items-center justify-center py-2">
+                <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-400/20 to-transparent"></div>
+                <div className="relative bg-black px-4">
+                  <div className="h-1 w-16 bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 rounded-full shadow-lg shadow-yellow-400/30"></div>
+                </div>
+              </div>
+              
+              {/* Next Level Info */}
+              {nextLevelData && (
+                <div>
+                  <div className="text-yellow-400 text-lg font-semibold mb-2">Next Level</div>
+                  <div className="text-xl lg:text-2xl font-bold">
+                    {nextLevelData.isBreak ? 
+                      `Descanso ${nextLevelData.duration}min` :
+                      `${nextLevelData.smallBlind} / ${nextLevelData.bigBlind}`
+                    }
+                    {!nextLevelData.isBreak && nextLevelData.ante > 0 && (
+                      <div className="text-lg text-gray-300">({nextLevelData.ante})</div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Center - Advanced Timer - Enlarged */}
+          {/* Center - Advanced Timer - Even more enlarged */}
           <div className="col-span-12 md:col-span-6 order-1 md:order-2 flex flex-col items-center justify-center">
-            <div className="scale-110 md:scale-125 lg:scale-150">
+            <div className="scale-125 md:scale-150 lg:scale-175">
               <AdvancedTimer
                 timeRemaining={tournament.timeRemaining}
                 currentLevel={currentLevel}
@@ -243,62 +273,21 @@ export function TournamentClock() {
             </div>
           </div>
 
-          {/* Right Side Info - Level, Prizes, Next Level */}
-          <div className="col-span-12 md:col-span-3 order-3 space-y-4 lg:space-y-6">
-            {/* Current Level */}
-            <LevelInfo
-              currentLevel={currentLevel}
-              nextLevelData={null}
-              currentLevelIndex={tournament.currentLevelIndex}
-              showNextLevel={false}
-            />
-            
-            {/* Enhanced Golden separator line */}
-            <div className="relative flex items-center justify-center py-2">
-              <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-400/20 to-transparent"></div>
-              <div className="relative bg-black px-4">
-                <div className="h-1 w-16 bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 rounded-full shadow-lg shadow-yellow-400/30"></div>
-              </div>
-            </div>
-            
-            {/* Prizes */}
+          {/* Right Side Info - Prizes only */}
+          <div className="col-span-12 md:col-span-3 order-3">
             <PrizeInfo />
-            
-            {/* Enhanced Golden separator line */}
-            <div className="relative flex items-center justify-center py-2">
-              <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-400/20 to-transparent"></div>
-              <div className="relative bg-black px-4">
-                <div className="h-1 w-16 bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 rounded-full shadow-lg shadow-yellow-400/30"></div>
-              </div>
-            </div>
-            
-            {/* Next Level */}
-            {nextLevelData && (
-              <div>
-                <div className="text-yellow-400 text-lg font-semibold mb-2">Next Level</div>
-                <div className="text-xl lg:text-2xl font-bold">
-                  {nextLevelData.isBreak ? 
-                    `Descanso ${nextLevelData.duration}min` :
-                    `${nextLevelData.smallBlind} / ${nextLevelData.bigBlind}`
-                  }
-                  {!nextLevelData.isBreak && nextLevelData.ante > 0 && (
-                    <div className="text-lg text-gray-300">({nextLevelData.ante})</div>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Bottom Info - Reduced margin */}
-        <div className="mt-4 text-center">
-          <div className="text-xs md:text-sm text-gray-400">
+        {/* Bottom Info - More compact */}
+        <div className="mt-2 text-center">
+          <div className="text-xs text-gray-400">
             Entry until the end of LVL 8 -- Day 1 will end at completion of LVL 8 (approx 21:50)
           </div>
         </div>
 
-        {/* Connection status and settings */}
-        <div className="fixed top-2 right-2 flex gap-2">
+        {/* Connection status and settings - adjusted for sticky bar */}
+        <div className="fixed top-16 right-2 flex gap-2">
           <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${isConnected ? 'bg-green-600' : 'bg-yellow-600'}`}>
             {isConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
             {isConnected ? 'Online' : 'Offline'}
@@ -395,7 +384,7 @@ export function TournamentClock() {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-4 right-4 bg-red-600 text-white p-4 rounded-lg shadow-lg"
+            className="fixed bottom-4 right-4 bg-red-600 text-white p-4 rounded-lg shadow-lg z-40"
           >
             <div className="font-bold">¡ÚLTIMO MINUTO!</div>
             <div className="text-sm">El nivel termina en menos de 1 minuto</div>

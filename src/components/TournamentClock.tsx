@@ -17,6 +17,7 @@ export function TournamentClock() {
   const [lastMinuteAlert, setLastMinuteAlert] = useState(false);
   const [showControlsPopup, setShowControlsPopup] = useState(false);
   const [actionHistory, setActionHistory] = useState<Array<Partial<any>>>([]);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Timer logic
   useEffect(() => {
@@ -78,6 +79,16 @@ export function TournamentClock() {
       setActionHistory(prev => [...prev.slice(-9), { ...tournament }]); // Keep last 10 actions
     }
   };
+
+  // Fullscreen detection
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   // Hotkeys
   useHotkeys('space', () => toggleTimer(), { preventDefault: true });
@@ -208,156 +219,223 @@ export function TournamentClock() {
 
   return (
     <div className="min-h-screen h-screen bg-black text-white overflow-hidden">
-      {/* Sticky Stats Bar */}
-      <StickyStatsBar tournament={tournament} />
+      {/* Sticky Stats Bar - Hide in fullscreen on mobile */}
+      {!(isFullscreen && window.innerWidth < 768) && (
+        <StickyStatsBar tournament={tournament} />
+      )}
 
-      {/* Main Content with top padding for sticky bar */}
-      <div className="pt-16 h-full max-w-none mx-auto p-4 flex flex-col">
-        {/* Title - More compact */}
-        <div className="text-center mb-2">
-          <h1 className="text-2xl md:text-4xl font-bold text-white">{tournament.structure.name}</h1>
-        </div>
+      {/* Main Content - Responsive padding */}
+      <div className={`${!(isFullscreen && window.innerWidth < 768) ? 'pt-16' : 'pt-0'} h-full flex flex-col`}>
+        
+        {/* Title - Responsive and hide on mobile fullscreen */}
+        {!(isFullscreen && window.innerWidth < 768) && (
+          <div className="text-center py-2 md:py-4">
+            <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-white px-4">
+              {tournament.structure.name}
+            </h1>
+          </div>
+        )}
 
-        {/* Main Layout - Optimized for full screen with sticky bar */}
-        <div className="flex-1 grid grid-cols-12 gap-4 lg:gap-8 items-center">
-          {/* Left Side Info - Simplified since stats moved to top */}
-          <div className="col-span-12 md:col-span-3 order-2 md:order-1">
-            <div className="space-y-6">
-              {/* Current Level */}
-              <LevelInfo
-                currentLevel={currentLevel}
-                nextLevelData={null}
-                currentLevelIndex={tournament.currentLevelIndex}
-                showNextLevel={false}
-              />
-              
-              {/* Enhanced Golden separator line */}
-              <div className="relative flex items-center justify-center py-2">
-                <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-400/20 to-transparent"></div>
-                <div className="relative bg-black px-4">
-                  <div className="h-1 w-16 bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 rounded-full shadow-lg shadow-yellow-400/30"></div>
-                </div>
-              </div>
-              
-              {/* Next Level Info */}
-              {nextLevelData && (
-                <div>
-                  <div className="text-yellow-400 text-lg font-semibold mb-2">Next Level</div>
-                  <div className="text-xl lg:text-2xl font-bold">
-                    {nextLevelData.isBreak ? 
-                      `Descanso ${nextLevelData.duration}min` :
-                      `${nextLevelData.smallBlind} / ${nextLevelData.bigBlind}`
-                    }
-                    {!nextLevelData.isBreak && nextLevelData.ante > 0 && (
-                      <div className="text-lg text-gray-300">({nextLevelData.ante})</div>
-                    )}
+        {/* Main Layout - Optimized responsive grid */}
+        <div className="flex-1 px-2 md:px-4 lg:px-8">
+          
+          {/* Desktop Layout (md and up) */}
+          <div className="hidden md:grid md:grid-cols-12 gap-4 lg:gap-8 h-full items-center">
+            
+            {/* Left Side Info */}
+            <div className="col-span-3 h-full flex flex-col justify-center">
+              <div className="space-y-6 lg:space-y-8">
+                <LevelInfo
+                  currentLevel={currentLevel}
+                  nextLevelData={null}
+                  currentLevelIndex={tournament.currentLevelIndex}
+                  showNextLevel={false}
+                />
+                
+                {/* Golden separator */}
+                <div className="relative flex items-center justify-center py-2">
+                  <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-400/20 to-transparent"></div>
+                  <div className="relative bg-black px-4">
+                    <div className="h-1 w-16 bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 rounded-full shadow-lg shadow-yellow-400/30"></div>
                   </div>
                 </div>
-              )}
+                
+                {/* Next Level Info */}
+                {nextLevelData && (
+                  <div>
+                    <div className="text-yellow-400 text-lg font-semibold mb-2">Next Level</div>
+                    <div className="text-xl lg:text-2xl font-bold">
+                      {nextLevelData.isBreak ? 
+                        `Descanso ${nextLevelData.duration}min` :
+                        `${nextLevelData.smallBlind} / ${nextLevelData.bigBlind}`
+                      }
+                      {!nextLevelData.isBreak && nextLevelData.ante > 0 && (
+                        <div className="text-lg text-gray-300">({nextLevelData.ante})</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Center Timer - Larger on desktop */}
+            <div className="col-span-6 h-full flex items-center justify-center">
+              <div className="scale-125 lg:scale-150 xl:scale-175">
+                <AdvancedTimer
+                  timeRemaining={tournament.timeRemaining}
+                  currentLevel={currentLevel}
+                  progress={progress}
+                  lastMinuteAlert={lastMinuteAlert}
+                  nextBreakTime={nextBreakTime}
+                  currentLevelIndex={tournament.currentLevelIndex}
+                  isRunning={tournament.isRunning}
+                  isPaused={tournament.isPaused}
+                />
+              </div>
+            </div>
+
+            {/* Right Side - Prizes */}
+            <div className="col-span-3 h-full flex flex-col justify-center">
+              <PrizeInfo />
             </div>
           </div>
 
-          {/* Center - Advanced Timer - Even more enlarged */}
-          <div className="col-span-12 md:col-span-6 order-1 md:order-2 flex flex-col items-center justify-center">
-            <div className="scale-125 md:scale-150 lg:scale-175">
-              <AdvancedTimer
-                timeRemaining={tournament.timeRemaining}
-                currentLevel={currentLevel}
-                progress={progress}
-                lastMinuteAlert={lastMinuteAlert}
-                nextBreakTime={nextBreakTime}
-                currentLevelIndex={tournament.currentLevelIndex}
-                isRunning={tournament.isRunning}
-                isPaused={tournament.isPaused}
-              />
+          {/* Mobile Layout - Stack optimized for mobile */}
+          <div className="md:hidden h-full flex flex-col">
+            
+            {/* Mobile Timer - Takes majority of screen */}
+            <div className="flex-1 flex items-center justify-center min-h-0">
+              <div className="scale-110 sm:scale-125">
+                <AdvancedTimer
+                  timeRemaining={tournament.timeRemaining}
+                  currentLevel={currentLevel}
+                  progress={progress}
+                  lastMinuteAlert={lastMinuteAlert}
+                  nextBreakTime={nextBreakTime}
+                  currentLevelIndex={tournament.currentLevelIndex}
+                  isRunning={tournament.isRunning}
+                  isPaused={tournament.isPaused}
+                />
+              </div>
+            </div>
+
+            {/* Mobile Info - Compact horizontal layout */}
+            {!isFullscreen && (
+              <div className="flex-shrink-0 px-2 pb-4">
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  
+                  {/* Current Level */}
+                  <div className="space-y-1">
+                    <div className="text-yellow-400 text-sm font-semibold">Level {tournament.currentLevelIndex + 1}</div>
+                    <div className="text-lg font-bold">
+                      {currentLevel?.isBreak ? 
+                        `${currentLevel.duration}min` :
+                        `${currentLevel?.smallBlind}/${currentLevel?.bigBlind}`
+                      }
+                    </div>
+                  </div>
+
+                  {/* Next Level */}
+                  {nextLevelData && (
+                    <div className="space-y-1">
+                      <div className="text-yellow-400 text-sm font-semibold">Next</div>
+                      <div className="text-lg font-bold">
+                        {nextLevelData.isBreak ? 
+                          `Break ${nextLevelData.duration}min` :
+                          `${nextLevelData.smallBlind}/${nextLevelData.bigBlind}`
+                        }
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Bottom Tournament Info - Hide on mobile fullscreen */}
+        {!(isFullscreen && window.innerWidth < 768) && (
+          <div className="flex-shrink-0 text-center py-2 px-4">
+            <div className="text-xs md:text-sm text-gray-400">
+              Entry until the end of LVL 8 -- Day 1 will end at completion of LVL 8 (approx 21:50)
             </div>
           </div>
+        )}
 
-          {/* Right Side Info - Prizes only */}
-          <div className="col-span-12 md:col-span-3 order-3">
-            <PrizeInfo />
-          </div>
-        </div>
-
-        {/* Bottom Info - More compact */}
-        <div className="mt-2 text-center">
-          <div className="text-xs text-gray-400">
-            Entry until the end of LVL 8 -- Day 1 will end at completion of LVL 8 (approx 21:50)
-          </div>
-        </div>
-
-        {/* Connection status and settings - adjusted for sticky bar */}
-        <div className="fixed top-16 right-2 flex gap-2">
+        {/* Connection status and settings - Responsive positioning */}
+        <div className={`fixed ${!(isFullscreen && window.innerWidth < 768) ? 'top-16' : 'top-2'} right-2 flex gap-2 z-40`}>
           <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${isConnected ? 'bg-green-600' : 'bg-yellow-600'}`}>
             {isConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-            {isConnected ? 'Online' : 'Offline'}
+            <span className="hidden sm:inline">{isConnected ? 'Online' : 'Offline'}</span>
           </div>
           <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
             <Settings className="w-4 h-4" />
           </Button>
         </div>
 
-        {/* Hotkeys info - Made responsive */}
-        <div className="fixed bottom-2 left-2 text-xs text-gray-500 hidden md:block">
-          <div className="space-x-2 lg:space-x-4">
-            <span>ESPACIO: Play/Pause</span>
-            <span>N: Siguiente</span>
-            <span>R: Reset</span>
-            <span>S: Configuración</span>
-            <span>CTRL+B: +Jugador</span>
-            <span>X: -Jugador</span>
-            <span>CTRL+R: Re-entry</span>
-            <span>CTRL+Z: Deshacer</span>
+        {/* Hotkeys info - Better responsive behavior */}
+        {!isFullscreen && (
+          <div className="fixed bottom-2 left-2 text-xs text-gray-500 hidden lg:block">
+            <div className="space-x-4">
+              <span>ESPACIO: Play/Pause</span>
+              <span>N: Siguiente</span>
+              <span>R: Reset</span>
+              <span>S: Configuración</span>
+              <span>CTRL+B: +Jugador</span>
+              <span>X: -Jugador</span>
+              <span>CTRL+R: Re-entry</span>
+              <span>CTRL+Z: Deshacer</span>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Controls Popup - Only shown when paused */}
+      {/* Controls Popup - Responsive sizing */}
       <AnimatePresence>
         {showControlsPopup && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
             onClick={() => setShowControlsPopup(false)}
           >
             <motion.div
-              className="bg-gray-900 border border-yellow-400/30 rounded-lg p-6 space-y-4"
+              className="bg-gray-900 border border-yellow-400/30 rounded-lg p-4 md:p-6 w-full max-w-md"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-xl font-bold text-yellow-400 text-center mb-4">Controles del Torneo</h3>
-              <div className="grid grid-cols-2 gap-3">
+              <h3 className="text-lg md:text-xl font-bold text-yellow-400 text-center mb-4">Controles del Torneo</h3>
+              <div className="grid grid-cols-2 gap-2 md:gap-3">
                 <Button
                   onClick={toggleTimer}
                   size="lg"
-                  className="bg-green-600 hover:bg-green-700"
+                  className="bg-green-600 hover:bg-green-700 text-sm md:text-base"
                 >
-                  <Play className="w-5 h-5 mr-2" />
+                  <Play className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
                   Iniciar
                 </Button>
-                <Button onClick={nextLevel} variant="secondary" size="lg">
-                  <SkipForward className="w-5 h-5 mr-2" />
+                <Button onClick={nextLevel} variant="secondary" size="lg" className="text-sm md:text-base">
+                  <SkipForward className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
                   Siguiente
                 </Button>
-                <Button onClick={resetLevel} variant="secondary" size="lg">
-                  <RotateCcw className="w-5 h-5 mr-2" />
+                <Button onClick={resetLevel} variant="secondary" size="lg" className="text-sm md:text-base">
+                  <RotateCcw className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
                   Reset
                 </Button>
-                <Button onClick={addPlayer} variant="secondary" size="lg">
-                  <UserPlus className="w-5 h-5 mr-2" />
+                <Button onClick={addPlayer} variant="secondary" size="lg" className="text-sm md:text-base">
+                  <UserPlus className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
                   +Jugador
                 </Button>
-                <Button onClick={eliminatePlayer} variant="secondary" size="lg">
-                  <UserMinus className="w-5 h-5 mr-2" />
+                <Button onClick={eliminatePlayer} variant="secondary" size="lg" className="text-sm md:text-base">
+                  <UserMinus className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
                   -Jugador
                 </Button>
-                <Button onClick={addReentry} variant="secondary" size="lg">
-                  <ReEntry className="w-5 h-5 mr-2" />
+                <Button onClick={addReentry} variant="secondary" size="lg" className="text-sm md:text-base">
+                  <ReEntry className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
                   Re-entry
                 </Button>
               </div>
-              <div className="text-xs text-gray-400 text-center mt-4">
+              <div className="text-xs text-gray-400 text-center mt-4 hidden md:block">
                 <div>ESPACIO: Play/Pause • N: Siguiente • R: Reset</div>
                 <div>CTRL+B: +Jugador • X: -Jugador • CTRL+R: Re-entry • CTRL+Z: Deshacer</div>
               </div>
@@ -377,17 +455,17 @@ export function TournamentClock() {
         )}
       </AnimatePresence>
 
-      {/* Last Minute Alert */}
+      {/* Last Minute Alert - Responsive positioning */}
       <AnimatePresence>
         {lastMinuteAlert && (
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-4 right-4 bg-red-600 text-white p-4 rounded-lg shadow-lg z-40"
+            className="fixed bottom-4 right-4 bg-red-600 text-white p-3 md:p-4 rounded-lg shadow-lg z-40 max-w-xs"
           >
-            <div className="font-bold">¡ÚLTIMO MINUTO!</div>
-            <div className="text-sm">El nivel termina en menos de 1 minuto</div>
+            <div className="font-bold text-sm md:text-base">¡ÚLTIMO MINUTO!</div>
+            <div className="text-xs md:text-sm">El nivel termina en menos de 1 minuto</div>
           </motion.div>
         )}
       </AnimatePresence>

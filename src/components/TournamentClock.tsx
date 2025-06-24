@@ -12,18 +12,22 @@ import { LevelInfo } from '@/components/LevelInfo';
 import { StickyStatsBar } from '@/components/StickyStatsBar';
 import { FloatingControls } from '@/components/FloatingControls';
 import { useSoundSystem } from '@/hooks/useSoundSystem';
+import { useMobileOptimization } from '@/hooks/useMobileOptimization';
+import { MobileControls } from '@/components/mobile/MobileControls';
 
 export function TournamentClock() {
   const { tournament, updateTournament, isConnected, error } = useTournament();
   const { playSound } = useSoundSystem();
+  const mobileOpt = useMobileOptimization();
+  
   const [showSettings, setShowSettings] = useState(false);
   const [lastMinuteAlert, setLastMinuteAlert] = useState(false);
   const [showControlsPopup, setShowControlsPopup] = useState(false);
   const [actionHistory, setActionHistory] = useState<Array<Partial<any>>>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showFloatingControls, setShowFloatingControls] = useState(false);
+  const [showMobileControls, setShowMobileControls] = useState(false);
 
-  // Timer logic with enhanced break handling and sound integration
   useEffect(() => {
     if (!tournament || !tournament.isRunning || tournament.isPaused) return;
 
@@ -112,7 +116,13 @@ export function TournamentClock() {
   useHotkeys('x', () => eliminatePlayer(), { preventDefault: true });
   useHotkeys('ctrl+z', () => undoLastAction(), { preventDefault: true });
   useHotkeys('ctrl+r', () => addReentry(), { preventDefault: true });
-  useHotkeys('m', () => setShowFloatingControls(!showFloatingControls), { preventDefault: true });
+  useHotkeys('m', () => {
+    if (mobileOpt.isMobile) {
+      setShowMobileControls(!showMobileControls);
+    } else {
+      setShowFloatingControls(!showFloatingControls);
+    }
+  }, { preventDefault: true });
 
   // Enhanced handler functions with sound integration
   const toggleTimer = () => {
@@ -264,32 +274,40 @@ export function TournamentClock() {
   const progress = currentLevel ? 
     ((currentLevel.duration * 60 - tournament.timeRemaining) / (currentLevel.duration * 60)) * 100 : 0;
 
-  // Calculate next break time (simplified for demo)
   const nextBreakTime = "35:09";
 
   return (
-    <div className="min-h-screen h-screen bg-black text-white overflow-hidden">
-      {/* Sticky Stats Bar - Hide in fullscreen on mobile */}
-      {!(isFullscreen && window.innerWidth < 768) && (
+    <div className={`min-h-screen h-screen bg-black text-white overflow-hidden ${
+      mobileOpt.isMobile && mobileOpt.isFullscreen ? 'touch-none' : ''
+    }`}>
+      {/* Sticky Stats Bar - Enhanced mobile behavior */}
+      {!(mobileOpt.isFullscreen && mobileOpt.isMobile) && (
         <StickyStatsBar tournament={tournament} />
       )}
 
-      {/* Main Content - Responsive padding */}
-      <div className={`${!(isFullscreen && window.innerWidth < 768) ? 'pt-16' : 'pt-0'} h-full flex flex-col`}>
+      {/* Main Content - Dynamic padding based on mobile state */}
+      <div className={`${
+        !(mobileOpt.isFullscreen && mobileOpt.isMobile) ? 'pt-16' : 'pt-0'
+      } h-full flex flex-col`} style={{
+        paddingTop: mobileOpt.isMobile && mobileOpt.isFullscreen ? `${mobileOpt.safeAreaInsets.top}px` : undefined,
+        paddingBottom: mobileOpt.isMobile && showMobileControls ? '120px' : undefined
+      }}>
         
-        {/* Title - Responsive and hide on mobile fullscreen */}
-        {!(isFullscreen && window.innerWidth < 768) && (
+        {/* Title - Enhanced mobile behavior */}
+        {!(mobileOpt.isFullscreen && mobileOpt.isMobile) && (
           <div className="text-center py-2 md:py-4">
-            <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-white px-4">
+            <h1 className={`${
+              mobileOpt.isMobile ? 'text-lg' : 'text-xl md:text-3xl lg:text-4xl'
+            } font-bold text-white px-4`}>
               {tournament.structure.name}
             </h1>
           </div>
         )}
 
-        {/* Main Layout - Optimized responsive grid */}
+        {/* Main Layout - Enhanced responsive behavior */}
         <div className="flex-1 px-2 md:px-4 lg:px-8">
           
-          {/* Desktop Layout (md and up) */}
+          {/* Desktop Layout */}
           <div className="hidden md:grid md:grid-cols-12 gap-4 lg:gap-8 h-full items-center">
             
             {/* Left Side Info */}
@@ -310,7 +328,7 @@ export function TournamentClock() {
                   </div>
                 </div>
                 
-                {/* Next Level Info - hide during breaks */}
+                {/* Next Level Info */}
                 {nextLevelData && !currentLevel?.isBreak && (
                   <div>
                     <div className="text-yellow-400 text-lg font-semibold mb-2">Next Level</div>
@@ -326,7 +344,7 @@ export function TournamentClock() {
                   </div>
                 )}
 
-                {/* Break Actions - show only during breaks */}
+                {/* Break Actions */}
                 {currentLevel?.isBreak && (
                   <div className="space-y-4">
                     <div className="text-cyan-400 text-lg font-semibold">Break Actions</div>
@@ -341,7 +359,7 @@ export function TournamentClock() {
               </div>
             </div>
 
-            {/* Center Timer - Larger on desktop */}
+            {/* Center Timer */}
             <div className="col-span-6 h-full flex items-center justify-center">
               <div className="scale-125 lg:scale-150 xl:scale-175">
                 <AdvancedTimer
@@ -363,12 +381,16 @@ export function TournamentClock() {
             </div>
           </div>
 
-          {/* Mobile Layout - Stack optimized for mobile */}
+          {/* Enhanced Mobile Layout */}
           <div className="md:hidden h-full flex flex-col">
             
-            {/* Mobile Timer - Takes majority of screen */}
+            {/* Mobile Timer - Optimized sizing */}
             <div className="flex-1 flex items-center justify-center min-h-0">
-              <div className="scale-110 sm:scale-125">
+              <div className={`${
+                mobileOpt.isFullscreen 
+                  ? mobileOpt.orientation === 'landscape' ? 'scale-90' : 'scale-125'
+                  : 'scale-110 sm:scale-125'
+              }`}>
                 <AdvancedTimer
                   timeRemaining={tournament.timeRemaining}
                   currentLevel={currentLevel}
@@ -382,8 +404,8 @@ export function TournamentClock() {
               </div>
             </div>
 
-            {/* Mobile Info - Compact horizontal layout */}
-            {!isFullscreen && (
+            {/* Mobile Info - Hide in fullscreen landscape */}
+            {!(mobileOpt.isFullscreen && mobileOpt.orientation === 'landscape') && (
               <div className="flex-shrink-0 px-2 pb-4">
                 <div className="grid grid-cols-2 gap-4 text-center">
                   
@@ -429,8 +451,8 @@ export function TournamentClock() {
           </div>
         </div>
 
-        {/* Bottom Tournament Info - Hide on mobile fullscreen */}
-        {!(isFullscreen && window.innerWidth < 768) && (
+        {/* Bottom Tournament Info */}
+        {!(mobileOpt.isFullscreen && mobileOpt.isMobile) && (
           <div className="flex-shrink-0 text-center py-2 px-4">
             <div className="text-xs md:text-sm text-gray-400">
               Entry until the end of LVL 8 -- Day 1 will end at completion of LVL 8 (approx 21:50)
@@ -438,8 +460,12 @@ export function TournamentClock() {
           </div>
         )}
 
-        {/* Connection status and settings - Responsive positioning */}
-        <div className={`fixed ${!(isFullscreen && window.innerWidth < 768) ? 'top-16' : 'top-2'} right-2 flex gap-2 z-40`}>
+        {/* Connection status and settings */}
+        <div className={`fixed ${
+          !(mobileOpt.isFullscreen && mobileOpt.isMobile) ? 'top-16' : 'top-2'
+        } right-2 flex gap-2 z-40`} style={{
+          top: mobileOpt.isMobile && mobileOpt.isFullscreen ? `${mobileOpt.safeAreaInsets.top + 8}px` : undefined
+        }}>
           <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${isConnected ? 'bg-green-600' : 'bg-yellow-600'}`}>
             {isConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
             <span className="hidden sm:inline">{isConnected ? 'Online' : 'Offline'}</span>
@@ -449,8 +475,8 @@ export function TournamentClock() {
           </Button>
         </div>
 
-        {/* Hotkeys info - Better responsive behavior */}
-        {!isFullscreen && (
+        {/* Desktop Hotkeys info */}
+        {!mobileOpt.isMobile && !mobileOpt.isFullscreen && (
           <div className="fixed bottom-2 left-2 text-xs text-gray-500 hidden xl:block">
             <div className="space-x-4">
               <span>ESPACIO: Play/Pause</span>
@@ -461,37 +487,56 @@ export function TournamentClock() {
               <span>X: -Jugador</span>
               <span>CTRL+R: Re-entry</span>
               <span>CTRL+Z: Deshacer</span>
-              <span>M: Mostrar/Ocultar Controles</span>
+              <span>M: Controles</span>
             </div>
           </div>
         )}
 
-        {/* Controls visibility indicator */}
-        {!showFloatingControls && (
+        {/* Mobile Controls Toggle Hint */}
+        {mobileOpt.isMobile && !showMobileControls && (
           <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-30">
             <div className="bg-black/80 text-gray-400 px-3 py-1 rounded-full text-sm border border-gray-600/50">
-              Presiona <span className="text-white font-semibold">M</span> para mostrar controles
+              Toca <span className="text-white font-semibold">M</span> o desliza hacia arriba para controles
             </div>
           </div>
         )}
       </div>
 
-      {/* Enhanced Floating Controls - Now toggleable */}
-      <FloatingControls
-        isRunning={tournament.isRunning}
-        isPaused={tournament.isPaused}
-        isOnBreak={tournament.isOnBreak}
-        onToggleTimer={toggleTimer}
-        onNextLevel={nextLevel}
-        onSkipBreak={skipBreak}
-        onResetLevel={resetLevel}
-        onAddPlayer={addPlayer}
-        onEliminatePlayer={eliminatePlayer}
-        onUndo={undoLastAction}
-        canUndo={actionHistory.length > 0}
-        playersCount={tournament.players}
-        isVisible={showFloatingControls}
-      />
+      {/* Desktop Floating Controls */}
+      {!mobileOpt.isMobile && (
+        <FloatingControls
+          isRunning={tournament.isRunning}
+          isPaused={tournament.isPaused}
+          isOnBreak={tournament.isOnBreak}
+          onToggleTimer={toggleTimer}
+          onNextLevel={nextLevel}
+          onSkipBreak={skipBreak}
+          onResetLevel={resetLevel}
+          onAddPlayer={addPlayer}
+          onEliminatePlayer={eliminatePlayer}
+          onUndo={undoLastAction}
+          canUndo={actionHistory.length > 0}
+          playersCount={tournament.players}
+          isVisible={showFloatingControls}
+        />
+      )}
+
+      {/* Mobile Controls */}
+      {mobileOpt.isMobile && (
+        <MobileControls
+          isRunning={tournament.isRunning}
+          isPaused={tournament.isPaused}
+          isFullscreen={mobileOpt.isFullscreen}
+          onToggleTimer={toggleTimer}
+          onNextLevel={nextLevel}
+          onResetLevel={resetLevel}
+          onAddPlayer={addPlayer}
+          onEliminatePlayer={eliminatePlayer}
+          onToggleFullscreen={mobileOpt.toggleFullscreen}
+          playersCount={tournament.players}
+          isVisible={showMobileControls}
+        />
+      )}
 
       {/* Settings Modal */}
       <AnimatePresence>
@@ -504,14 +549,16 @@ export function TournamentClock() {
         )}
       </AnimatePresence>
 
-      {/* Last Minute Alert - Responsive positioning */}
+      {/* Last Minute Alert */}
       <AnimatePresence>
         {lastMinuteAlert && (
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-4 right-4 bg-red-600 text-white p-3 md:p-4 rounded-lg shadow-lg z-40 max-w-xs"
+            className={`fixed ${
+              mobileOpt.isMobile ? 'bottom-32' : 'bottom-4'
+            } right-4 bg-red-600 text-white p-3 md:p-4 rounded-lg shadow-lg z-40 max-w-xs`}
           >
             <div className="font-bold text-sm md:text-base">¡ÚLTIMO MINUTO!</div>
             <div className="text-xs md:text-sm">El nivel termina en menos de 1 minuto</div>

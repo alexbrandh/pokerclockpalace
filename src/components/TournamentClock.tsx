@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Settings, Wifi, WifiOff, Play, Pause, SkipForward, RotateCcw, UserPlus, UserMinus, RotateCcw as ReEntry } from 'lucide-react';
@@ -6,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useTournament } from '@/contexts/TournamentContext';
 import { TournamentSettings } from '@/components/TournamentSettings';
-import { CircularTimer } from '@/components/CircularTimer';
+import { AdvancedTimer } from '@/components/timer/AdvancedTimer';
 import { PlayerInfo } from '@/components/PlayerInfo';
 import { PrizeInfo } from '@/components/PrizeInfo';
 import { LevelInfo } from '@/components/LevelInfo';
@@ -228,16 +227,18 @@ export function TournamentClock() {
             />
           </div>
 
-          {/* Center - Clock - Enlarged */}
+          {/* Center - Advanced Timer - Enlarged */}
           <div className="col-span-12 md:col-span-6 order-1 md:order-2 flex flex-col items-center justify-center">
             <div className="scale-110 md:scale-125 lg:scale-150">
-              <CircularTimer
+              <AdvancedTimer
                 timeRemaining={tournament.timeRemaining}
                 currentLevel={currentLevel}
                 progress={progress}
                 lastMinuteAlert={lastMinuteAlert}
                 nextBreakTime={nextBreakTime}
                 currentLevelIndex={tournament.currentLevelIndex}
+                isRunning={tournament.isRunning}
+                isPaused={tournament.isPaused}
               />
             </div>
           </div>

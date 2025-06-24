@@ -10,6 +10,7 @@ import { PlayerInfo } from '@/components/PlayerInfo';
 import { PrizeInfo } from '@/components/PrizeInfo';
 import { LevelInfo } from '@/components/LevelInfo';
 import { StickyStatsBar } from '@/components/StickyStatsBar';
+import { FloatingControls } from '@/components/FloatingControls';
 
 export function TournamentClock() {
   const { tournament, updateTournament, isConnected, error } = useTournament();
@@ -429,7 +430,7 @@ export function TournamentClock() {
 
         {/* Hotkeys info - Better responsive behavior */}
         {!isFullscreen && (
-          <div className="fixed bottom-2 left-2 text-xs text-gray-500 hidden lg:block">
+          <div className="fixed bottom-2 left-2 text-xs text-gray-500 hidden xl:block">
             <div className="space-x-4">
               <span>ESPACIO: Play/Pause</span>
               <span>N: Siguiente</span>
@@ -444,83 +445,22 @@ export function TournamentClock() {
         )}
       </div>
 
-      {/* Controls Popup - Enhanced for breaks */}
-      <AnimatePresence>
-        {showControlsPopup && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-            onClick={() => setShowControlsPopup(false)}
-          >
-            <motion.div
-              className="bg-gray-900 border border-yellow-400/30 rounded-lg p-4 md:p-6 w-full max-w-md"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 className={`text-lg md:text-xl font-bold text-center mb-4 ${
-                currentLevel?.isBreak ? 'text-cyan-400' : 'text-yellow-400'
-              }`}>
-                {currentLevel?.isBreak ? 'Controles de Descanso' : 'Controles del Torneo'}
-              </h3>
-              <div className="grid grid-cols-2 gap-2 md:gap-3">
-                <Button
-                  onClick={toggleTimer}
-                  size="lg"
-                  className={`text-sm md:text-base ${
-                    currentLevel?.isBreak 
-                      ? 'bg-cyan-600 hover:bg-cyan-700' 
-                      : 'bg-green-600 hover:bg-green-700'
-                  }`}
-                >
-                  <Play className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
-                  {currentLevel?.isBreak ? 'Continuar Break' : 'Iniciar'}
-                </Button>
-                
-                {currentLevel?.isBreak && (
-                  <Button 
-                    onClick={skipBreak} 
-                    variant="secondary" 
-                    size="lg" 
-                    className="text-sm md:text-base bg-cyan-700 hover:bg-cyan-800 text-white"
-                  >
-                    <SkipForward className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
-                    Skip Break
-                  </Button>
-                )}
-                
-                {!currentLevel?.isBreak && (
-                  <Button onClick={nextLevel} variant="secondary" size="lg" className="text-sm md:text-base">
-                    <SkipForward className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
-                    Siguiente
-                  </Button>
-                )}
-                
-                <Button onClick={resetLevel} variant="secondary" size="lg" className="text-sm md:text-base">
-                  <RotateCcw className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
-                  Reset
-                </Button>
-                <Button onClick={addPlayer} variant="secondary" size="lg" className="text-sm md:text-base">
-                  <UserPlus className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
-                  +Jugador
-                </Button>
-                <Button onClick={eliminatePlayer} variant="secondary" size="lg" className="text-sm md:text-base">
-                  <UserMinus className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
-                  -Jugador
-                </Button>
-                <Button onClick={addReentry} variant="secondary" size="lg" className="text-sm md:text-base">
-                  <ReEntry className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
-                  Re-entry
-                </Button>
-              </div>
-              <div className="text-xs text-gray-400 text-center mt-4 hidden md:block">
-                <div>ESPACIO: Play/Pause • N: Siguiente • R: Reset</div>
-                <div>CTRL+B: +Jugador • X: -Jugador • CTRL+R: Re-entry • CTRL+Z: Deshacer</div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Enhanced Floating Controls */}
+      <FloatingControls
+        isRunning={tournament.isRunning}
+        isPaused={tournament.isPaused}
+        isOnBreak={tournament.isOnBreak}
+        onToggleTimer={toggleTimer}
+        onNextLevel={nextLevel}
+        onSkipBreak={skipBreak}
+        onResetLevel={resetLevel}
+        onAddPlayer={addPlayer}
+        onEliminatePlayer={eliminatePlayer}
+        onUndo={undoLastAction}
+        canUndo={actionHistory.length > 0}
+        playersCount={tournament.players}
+        isVisible={true}
+      />
 
       {/* Settings Modal */}
       <AnimatePresence>

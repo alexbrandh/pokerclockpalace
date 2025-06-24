@@ -20,6 +20,7 @@ export function TournamentSetup({ onTournamentCreated }: TournamentSetupProps) {
     buyIn: 50,
     reentryFee: 25,
     guaranteedPrizePool: 300,
+    initialStack: 10000, // Added missing initialStack field
     levels: [
       { id: '1', smallBlind: 50, bigBlind: 100, ante: 0, duration: 20, isBreak: false },
       { id: '2', smallBlind: 75, bigBlind: 150, ante: 0, duration: 20, isBreak: false },
@@ -172,6 +173,15 @@ export function TournamentSetup({ onTournamentCreated }: TournamentSetupProps) {
                   type="number"
                   value={structure.guaranteedPrizePool}
                   onChange={(e) => setStructure(prev => ({ ...prev, guaranteedPrizePool: +e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="initialStack">Stack Inicial</Label>
+                <Input
+                  id="initialStack"
+                  type="number"
+                  value={structure.initialStack}
+                  onChange={(e) => setStructure(prev => ({ ...prev, initialStack: +e.target.value }))}
                 />
               </div>
             </div>

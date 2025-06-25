@@ -9,9 +9,11 @@ export function useServerTimer(tournamentId: string | null) {
     if (!tournamentId) return null;
 
     try {
-      const { data, error } = await supabase.rpc('calculate_time_remaining' as any, {
-        p_tournament_id: tournamentId
-      });
+      // Use the generic rpc method with proper error handling
+      const { data, error } = await supabase.rpc(
+        'calculate_time_remaining',
+        { p_tournament_id: tournamentId }
+      );
 
       if (error) {
         console.error('Error fetching server time:', error);

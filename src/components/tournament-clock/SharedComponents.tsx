@@ -8,7 +8,7 @@ import { useMobileOptimization } from '@/hooks/useMobileOptimization';
 interface ConnectionStatusProps {
   isConnected: boolean;
   connectionStatus?: string;
-  errorMessage?: string;
+  error?: string;
   reconnectAttempts?: number;
   onReconnect?: () => void;
   onSettingsClick: () => void;
@@ -16,8 +16,8 @@ interface ConnectionStatusProps {
 
 export function ConnectionStatus({ 
   isConnected, 
-  connectionStatus = 'unknown',
-  errorMessage,
+  connectionStatus = 'disconnected',
+  error,
   reconnectAttempts = 0,
   onReconnect,
   onSettingsClick 
@@ -28,7 +28,7 @@ export function ConnectionStatus({
       case 'connecting': return 'text-yellow-400';
       case 'retrying': return 'text-orange-400';
       case 'error': return 'text-red-400';
-      case 'disconnected': return 'text-red-400';
+      case 'disconnected': return 'text-gray-400';
       default: return 'text-gray-400';
     }
   };
@@ -37,8 +37,8 @@ export function ConnectionStatus({
     switch (connectionStatus) {
       case 'connected': return 'Conectado';
       case 'connecting': return 'Conectando...';
-      case 'retrying': return `Reintentando... (${reconnectAttempts}/3)`;
-      case 'error': return errorMessage || 'Error de conexión';
+      case 'retrying': return `Reintentando... (${reconnectAttempts}/5)`;
+      case 'error': return error || 'Error de conexión';
       case 'disconnected': return 'Desconectado';
       default: return 'Estado desconocido';
     }

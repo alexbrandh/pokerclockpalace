@@ -1,10 +1,9 @@
 
 import { supabase } from '@/lib/supabase'
 import { TournamentState } from '@/types/tournament'
-import { RealtimeChannel } from '@supabase/supabase-js'
 
 export class TournamentJoiningService {
-  static async joinTournament(tournamentId: string): Promise<{ tournament: TournamentState, channel?: RealtimeChannel }> {
+  static async joinTournament(tournamentId: string): Promise<{ tournament: TournamentState }> {
     console.log('🔄 Joining tournament:', tournamentId);
 
     try {
@@ -61,18 +60,7 @@ export class TournamentJoiningService {
 
       console.log('✅ Tournament state parsed successfully');
 
-      // Set up real-time subscription with optimized configuration
-      const channel = supabase
-        .channel(`tournament_${tournamentId}`, {
-          config: {
-            broadcast: { self: false },
-            presence: { key: tournamentId }
-          }
-        });
-
-      console.log('🔄 Setting up real-time channel for tournament:', tournamentId);
-
-      return { tournament: tournamentState, channel }
+      return { tournament: tournamentState }
     } catch (error) {
       console.error('❌ Error in joinTournament:', error);
       throw error;

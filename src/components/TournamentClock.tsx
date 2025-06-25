@@ -14,10 +14,9 @@ export function TournamentClock() {
     tournament,
     isConnected,
     connectionStatus,
-    errorMessage,
+    error,
     reconnectAttempts,
     reconnect,
-    error,
     lastMinuteAlert,
     actionHistory,
     toggleTimer,
@@ -43,7 +42,7 @@ export function TournamentClock() {
   }, [tournament?.isPaused, tournament?.isOnBreak]);
 
   if (!tournament) {
-    return <LoadingScreen error={error} />;
+    return <LoadingScreen error={error || undefined} />;
   }
 
   const currentLevel = tournament.structure.levels[tournament.currentLevelIndex];
@@ -102,11 +101,11 @@ export function TournamentClock() {
         />
       )}
 
-      {/* Enhanced Connection Status with detailed error info */}
+      {/* Simplified Connection Status */}
       <ConnectionStatus 
         isConnected={isConnected} 
         connectionStatus={connectionStatus}
-        errorMessage={errorMessage}
+        error={error || undefined}
         reconnectAttempts={reconnectAttempts}
         onReconnect={reconnect}
         onSettingsClick={() => setShowSettings(true)} 

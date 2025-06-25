@@ -138,6 +138,8 @@ export function MobileTournamentClock({
           isFullscreen={mobileOpt.isFullscreen}
           playersCount={tournament.players}
           canUndo={actionHistory.length > 0}
+          fullscreenSupported={mobileOpt.fullscreenSupported}
+          debugInfo={mobileOpt.debugInfo}
           onToggleTimer={toggleTimer}
           onNextLevel={nextLevel}
           onResetLevel={resetLevel}
@@ -269,6 +271,8 @@ export function MobileTournamentClock({
         isFullscreen={mobileOpt.isFullscreen}
         playersCount={tournament.players}
         canUndo={actionHistory.length > 0}
+        fullscreenSupported={mobileOpt.fullscreenSupported}
+        debugInfo={mobileOpt.debugInfo}
         onToggleTimer={toggleTimer}
         onNextLevel={nextLevel}
         onResetLevel={resetLevel}

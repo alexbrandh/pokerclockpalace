@@ -20,14 +20,25 @@ export function useSupabaseTournamentLogic() {
   const { toggleTimer, nextLevel, skipBreak, resetLevel } = useTournamentActions();
   const { addPlayer, eliminatePlayer, addReentry } = useTournamentPlayerActions();
 
-  // Real-time connection - now only for manual changes, not automatic time sync
+  // Enhanced real-time connection with better error handling
   const handleStateUpdate = useCallback((payload: any) => {
-    console.log('📡 Processing manual tournament update:', payload);
-    // Only sync when there are manual changes (pause, player changes, etc.)
-    // Time calculation is now done mathematically
+    console.log('📡 Processing tournament update:', {
+      event: payload.eventType,
+      table: payload.table,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Real-time updates are now handled by the SupabaseTournamentContext
+    // This callback serves as additional logging and monitoring
   }, []);
 
-  const { connectionStatus, reconnect, isConnected } = useRealtimeConnection({
+  const { 
+    connectionStatus, 
+    reconnect, 
+    isConnected, 
+    errorMessage, 
+    reconnectAttempts 
+  } = useRealtimeConnection({
     tournamentId: currentTournament?.id || '',
     onStateUpdate: handleStateUpdate
   });
@@ -41,11 +52,13 @@ export function useSupabaseTournamentLogic() {
     } : null,
     isConnected,
     connectionStatus,
+    errorMessage,
+    reconnectAttempts,
     reconnect,
-    error,
+    error: error || errorMessage, // Combine context error with connection error
     lastMinuteAlert,
     actionHistory,
-    breakTimeRemaining, // New: expose break time remaining
+    breakTimeRemaining,
     toggleTimer,
     nextLevel,
     skipBreak,

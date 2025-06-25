@@ -1,13 +1,15 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Settings, Wifi, WifiOff, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Settings, Wifi, WifiOff, RefreshCw, AlertTriangle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMobileOptimization } from '@/hooks/useMobileOptimization';
 
 interface ConnectionStatusProps {
   isConnected: boolean;
   connectionStatus?: string;
+  errorMessage?: string;
+  reconnectAttempts?: number;
   onReconnect?: () => void;
   onSettingsClick: () => void;
 }
@@ -15,6 +17,8 @@ interface ConnectionStatusProps {
 export function ConnectionStatus({ 
   isConnected, 
   connectionStatus = 'unknown',
+  errorMessage,
+  reconnectAttempts = 0,
   onReconnect,
   onSettingsClick 
 }: ConnectionStatusProps) {
@@ -22,6 +26,7 @@ export function ConnectionStatus({
     switch (connectionStatus) {
       case 'connected': return 'text-green-400';
       case 'connecting': return 'text-yellow-400';
+      case 'retrying': return 'text-orange-400';
       case 'error': return 'text-red-400';
       case 'disconnected': return 'text-red-400';
       default: return 'text-gray-400';
@@ -32,7 +37,8 @@ export function ConnectionStatus({
     switch (connectionStatus) {
       case 'connected': return 'Conectado';
       case 'connecting': return 'Conectando...';
-      case 'error': return 'Error de conexión';
+      case 'retrying': return `Reintentando... (${reconnectAttempts}/3)`;
+      case 'error': return errorMessage || 'Error de conexión';
       case 'disconnected': return 'Desconectado';
       default: return 'Estado desconocido';
     }
@@ -41,33 +47,41 @@ export function ConnectionStatus({
   const getStatusIcon = () => {
     switch (connectionStatus) {
       case 'connected': return <Wifi className="w-4 h-4" />;
-      case 'connecting': return <RefreshCw className="w-4 h-4 animate-spin" />;
+      case 'connecting': return <Loader2 className="w-4 h-4 animate-spin" />;
+      case 'retrying': return <RefreshCw className="w-4 h-4 animate-spin" />;
       case 'error':
       case 'disconnected': return <WifiOff className="w-4 h-4" />;
-      default: return <WifiOff className="w-4 h-4" />;
+      default: return <AlertTriangle className="w-4 h-4" />;
     }
   };
+
+  const showReconnectButton = !isConnected && onReconnect && (connectionStatus === 'error' || connectionStatus === 'disconnected');
 
   return (
     <div className="fixed top-4 right-4 z-50 flex items-center gap-3">
       <div className={`flex items-center gap-2 text-sm ${getStatusColor()}`}>
         {getStatusIcon()}
-        <span className="hidden sm:inline">{getStatusText()}</span>
+        <span className="hidden sm:inline max-w-48 truncate" title={getStatusText()}>
+          {getStatusText()}
+        </span>
       </div>
       
-      {!isConnected && onReconnect && (
-        <button
+      {showReconnectButton && (
+        <motion.button
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
           onClick={onReconnect}
-          className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded transition-colors flex items-center gap-1"
+          className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded transition-colors flex items-center gap-1 shadow-lg"
         >
           <RefreshCw className="w-3 h-3" />
           <span className="hidden sm:inline">Reconectar</span>
-        </button>
+        </motion.button>
       )}
       
       <button
         onClick={onSettingsClick}
-        className="text-gray-400 hover:text-white p-1 rounded-md hover:bg-white/10 transition-colors"
+        className="text-gray-400 hover:text-white p-2 rounded-md hover:bg-white/10 transition-colors"
+        title="Configuración"
       >
         <Settings className="w-5 h-5" />
       </button>
@@ -108,25 +122,34 @@ interface LoadingScreenProps {
 export function LoadingScreen({ error }: LoadingScreenProps) {
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center">
-      <div className="text-center space-y-4">
+      <div className="text-center space-y-6 max-w-md mx-auto px-4">
         <div className="text-2xl font-bold">Configurando torneo...</div>
-        {error && (
-          <div className="text-yellow-400 flex items-center justify-center gap-2">
-            <AlertTriangle className="w-5 h-5" />
-            <div className="text-sm max-w-md">
+        
+        {error ? (
+          <div className="text-yellow-400 space-y-3">
+            <div className="flex items-center justify-center gap-2">
+              <AlertTriangle className="w-5 h-5" />
+              <div className="text-sm font-medium">Error de conexión</div>
+            </div>
+            <div className="text-xs bg-yellow-400/10 p-3 rounded-lg border border-yellow-400/20">
               {error}
-              <div className="mt-2 text-xs text-gray-400">
-                Verificando conexión y datos del torneo...
-              </div>
+            </div>
+            <div className="text-xs text-gray-400">
+              Verificando conexión y reintentando automáticamente...
             </div>
           </div>
-        )}
-        {!error && (
+        ) : (
           <div className="flex items-center justify-center gap-2 text-gray-400">
-            <RefreshCw className="w-5 h-5 animate-spin" />
+            <Loader2 className="w-5 h-5 animate-spin" />
             <span className="text-sm">Cargando datos del servidor...</span>
           </div>
         )}
+        
+        <div className="space-y-2 text-xs text-gray-500">
+          <div>• Conectando con la base de datos</div>
+          <div>• Configurando actualizaciones en tiempo real</div>
+          <div>• Sincronizando datos del torneo</div>
+        </div>
       </div>
     </div>
   );

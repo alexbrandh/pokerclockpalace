@@ -14,6 +14,8 @@ export function TournamentClock() {
     tournament,
     isConnected,
     connectionStatus,
+    errorMessage,
+    reconnectAttempts,
     reconnect,
     error,
     lastMinuteAlert,
@@ -100,10 +102,12 @@ export function TournamentClock() {
         />
       )}
 
-      {/* Enhanced Connection Status with reconnect option */}
+      {/* Enhanced Connection Status with detailed error info */}
       <ConnectionStatus 
         isConnected={isConnected} 
         connectionStatus={connectionStatus}
+        errorMessage={errorMessage}
+        reconnectAttempts={reconnectAttempts}
         onReconnect={reconnect}
         onSettingsClick={() => setShowSettings(true)} 
       />

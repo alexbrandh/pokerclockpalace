@@ -5,6 +5,7 @@ import { Tournament, SupabaseTournamentContextType, TournamentStateDB } from '@/
 import { TournamentService } from '@/services/tournament-service'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { RealtimeChannel } from '@supabase/supabase-js'
+import { useToast } from '@/hooks/use-toast'
 
 const SupabaseTournamentContext = createContext<SupabaseTournamentContextType | null>(null)
 
@@ -14,6 +15,7 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [realtimeChannel, setRealtimeChannel] = useState<RealtimeChannel | null>(null)
+  const { toast } = useToast()
 
   console.log('SupabaseTournamentProvider initialized');
   console.log('Supabase configured:', isSupabaseConfigured());
@@ -26,11 +28,23 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       const tournamentId = await TournamentService.createTournament(structure, city)
       await loadTournaments()
       
+      toast({
+        title: "Torneo creado",
+        description: "El torneo se ha creado exitosamente",
+      })
+      
       return tournamentId
     } catch (err) {
       console.error('Error creating tournament:', err);
       const errorMessage = err instanceof Error ? err.message : 'Error creating tournament';
       setError(errorMessage);
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
+      })
+      
       throw err;
     } finally {
       setIsLoading(false)
@@ -42,17 +56,23 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       setIsLoading(true)
       setError(null)
 
+      console.log('🔄 Joining tournament with enhanced error handling:', tournamentId);
+
       const { tournament, channel } = await TournamentService.joinTournament(tournamentId)
       setCurrentTournament(tournament)
 
       if (channel) {
         // Clean up previous channel
         if (realtimeChannel) {
-          console.log('Cleaning up previous channel');
-          await realtimeChannel.unsubscribe()
+          console.log('🧹 Cleaning up previous channel');
+          try {
+            await realtimeChannel.unsubscribe()
+          } catch (cleanupError) {
+            console.warn('Warning during channel cleanup:', cleanupError);
+          }
         }
 
-        // Set up real-time updates with correct postgres_changes configuration
+        // Set up real-time updates with enhanced error handling
         const channelSetup = channel
           .on('postgres_changes', 
             { 
@@ -62,21 +82,24 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
               filter: `tournament_id=eq.${tournamentId}`
             },
             (payload) => {
-              console.log('Real-time tournament_states update received:', payload);
+              console.log('📡 Real-time tournament_states update received:', {
+                event: payload.eventType,
+                timestamp: new Date().toISOString(),
+                hasNewData: !!payload.new
+              });
               
               if (payload.new && payload.eventType !== 'DELETE') {
                 const newState = payload.new as TournamentStateDB
-                console.log('Processing state update:', {
-                  currentLevelIndex: newState.current_level_index,
-                  timeRemaining: newState.time_remaining,
-                  isRunning: newState.is_running,
-                  isPaused: newState.is_paused,
+                console.log('📊 Processing state update:', {
+                  level: newState.current_level_index,
+                  time: newState.time_remaining,
+                  running: newState.is_running,
                   players: newState.players
                 });
                 
                 setCurrentTournament(prev => {
                   if (!prev) {
-                    console.log('No previous tournament state, ignoring update');
+                    console.log('⚠️ No previous tournament state, ignoring update');
                     return null;
                   }
                   
@@ -94,26 +117,45 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
                     startTime: newState.start_time ? Date.parse(newState.start_time) : undefined
                   };
                   
-                  console.log('✅ Tournament state updated from real-time:', updated);
+                  console.log('✅ Tournament state updated from real-time');
                   return updated;
                 });
               }
             }
           )
           .subscribe((status, err) => {
-            console.log('Real-time channel subscription status:', status);
+            console.log(`📡 Real-time subscription status: ${status}`);
             
             if (status === 'SUBSCRIBED') {
-              console.log('✅ Successfully subscribed to real-time updates for tournament:', tournamentId);
+              console.log('✅ Successfully subscribed to real-time updates');
               setError(null); // Clear any previous connection errors
+              
+              toast({
+                title: "Conectado",
+                description: "Conexión en tiempo real establecida",
+              })
             } else if (status === 'CHANNEL_ERROR') {
               console.error('❌ Real-time channel error:', err);
-              setError('Error conectando a actualizaciones en tiempo real');
+              const errorMsg = err?.message || 'Error de canal desconocido';
+              setError(`Error de conexión: ${errorMsg}`);
+              
+              toast({
+                title: "Error de conexión",
+                description: "No se pudo conectar a las actualizaciones en tiempo real",
+                variant: "destructive"
+              })
             } else if (status === 'TIMED_OUT') {
               console.error('❌ Real-time subscription timed out:', err);
               setError('Conexión en tiempo real expiró');
+              
+              toast({
+                title: "Conexión expiró",
+                description: "Reintentando conexión automáticamente...",
+                variant: "destructive"
+              })
             } else if (status === 'CLOSED') {
-              console.log('Real-time channel closed');
+              console.log('📪 Real-time channel closed');
+              setError('Conexión cerrada');
             }
           });
 
@@ -121,9 +163,16 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       }
 
     } catch (err) {
-      console.error('Error joining tournament:', err);
+      console.error('❌ Error joining tournament:', err);
       const errorMessage = err instanceof Error ? err.message : 'Error joining tournament';
       setError(errorMessage);
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
+      })
+      
       throw err;
     } finally {
       setIsLoading(false)
@@ -137,13 +186,13 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
     }
 
     try {
-      console.log('Updating tournament state:', updates);
+      console.log('🔄 Updating tournament state:', updates);
       
       // Optimistically update the local state first for immediate UI feedback
       setCurrentTournament(prev => {
         if (!prev) return null;
         const optimisticUpdate = { ...prev, ...updates };
-        console.log('Optimistic update applied:', optimisticUpdate);
+        console.log('⚡ Optimistic update applied');
         return optimisticUpdate;
       });
 
@@ -156,11 +205,17 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       const errorMessage = err instanceof Error ? err.message : 'Error updating tournament';
       setError(errorMessage);
       
+      toast({
+        title: "Error de actualización",
+        description: errorMessage,
+        variant: "destructive"
+      })
+      
       // Revert optimistic update on error by refetching current state
       try {
         const { tournament } = await TournamentService.joinTournament(currentTournament.id);
         setCurrentTournament(tournament);
-        console.log('Reverted to server state after error');
+        console.log('🔄 Reverted to server state after error');
       } catch (refetchErr) {
         console.error('Error refetching tournament state:', refetchErr);
       }
@@ -171,8 +226,12 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
 
   const leaveTournament = async () => {
     if (realtimeChannel) {
-      console.log('Leaving tournament - cleaning up real-time channel');
-      await realtimeChannel.unsubscribe()
+      console.log('👋 Leaving tournament - cleaning up real-time channel');
+      try {
+        await realtimeChannel.unsubscribe()
+      } catch (error) {
+        console.warn('Warning during channel cleanup on leave:', error);
+      }
       setRealtimeChannel(null)
     }
     setCurrentTournament(null)
@@ -184,27 +243,34 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       setIsLoading(true)
       setError(null)
 
-      console.log('Loading tournaments from Supabase...');
+      console.log('📋 Loading tournaments from Supabase...');
       const data = await TournamentService.loadTournaments()
       setTournaments(data)
+      console.log(`✅ Loaded ${data.length} tournaments`);
     } catch (err) {
-      console.error('Error loading tournaments:', err);
+      console.error('❌ Error loading tournaments:', err);
       const errorMessage = err instanceof Error ? err.message : 'Error loading tournaments';
       setError(errorMessage);
+      
+      toast({
+        title: "Error de carga",
+        description: errorMessage,
+        variant: "destructive"
+      })
     } finally {
       setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    console.log('SupabaseTournamentProvider mounted, loading tournaments...');
+    console.log('🚀 SupabaseTournamentProvider mounted, loading tournaments...');
     loadTournaments()
   }, [])
 
   useEffect(() => {
     return () => {
       if (realtimeChannel) {
-        console.log('Component unmounting - cleaning up real-time channel');
+        console.log('🧹 Component unmounting - cleaning up real-time channel');
         realtimeChannel.unsubscribe()
       }
     }

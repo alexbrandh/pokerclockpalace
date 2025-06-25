@@ -9,7 +9,151 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      tournament_logs: {
+        Row: {
+          action: string
+          created_at: string
+          created_by: string
+          details: Json
+          id: string
+          tournament_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          created_by: string
+          details?: Json
+          id?: string
+          tournament_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          created_by?: string
+          details?: Json
+          id?: string
+          tournament_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_logs_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tournament_states: {
+        Row: {
+          current_level_index: number
+          current_prize_pool: number
+          entries: number
+          id: string
+          is_on_break: boolean
+          is_paused: boolean
+          is_running: boolean
+          players: number
+          reentries: number
+          start_time: string | null
+          time_remaining: number
+          tournament_id: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          current_level_index?: number
+          current_prize_pool?: number
+          entries?: number
+          id?: string
+          is_on_break?: boolean
+          is_paused?: boolean
+          is_running?: boolean
+          players?: number
+          reentries?: number
+          start_time?: string | null
+          time_remaining?: number
+          tournament_id: string
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          current_level_index?: number
+          current_prize_pool?: number
+          entries?: number
+          id?: string
+          is_on_break?: boolean
+          is_paused?: boolean
+          is_running?: boolean
+          players?: number
+          reentries?: number
+          start_time?: string | null
+          time_remaining?: number
+          tournament_id?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_states_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: true
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tournaments: {
+        Row: {
+          access_code: string
+          break_after_levels: number
+          buy_in: number
+          city: string
+          created_at: string
+          created_by: string
+          guaranteed_prize_pool: number
+          id: string
+          initial_stack: number
+          levels: Json
+          name: string
+          payout_structure: Json
+          reentry_fee: number
+          status: string
+        }
+        Insert: {
+          access_code: string
+          break_after_levels?: number
+          buy_in?: number
+          city: string
+          created_at?: string
+          created_by: string
+          guaranteed_prize_pool?: number
+          id?: string
+          initial_stack?: number
+          levels?: Json
+          name: string
+          payout_structure?: Json
+          reentry_fee?: number
+          status?: string
+        }
+        Update: {
+          access_code?: string
+          break_after_levels?: number
+          buy_in?: number
+          city?: string
+          created_at?: string
+          created_by?: string
+          guaranteed_prize_pool?: number
+          id?: string
+          initial_stack?: number
+          levels?: Json
+          name?: string
+          payout_structure?: Json
+          reentry_fee?: number
+          status?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -4,7 +4,6 @@ import { TournamentState } from '@/types/tournament'
 import { Tournament, SupabaseTournamentContextType, TournamentStateDB } from '@/types/tournament-context'
 import { TournamentService } from '@/services/tournament-service'
 import { isSupabaseConfigured } from '@/lib/supabase'
-import { mockTournaments } from '@/data/mock-tournaments'
 import { RealtimeChannel } from '@supabase/supabase-js'
 
 const SupabaseTournamentContext = createContext<SupabaseTournamentContextType | null>(null)
@@ -25,15 +24,7 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       setError(null)
 
       const tournamentId = await TournamentService.createTournament(structure, city)
-      
-      if (!isSupabaseConfigured()) {
-        // Update local tournaments for demo mode
-        const demoTournament = mockTournaments.find(t => t.id === tournamentId) ||
-          mockTournaments[mockTournaments.length - 1]; // fallback
-        setTournaments(prev => [demoTournament, ...prev]);
-      } else {
-        await loadTournaments()
-      }
+      await loadTournaments()
       
       return tournamentId
     } catch (err) {
@@ -60,7 +51,7 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
           realtimeChannel.unsubscribe()
         }
 
-        // Set up real-time updates for Supabase mode
+        // Set up real-time updates
         channel.on('postgres_changes', 
           { event: '*', schema: 'public', table: 'tournament_states', filter: `tournament_id=eq.${tournamentId}` },
           (payload) => {
@@ -101,12 +92,6 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
     if (!currentTournament) return
 
     try {
-      if (!isSupabaseConfigured()) {
-        // Demo mode - update local state only
-        setCurrentTournament(prev => prev ? { ...prev, ...updates } : null);
-        return;
-      }
-
       await TournamentService.updateTournamentState(currentTournament.id, updates)
     } catch (err) {
       console.error('Error updating tournament:', err);
@@ -129,7 +114,7 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       setIsLoading(true)
       setError(null)
 
-      console.log('Loading tournaments...');
+      console.log('Loading tournaments from Supabase...');
       const data = await TournamentService.loadTournaments()
       setTournaments(data)
     } catch (err) {

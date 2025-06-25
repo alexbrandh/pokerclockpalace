@@ -1,31 +1,30 @@
 
 import { createClient } from '@supabase/supabase-js'
-import { Database } from '@/types/supabase'
+import { Database } from '@/integrations/supabase/types'
 
-// For now, we'll create a mock client if no env vars are provided
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-key'
+const supabaseUrl = 'https://ohvboilegetblfwjipsq.supabase.co'
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9odmJvaWxlZ2V0Ymxmd2ppcHNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA4NDcyNTksImV4cCI6MjA2NjQyMzI1OX0.cK4KHKBh6a5Kyyx2O0iLMRkcWA8_SdeKFxhwMjfFNdU'
 
 console.log('Supabase URL:', supabaseUrl);
-console.log('Supabase Key exists:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
+console.log('Supabase configured: true');
 
-const isConfigured = import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-export const supabase = isConfigured ? createClient<Database>(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    storageKey: 'poker-tournament-auth'
+  },
   realtime: {
     params: {
       eventsPerSecond: 2
     }
-  },
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true
   }
-}) : null;
+});
 
 // Helper function to check if Supabase is configured
 export function isSupabaseConfigured(): boolean {
-  return isConfigured;
+  return true;
 }
 
 // Helper function to generate unique access codes
@@ -35,10 +34,6 @@ export function generateAccessCode(): string {
 
 // Helper function to get current user ID (for anonymous users)
 export async function getCurrentUserId(): Promise<string> {
-  if (!supabase) {
-    return 'demo-user-' + Math.random().toString(36).substring(2, 8);
-  }
-
   try {
     const { data: { user } } = await supabase.auth.getUser()
     
@@ -46,12 +41,12 @@ export async function getCurrentUserId(): Promise<string> {
       // Sign in anonymously if no user
       const { data: { user: anonUser }, error } = await supabase.auth.signInAnonymously()
       if (error) throw error
-      return anonUser?.id || 'anonymous'
+      return anonUser?.id || 'anonymous-' + Math.random().toString(36).substring(2, 8)
     }
     
     return user.id
   } catch (error) {
     console.error('Error getting user ID:', error);
-    return 'demo-user-' + Math.random().toString(36).substring(2, 8);
+    return 'anonymous-' + Math.random().toString(36).substring(2, 8);
   }
 }

@@ -5,7 +5,7 @@ import { Tournament, SupabaseTournamentContextType, TournamentStateDB } from '@/
 import { TournamentService } from '@/services/tournament-service'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
-import { useSupabaseRealtime } from '@/hooks/useSupabaseRealtime'
+import { useSimplePolling } from '@/hooks/useSimplePolling'
 
 const SupabaseTournamentContext = createContext<SupabaseTournamentContextType | null>(null)
 
@@ -19,9 +19,9 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
   console.log('SupabaseTournamentProvider initialized');
   console.log('Supabase configured:', isSupabaseConfigured());
 
-  // Enhanced real-time connection with the new simplified hook
+  // Simple polling connection with improved error handling
   const handleStateUpdate = (payload: any) => {
-    console.log('📡 Processing tournament update:', {
+    console.log('📡 Processing tournament update via polling:', {
       event: payload.eventType,
       timestamp: new Date().toISOString()
     });
@@ -55,35 +55,26 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
           startTime: newState.start_time ? Date.parse(newState.start_time) : undefined
         };
         
-        console.log('✅ Tournament state updated from real-time');
+        console.log('✅ Tournament state updated via polling');
         return updated;
       });
     }
   };
 
-  const realtimeConnection = useSupabaseRealtime({
+  const pollingConnection = useSimplePolling({
     tournamentId: currentTournament?.id || '',
     onStateUpdate: handleStateUpdate,
     enabled: !!currentTournament?.id
   });
 
-  // Handle connection status changes
+  // Clear errors when polling is working
   useEffect(() => {
-    if (realtimeConnection.status === 'connected' && realtimeConnection.isConnected) {
+    if (pollingConnection.isPolling && !pollingConnection.error) {
       setError(null);
-      toast({
-        title: "Conectado",
-        description: "Conexión en tiempo real establecida",
-      });
-    } else if (realtimeConnection.status === 'error' && realtimeConnection.lastError) {
-      setError(realtimeConnection.lastError);
-      toast({
-        title: "Error de conexión",
-        description: realtimeConnection.lastError,
-        variant: "destructive"
-      });
+    } else if (pollingConnection.error) {
+      setError(pollingConnection.error);
     }
-  }, [realtimeConnection.status, realtimeConnection.isConnected, realtimeConnection.lastError, toast]);
+  }, [pollingConnection.isPolling, pollingConnection.error]);
 
   const createTournament = async (structure: any, city: string): Promise<string> => {
     try {
@@ -161,9 +152,12 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
         return optimisticUpdate;
       });
 
-      // Then persist to database (this will trigger real-time updates for other clients)
+      // Then persist to database (polling will pick up changes for other clients)
       await TournamentService.updateTournamentState(currentTournament.id, updates);
       console.log('✅ Tournament state updated successfully in database');
+      
+      // Refresh polling data immediately after update
+      pollingConnection.refresh();
       
     } catch (err) {
       console.error('❌ Error updating tournament state:', err);
@@ -192,7 +186,7 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
   const leaveTournament = async () => {
     console.log('👋 Leaving tournament');
     setCurrentTournament(null)
-    setError(null) // Clear any connection errors when leaving
+    setError(null)
   }
 
   const loadTournaments = async () => {
@@ -229,15 +223,22 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       tournaments,
       currentTournament,
       isLoading,
-      error: error || realtimeConnection.error,
+      error: error || pollingConnection.error,
       isSupabaseConfigured: isSupabaseConfigured(),
       createTournament,
       joinTournament,
       updateTournamentState,
       leaveTournament,
       loadTournaments,
-      // Expose realtime connection state
-      realtimeConnection
+      // Simplified connection state for polling
+      realtimeConnection: {
+        isConnected: pollingConnection.isPolling,
+        status: pollingConnection.isPolling ? 'polling' : 'disconnected',
+        error: pollingConnection.error,
+        reconnectAttempts: 0,
+        lastError: pollingConnection.error,
+        reconnect: pollingConnection.refresh
+      }
     }}>
       {children}
     </SupabaseTournamentContext.Provider>

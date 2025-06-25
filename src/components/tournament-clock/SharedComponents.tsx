@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Settings, Wifi, WifiOff, RefreshCw, AlertTriangle, Loader2, Clock } from 'lucide-react';
@@ -23,10 +24,8 @@ export function ConnectionStatus({
 }: ConnectionStatusProps) {
   const getStatusColor = () => {
     switch (connectionStatus) {
-      case 'connected': return 'text-green-400';
-      case 'connecting': return 'text-yellow-400';
-      case 'retrying': return 'text-orange-400';
       case 'polling': return 'text-blue-400';
+      case 'connected': return 'text-green-400';
       case 'error': return 'text-red-400';
       case 'disconnected': return 'text-gray-400';
       default: return 'text-gray-400';
@@ -35,11 +34,9 @@ export function ConnectionStatus({
 
   const getStatusText = () => {
     switch (connectionStatus) {
-      case 'connected': return 'Tiempo Real';
-      case 'connecting': return 'Conectando...';
-      case 'retrying': return `Reintentando... (${reconnectAttempts}/3)`;
-      case 'polling': return 'Modo Actualización';
-      case 'error': return 'Error conexión';
+      case 'polling': return 'Actualizando';
+      case 'connected': return 'Conectado';
+      case 'error': return 'Error';
       case 'disconnected': return 'Desconectado';
       default: return 'Estado desconocido';
     }
@@ -47,18 +44,13 @@ export function ConnectionStatus({
 
   const getStatusIcon = () => {
     switch (connectionStatus) {
-      case 'connected': return <Wifi className="w-4 h-4" />;
-      case 'connecting': return <Loader2 className="w-4 h-4 animate-spin" />;
-      case 'retrying': return <RefreshCw className="w-4 h-4 animate-spin" />;
       case 'polling': return <Clock className="w-4 h-4" />;
-      case 'error':
+      case 'connected': return <Wifi className="w-4 h-4" />;
+      case 'error': return <AlertTriangle className="w-4 h-4" />;
       case 'disconnected': return <WifiOff className="w-4 h-4" />;
       default: return <AlertTriangle className="w-4 h-4" />;
     }
   };
-
-  const showReconnectButton = !isConnected && onReconnect && 
-    (connectionStatus === 'error' || connectionStatus === 'disconnected');
 
   return (
     <div className="fixed top-4 right-4 z-50 flex items-center gap-3">
@@ -71,12 +63,12 @@ export function ConnectionStatus({
       
       {connectionStatus === 'polling' && (
         <div className="text-xs bg-blue-600/20 text-blue-300 px-2 py-1 rounded border border-blue-600/30">
-          <span className="hidden sm:inline">Actualizando cada 5s</span>
+          <span className="hidden sm:inline">Cada 5s</span>
           <span className="sm:hidden">5s</span>
         </div>
       )}
       
-      {showReconnectButton && (
+      {onReconnect && connectionStatus === 'error' && (
         <motion.button
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -84,7 +76,7 @@ export function ConnectionStatus({
           className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded transition-colors flex items-center gap-1 shadow-lg"
         >
           <RefreshCw className="w-3 h-3" />
-          <span className="hidden sm:inline">Reconectar</span>
+          <span className="hidden sm:inline">Actualizar</span>
         </motion.button>
       )}
       
@@ -139,13 +131,10 @@ export function LoadingScreen({ error }: LoadingScreenProps) {
           <div className="text-yellow-400 space-y-3">
             <div className="flex items-center justify-center gap-2">
               <AlertTriangle className="w-5 h-5" />
-              <div className="text-sm font-medium">Problema de conexión</div>
+              <div className="text-sm font-medium">Modo de actualización</div>
             </div>
-            <div className="text-xs bg-yellow-400/10 p-3 rounded-lg border border-yellow-400/20">
-              {error}
-            </div>
-            <div className="text-xs text-gray-400">
-              Activando modo de actualización automática...
+            <div className="text-xs bg-blue-600/10 p-3 rounded-lg border border-blue-600/20">
+              Sistema funcionando con actualizaciones cada 5 segundos
             </div>
           </div>
         ) : (

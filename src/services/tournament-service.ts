@@ -91,69 +91,82 @@ export class TournamentService {
   }
 
   static async joinTournament(tournamentId: string): Promise<{ tournament: TournamentState, channel?: RealtimeChannel }> {
-    console.log('Joining tournament:', tournamentId);
+    console.log('🔄 Joining tournament:', tournamentId);
 
-    // Get tournament and its current state
-    const { data: tournament, error: tournamentError } = await supabase
-      .from('tournaments')
-      .select('*')
-      .eq('id', tournamentId)
-      .single()
+    try {
+      // Get tournament and its current state
+      const { data: tournament, error: tournamentError } = await supabase
+        .from('tournaments')
+        .select('*')
+        .eq('id', tournamentId)
+        .single()
 
-    if (tournamentError) throw tournamentError
+      if (tournamentError) {
+        console.error('❌ Error loading tournament:', tournamentError);
+        throw tournamentError;
+      }
 
-    const { data: state, error: stateError } = await supabase
-      .from('tournament_states')
-      .select('*')
-      .eq('tournament_id', tournamentId)
-      .single()
+      const { data: state, error: stateError } = await supabase
+        .from('tournament_states')
+        .select('*')
+        .eq('tournament_id', tournamentId)
+        .single()
 
-    if (stateError) throw stateError
+      if (stateError) {
+        console.error('❌ Error loading tournament state:', stateError);
+        throw stateError;
+      }
 
-    // Convert to TournamentState format with proper type conversion
-    const tournamentState: TournamentState = {
-      id: tournament.id,
-      structure: {
+      console.log('✅ Tournament data loaded:', { tournament: tournament.name, state: state.is_running });
+
+      // Convert to TournamentState format with proper type conversion
+      const tournamentState: TournamentState = {
         id: tournament.id,
-        name: tournament.name,
-        buyIn: tournament.buy_in,
-        reentryFee: tournament.reentry_fee,
-        guaranteedPrizePool: tournament.guaranteed_prize_pool,
-        initialStack: tournament.initial_stack,
-        levels: tournament.levels as any, // Convert from JSON
-        breakAfterLevels: tournament.break_after_levels,
-        payoutStructure: tournament.payout_structure as any // Convert from JSON
-      },
-      currentLevelIndex: state.current_level_index,
-      timeRemaining: state.time_remaining,
-      isRunning: state.is_running,
-      isPaused: state.is_paused,
-      isOnBreak: state.is_on_break,
-      players: state.players,
-      entries: state.entries,
-      reentries: state.reentries,
-      currentPrizePool: state.current_prize_pool,
-      startTime: state.start_time ? Date.parse(state.start_time) : undefined
+        structure: {
+          id: tournament.id,
+          name: tournament.name,
+          buyIn: tournament.buy_in,
+          reentryFee: tournament.reentry_fee,
+          guaranteedPrizePool: tournament.guaranteed_prize_pool,
+          initialStack: tournament.initial_stack,
+          levels: tournament.levels as any, // Convert from JSON
+          breakAfterLevels: tournament.break_after_levels,
+          payoutStructure: tournament.payout_structure as any // Convert from JSON
+        },
+        currentLevelIndex: state.current_level_index,
+        timeRemaining: state.time_remaining,
+        isRunning: state.is_running,
+        isPaused: state.is_paused,
+        isOnBreak: state.is_on_break,
+        players: state.players,
+        entries: state.entries,
+        reentries: state.reentries,
+        currentPrizePool: state.current_prize_pool,
+        startTime: state.start_time ? Date.parse(state.start_time) : undefined
+      }
+
+      console.log('✅ Tournament state parsed successfully');
+
+      // Set up real-time subscription with optimized configuration
+      const channel = supabase
+        .channel(`tournament_${tournamentId}`, {
+          config: {
+            broadcast: { self: false },
+            presence: { key: tournamentId }
+          }
+        });
+
+      console.log('🔄 Setting up real-time channel for tournament:', tournamentId);
+
+      return { tournament: tournamentState, channel }
+    } catch (error) {
+      console.error('❌ Error in joinTournament:', error);
+      throw error;
     }
-
-    console.log('Tournament state loaded:', tournamentState);
-
-    // Set up real-time subscription with optimized configuration
-    const channel = supabase
-      .channel(`tournament_${tournamentId}`, {
-        config: {
-          broadcast: { self: false },
-          presence: { key: tournamentId }
-        }
-      });
-
-    console.log('Setting up optimized real-time channel for tournament:', tournamentId);
-
-    return { tournament: tournamentState, channel }
   }
 
   static async updateTournamentState(tournamentId: string, updates: Partial<TournamentState>): Promise<void> {
-    console.log('TournamentService: Updating tournament state for:', tournamentId, updates);
+    console.log('🔄 TournamentService: Updating tournament state for:', tournamentId, updates);
 
     try {
       const userId = await getCurrentUserId();
@@ -176,7 +189,7 @@ export class TournamentService {
       if (updates.currentPrizePool !== undefined) updateData.current_prize_pool = updates.currentPrizePool;
       if (updates.startTime !== undefined) updateData.start_time = updates.startTime ? new Date(updates.startTime).toISOString() : null;
 
-      console.log('Database update payload:', updateData);
+      console.log('📤 Database update payload:', updateData);
 
       const { data, error } = await supabase
         .from('tournament_states')
@@ -186,11 +199,11 @@ export class TournamentService {
         .single();
 
       if (error) {
-        console.error('Database update error:', error);
+        console.error('❌ Database update error:', error);
         throw error;
       }
 
-      console.log('✅ Database update successful - real-time will sync automatically:', data);
+      console.log('✅ Database update successful:', data);
 
       // Log the action with proper JSON conversion
       await supabase
@@ -201,6 +214,8 @@ export class TournamentService {
           details: updates as any, // Convert to JSON
           created_by: userId
         });
+
+      console.log('✅ Tournament log created successfully');
 
     } catch (error) {
       console.error('❌ Error in updateTournamentState:', error);

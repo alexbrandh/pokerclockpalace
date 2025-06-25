@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Settings, Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { Settings, Wifi, WifiOff, RefreshCw, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMobileOptimization } from '@/hooks/useMobileOptimization';
 
@@ -112,13 +112,19 @@ export function LoadingScreen({ error }: LoadingScreenProps) {
         <div className="text-2xl font-bold">Configurando torneo...</div>
         {error && (
           <div className="text-yellow-400 flex items-center justify-center gap-2">
-            <WifiOff className="w-5 h-5" />
-            <div className="text-sm">
+            <AlertTriangle className="w-5 h-5" />
+            <div className="text-sm max-w-md">
               {error}
               <div className="mt-2 text-xs text-gray-400">
-                Verificando conexión...
+                Verificando conexión y datos del torneo...
               </div>
             </div>
+          </div>
+        )}
+        {!error && (
+          <div className="flex items-center justify-center gap-2 text-gray-400">
+            <RefreshCw className="w-5 h-5 animate-spin" />
+            <span className="text-sm">Cargando datos del servidor...</span>
           </div>
         )}
       </div>

@@ -28,28 +28,32 @@ export function useServerTimer(tournamentId: string | null) {
       setIsLoading(true);
       setLastError(null);
       
-      // Calculate time remaining using the new mathematical approach with break support
+      console.log(`🔄 Fetching server time for tournament: ${tournamentId}`);
+      
+      // Calculate time remaining using the improved mathematical approach
       const { data: timeData, error: timeError } = await supabase.rpc(
         'calculate_time_remaining' as any,
         { p_tournament_id: tournamentId }
       );
 
       if (timeError) {
-        console.error('Error fetching server time:', timeError);
+        console.error('❌ Error fetching server time:', timeError);
         setLastError(`Error calculating time: ${timeError.message}`);
         return null;
       }
 
       if (!timeData || timeData.length === 0) {
-        console.warn('No time data returned from server');
+        console.warn('⚠️ No time data returned from server');
         setLastError('No time data available');
         return null;
       }
 
+      console.log('✅ Server time data received:', timeData[0]);
       return timeData as ServerTimeResult[];
     } catch (error) {
-      console.error('Error calculating server time:', error);
-      setLastError(`Server time error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('❌ Error calculating server time:', error);
+      setLastError(`Server time error: ${errorMessage}`);
       return null;
     } finally {
       setIsLoading(false);
@@ -63,28 +67,32 @@ export function useServerTimer(tournamentId: string | null) {
       setIsLoading(true);
       setLastError(null);
       
-      // Calculate current level index using the new mathematical approach with break support
+      console.log(`🔄 Fetching server level index for tournament: ${tournamentId}`);
+      
+      // Calculate current level index using the improved mathematical approach
       const { data: levelData, error: levelError } = await supabase.rpc(
         'calculate_current_level_index' as any,
         { p_tournament_id: tournamentId }
       );
 
       if (levelError) {
-        console.error('Error fetching server level index:', levelError);
+        console.error('❌ Error fetching server level index:', levelError);
         setLastError(`Error calculating level: ${levelError.message}`);
         return null;
       }
 
       if (!levelData || levelData.length === 0) {
-        console.warn('No level data returned from server');
+        console.warn('⚠️ No level data returned from server');
         setLastError('No level data available');
         return null;
       }
 
+      console.log('✅ Server level data received:', levelData[0]);
       return levelData as ServerLevelResult[];
     } catch (error) {
-      console.error('Error calculating server level index:', error);
-      setLastError(`Server level error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('❌ Error calculating server level index:', error);
+      setLastError(`Server level error: ${errorMessage}`);
       return null;
     } finally {
       setIsLoading(false);
@@ -92,10 +100,13 @@ export function useServerTimer(tournamentId: string | null) {
   }, [tournamentId]);
 
   const syncWithServer = useCallback(async () => {
-    if (!tournamentId) return;
+    if (!tournamentId) {
+      console.warn('⚠️ No tournament ID provided for sync');
+      return;
+    }
 
     try {
-      console.log('🔄 Syncing with server using mathematical calculation with break support...');
+      console.log('🔄 Syncing with server using improved mathematical calculation...');
       
       const [serverTime, levelIndex] = await Promise.all([
         fetchServerTime(),
@@ -107,25 +118,34 @@ export function useServerTimer(tournamentId: string | null) {
         setServerTimeRemaining(timeResult.time_remaining_seconds);
         setServerIsOnBreak(timeResult.is_on_break);
         setBreakTimeRemaining(timeResult.break_time_remaining);
-        console.log(`📊 Server time calculated: ${timeResult.time_remaining_seconds}s, break: ${timeResult.is_on_break}, break_time: ${timeResult.break_time_remaining}s`);
+        console.log(`📊 Server time synced: ${timeResult.time_remaining_seconds}s, break: ${timeResult.is_on_break}, break_time: ${timeResult.break_time_remaining}s`);
+      } else {
+        console.warn('⚠️ No valid server time data received');
       }
       
       if (levelIndex && levelIndex.length > 0) {
         const levelResult = levelIndex[0];
         setServerLevelIndex(levelResult.current_level_index);
-        console.log(`📊 Server level calculated: ${levelResult.current_level_index}, break: ${levelResult.is_on_break}`);
+        console.log(`📊 Server level synced: ${levelResult.current_level_index}, break: ${levelResult.is_on_break}`);
+      } else {
+        console.warn('⚠️ No valid server level data received');
       }
 
       // Clear any previous errors on successful sync
-      setLastError(null);
+      if (serverTime || levelIndex) {
+        setLastError(null);
+        console.log('✅ Server sync completed successfully');
+      }
     } catch (error) {
-      console.error('Sync error:', error);
-      setLastError(`Sync failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('❌ Sync error:', error);
+      setLastError(`Sync failed: ${errorMessage}`);
     }
   }, [fetchServerTime, fetchServerLevelIndex, tournamentId]);
 
   useEffect(() => {
     if (tournamentId) {
+      console.log(`🚀 Initializing server timer for tournament: ${tournamentId}`);
       syncWithServer();
     }
   }, [tournamentId, syncWithServer]);

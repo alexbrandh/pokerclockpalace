@@ -1,5 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSafariFullscreenManager } from './useSafariFullscreenManager';
+import { detectSafariMobile } from '@/utils/safariMobileUtils';
 import type { FullscreenManager } from '@/types/mobile-optimization';
 
 export function useFullscreenManager(
@@ -8,7 +10,23 @@ export function useFullscreenManager(
 ): FullscreenManager {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fullscreenSupported, setFullscreenSupported] = useState(false);
+  
+  // Detect Safari and use appropriate manager
+  const safariInfo = detectSafariMobile();
+  const safariManager = useSafariFullscreenManager(onDebugInfo, lockToLandscape);
 
+  // If Safari iOS, use Safari manager
+  if (safariInfo.isIOSSafari) {
+    return {
+      isFullscreen: safariManager.isFullscreen,
+      fullscreenSupported: safariManager.fullscreenSupported,
+      enterFullscreen: safariManager.enterFullscreen,
+      exitFullscreen: safariManager.exitFullscreen,
+      toggleFullscreen: safariManager.toggleFullscreen
+    };
+  }
+
+  // For other browsers, use standard fullscreen manager
   const updateFullscreenState = useCallback(() => {
     const fullscreen = !!(document.fullscreenElement || (document as any).webkitFullscreenElement || (document as any).mozFullScreenElement);
     setIsFullscreen(fullscreen);
@@ -44,7 +62,7 @@ export function useFullscreenManager(
   }, [updateFullscreenState]);
 
   const enterFullscreen = useCallback(async () => {
-    console.log('🚀 Starting fullscreen process...');
+    console.log('🚀 Starting standard fullscreen process...');
     
     try {
       const element = document.documentElement;

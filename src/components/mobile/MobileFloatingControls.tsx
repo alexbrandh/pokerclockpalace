@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, Settings, Maximize, Minimize } from 'lucide-react';
+import { Play, Pause, Settings, Maximize, Minimize, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MobileTournamentControlsModal } from './MobileTournamentControlsModal';
+import { detectSafariMobile } from '@/utils/safariMobileUtils';
 
 interface MobileFloatingControlsProps {
   isRunning: boolean;
@@ -46,10 +47,12 @@ export function MobileFloatingControls({
   onToggleFullscreen,
   onOpenSettings
 }: MobileFloatingControlsProps) {
+  const safariInfo = detectSafariMobile();
+
   const handleFullscreenClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('🎯 Fullscreen button clicked - starting process...');
+    console.log('🎯 Fullscreen button clicked - Safari iOS:', safariInfo.isIOSSafari);
     
     // Add visual feedback immediately
     const button = e.currentTarget as HTMLButtonElement;
@@ -61,6 +64,22 @@ export function MobileFloatingControls({
     
     // Call the fullscreen function
     onToggleFullscreen();
+  };
+
+  const getFullscreenButtonTitle = () => {
+    if (!fullscreenSupported) {
+      return "Pantalla completa no soportada";
+    }
+    
+    if (safariInfo.isIOSSafari) {
+      if (safariInfo.isStandalone) {
+        return isFullscreen ? "Salir de pantalla completa" : "Pantalla completa (desde app)";
+      } else {
+        return isFullscreen ? "Salir de pantalla completa" : "Pantalla completa Safari";
+      }
+    }
+    
+    return isFullscreen ? "Salir de pantalla completa" : "Pantalla completa horizontal";
   };
 
   return (
@@ -79,6 +98,13 @@ export function MobileFloatingControls({
                 <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
                 <span>{debugInfo}</span>
               </div>
+              {/* Safari-specific PWA hint */}
+              {safariInfo.isIOSSafari && !safariInfo.isStandalone && debugInfo.includes('alternativo') && (
+                <div className="mt-2 text-xs text-gray-300 flex items-center justify-center gap-1">
+                  <Plus className="w-3 h-3" />
+                  <span>Añadir a pantalla de inicio para mejor experiencia</span>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
@@ -100,16 +126,12 @@ export function MobileFloatingControls({
                 fullscreenSupported 
                   ? isFullscreen 
                     ? 'border-green-500/60 text-green-400 hover:border-green-400 shadow-green-400/20' 
-                    : 'border-yellow-500/60 text-yellow-400 hover:border-yellow-400 shadow-yellow-400/20'
+                    : safariInfo.isIOSSafari
+                      ? 'border-orange-500/60 text-orange-400 hover:border-orange-400 shadow-orange-400/20'
+                      : 'border-yellow-500/60 text-yellow-400 hover:border-yellow-400 shadow-yellow-400/20'
                   : 'border-red-500/60 text-red-400 opacity-50 cursor-not-allowed'
               }`}
-              title={
-                !fullscreenSupported 
-                  ? "Pantalla completa no soportada" 
-                  : isFullscreen 
-                    ? "Salir de pantalla completa" 
-                    : "Pantalla completa horizontal"
-              }
+              title={getFullscreenButtonTitle()}
             >
               {isFullscreen ? (
                 <Minimize className="w-5 h-5" />

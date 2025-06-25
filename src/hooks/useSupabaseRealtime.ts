@@ -5,7 +5,7 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 
 export interface RealtimeConnectionState {
   isConnected: boolean;
-  status: 'connecting' | 'connected' | 'disconnected' | 'error' | 'retrying';
+  status: 'connecting' | 'connected' | 'disconnected' | 'error' | 'retrying' | 'polling';
   error: string | null;
   reconnectAttempts: number;
   lastError: string | null;
@@ -30,17 +30,27 @@ export function useSupabaseRealtime({
     lastError: null
   });
 
+  // Use refs to avoid circular dependencies
   const channelRef = useRef<RealtimeChannel | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const maxReconnectAttempts = 5;
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectAttemptsRef = useRef(0);
+  const isConnectingRef = useRef(false);
+  const maxReconnectAttempts = 3;
   const baseDelay = 1000;
 
+  // Cleanup function
   const cleanup = useCallback(() => {
     console.log('🧹 Cleaning up realtime connection');
     
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
+    }
+
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
     }
 
     if (channelRef.current) {
@@ -51,22 +61,67 @@ export function useSupabaseRealtime({
       }
       channelRef.current = null;
     }
+
+    isConnectingRef.current = false;
   }, []);
 
-  const connect = useCallback(async () => {
-    if (!enabled || !tournamentId) {
-      console.log('⏸️ Realtime connection disabled or no tournament ID');
-      return;
-    }
-
-    cleanup();
-
-    console.log('🔄 Establishing realtime connection for tournament:', tournamentId);
+  // Polling fallback function
+  const startPollingMode = useCallback(() => {
+    console.log('📊 Starting polling mode as fallback');
     
     setConnectionState(prev => ({
       ...prev,
-      status: prev.reconnectAttempts > 0 ? 'retrying' : 'connecting',
-      error: null
+      status: 'polling',
+      isConnected: false,
+      error: 'Using polling mode due to connection issues'
+    }));
+
+    // Poll for updates every 5 seconds
+    pollingIntervalRef.current = setInterval(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('tournament_states')
+          .select('*')
+          .eq('tournament_id', tournamentId)
+          .single();
+
+        if (!error && data) {
+          console.log('📡 Polling update received');
+          onStateUpdate({
+            eventType: 'UPDATE',
+            new: data,
+            old: null
+          });
+        }
+      } catch (error) {
+        console.warn('Polling error:', error);
+      }
+    }, 5000);
+  }, [tournamentId, onStateUpdate]);
+
+  // Connection function without circular dependencies
+  const connect = useCallback(() => {
+    if (!enabled || !tournamentId || isConnectingRef.current) {
+      return;
+    }
+
+    // If we've exceeded max attempts, switch to polling
+    if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
+      console.log('🔄 Max reconnect attempts reached, switching to polling mode');
+      startPollingMode();
+      return;
+    }
+
+    isConnectingRef.current = true;
+    cleanup();
+
+    console.log(`🔄 Connecting to tournament: ${tournamentId} (attempt ${reconnectAttemptsRef.current + 1}/${maxReconnectAttempts})`);
+    
+    setConnectionState(prev => ({
+      ...prev,
+      status: reconnectAttemptsRef.current > 0 ? 'retrying' : 'connecting',
+      error: null,
+      reconnectAttempts: reconnectAttemptsRef.current
     }));
 
     try {
@@ -91,8 +146,10 @@ export function useSupabaseRealtime({
         )
         .subscribe((status, error) => {
           console.log(`📡 Subscription status: ${status}`);
+          isConnectingRef.current = false;
           
           if (status === 'SUBSCRIBED') {
+            reconnectAttemptsRef.current = 0;
             setConnectionState(prev => ({
               ...prev,
               isConnected: true,
@@ -101,6 +158,7 @@ export function useSupabaseRealtime({
               reconnectAttempts: 0
             }));
             console.log('✅ Successfully connected to realtime');
+            
           } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
             const errorMessage = error?.message || `Connection ${status.toLowerCase()}`;
             console.error(`❌ Connection error: ${errorMessage}`);
@@ -110,22 +168,24 @@ export function useSupabaseRealtime({
               isConnected: false,
               status: 'error',
               error: errorMessage,
-              lastError: errorMessage
+              lastError: errorMessage,
+              reconnectAttempts: reconnectAttemptsRef.current
             }));
             
-            // Attempt reconnection with exponential backoff
-            if (connectionState.reconnectAttempts < maxReconnectAttempts) {
-              const delay = baseDelay * Math.pow(2, connectionState.reconnectAttempts);
-              console.log(`🔄 Reconnecting in ${delay}ms (attempt ${connectionState.reconnectAttempts + 1}/${maxReconnectAttempts})`);
-              
+            // Schedule reconnection
+            reconnectAttemptsRef.current++;
+            const delay = baseDelay * Math.pow(2, reconnectAttemptsRef.current - 1);
+            
+            if (reconnectAttemptsRef.current <= maxReconnectAttempts) {
+              console.log(`🔄 Reconnecting in ${delay}ms`);
               reconnectTimeoutRef.current = setTimeout(() => {
-                setConnectionState(prev => ({
-                  ...prev,
-                  reconnectAttempts: prev.reconnectAttempts + 1
-                }));
                 connect();
               }, delay);
+            } else {
+              console.log('🔄 Max attempts reached, switching to polling');
+              startPollingMode();
             }
+            
           } else if (status === 'CLOSED') {
             console.log('📪 Connection closed');
             setConnectionState(prev => ({
@@ -139,7 +199,8 @@ export function useSupabaseRealtime({
       channelRef.current = channel;
       
     } catch (error) {
-      console.error('❌ Failed to establish realtime connection:', error);
+      console.error('❌ Failed to establish connection:', error);
+      isConnectingRef.current = false;
       const errorMessage = error instanceof Error ? error.message : 'Unknown connection error';
       
       setConnectionState(prev => ({
@@ -147,18 +208,40 @@ export function useSupabaseRealtime({
         isConnected: false,
         status: 'error',
         error: errorMessage,
-        lastError: errorMessage
+        lastError: errorMessage,
+        reconnectAttempts: reconnectAttemptsRef.current
       }));
+      
+      // Schedule reconnection
+      reconnectAttemptsRef.current++;
+      if (reconnectAttemptsRef.current <= maxReconnectAttempts) {
+        const delay = baseDelay * Math.pow(2, reconnectAttemptsRef.current - 1);
+        reconnectTimeoutRef.current = setTimeout(() => {
+          connect();
+        }, delay);
+      } else {
+        startPollingMode();
+      }
     }
-  }, [tournamentId, enabled, onStateUpdate, connectionState.reconnectAttempts, cleanup]);
+  }, [enabled, tournamentId, onStateUpdate, cleanup, startPollingMode]);
 
+  // Manual reconnect function
   const reconnect = useCallback(() => {
     console.log('🔄 Manual reconnection requested');
+    reconnectAttemptsRef.current = 0;
     setConnectionState(prev => ({
       ...prev,
       reconnectAttempts: 0,
-      error: null
+      error: null,
+      status: 'disconnected'
     }));
+    
+    // Stop polling if active
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+    
     connect();
   }, [connect]);
 
@@ -169,22 +252,22 @@ export function useSupabaseRealtime({
     }
     
     return cleanup;
-  }, [enabled, tournamentId, connect, cleanup]);
+  }, [enabled, tournamentId]); // Removed connect and cleanup from dependencies to avoid loops
 
   // Handle page visibility changes
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && enabled && tournamentId) {
         console.log('👁️ Page became visible, checking connection');
-        if (!connectionState.isConnected) {
-          connect();
+        if (!connectionState.isConnected && connectionState.status !== 'polling') {
+          reconnect();
         }
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [enabled, tournamentId, connectionState.isConnected, connect]);
+  }, [enabled, tournamentId, connectionState.isConnected, connectionState.status, reconnect]);
 
   return {
     ...connectionState,

@@ -64,12 +64,15 @@ export function TournamentClock() {
           progress={progress}
           lastMinuteAlert={lastMinuteAlert}
           nextBreakTime={nextBreakTime}
+          actionHistory={actionHistory}
           toggleTimer={toggleTimer}
           nextLevel={nextLevel}
           resetLevel={resetLevel}
           addPlayer={addPlayer}
           eliminatePlayer={eliminatePlayer}
+          addReentry={addReentry}
           skipBreak={skipBreak}
+          undoLastAction={undoLastAction}
           setShowSettings={setShowSettings}
         />
       ) : (

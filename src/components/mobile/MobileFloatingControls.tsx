@@ -11,12 +11,15 @@ interface MobileFloatingControlsProps {
   isOnBreak: boolean;
   isFullscreen: boolean;
   playersCount: number;
+  canUndo: boolean;
   onToggleTimer: () => void;
   onNextLevel: () => void;
   onResetLevel: () => void;
   onAddPlayer: () => void;
   onEliminatePlayer: () => void;
+  onAddReentry: () => void;
   onSkipBreak: () => void;
+  onUndoLastAction: () => void;
   onToggleFullscreen: () => void;
   onOpenSettings: () => void;
 }
@@ -27,12 +30,15 @@ export function MobileFloatingControls({
   isOnBreak,
   isFullscreen,
   playersCount,
+  canUndo,
   onToggleTimer,
   onNextLevel,
   onResetLevel,
   onAddPlayer,
   onEliminatePlayer,
+  onAddReentry,
   onSkipBreak,
+  onUndoLastAction,
   onToggleFullscreen,
   onOpenSettings
 }: MobileFloatingControlsProps) {
@@ -48,12 +54,12 @@ export function MobileFloatingControls({
             onClick={onToggleFullscreen}
             size="lg"
             variant="outline"
-            className="h-14 w-14 rounded-full border-2 border-gray-500/60 text-gray-300 hover:bg-gray-800/50 hover:border-gray-400 shadow-xl bg-black/80 backdrop-blur"
+            className="h-12 w-12 rounded-full border-2 border-gray-500/60 text-gray-300 hover:bg-gray-800/50 hover:border-gray-400 shadow-xl bg-black/80 backdrop-blur"
           >
             {isFullscreen ? (
-              <Minimize className="w-6 h-6" />
+              <Minimize className="w-5 h-5" />
             ) : (
-              <Maximize className="w-6 h-6" />
+              <Maximize className="w-5 h-5" />
             )}
           </Button>
         </motion.div>
@@ -66,16 +72,16 @@ export function MobileFloatingControls({
           <Button
             onClick={onToggleTimer}
             size="lg"
-            className={`h-20 w-20 rounded-full shadow-2xl transition-all duration-200 text-lg font-bold ${
+            className={`h-16 w-16 rounded-full shadow-2xl transition-all duration-200 text-lg font-bold ${
               isPaused 
                 ? 'bg-green-600 hover:bg-green-700 text-white shadow-green-600/50' 
                 : 'bg-yellow-600 hover:bg-yellow-700 text-white shadow-yellow-600/50'
             }`}
           >
             {isPaused ? (
-              <Play className="w-10 h-10" />
+              <Play className="w-8 h-8" />
             ) : (
-              <Pause className="w-10 h-10" />
+              <Pause className="w-8 h-8" />
             )}
           </Button>
         </motion.div>
@@ -90,20 +96,23 @@ export function MobileFloatingControls({
             isPaused={isPaused}
             isOnBreak={isOnBreak}
             playersCount={playersCount}
+            canUndo={canUndo}
             onToggleTimer={onToggleTimer}
             onNextLevel={onNextLevel}
             onResetLevel={onResetLevel}
             onAddPlayer={onAddPlayer}
             onEliminatePlayer={onEliminatePlayer}
+            onAddReentry={onAddReentry}
             onSkipBreak={onSkipBreak}
+            onUndoLastAction={onUndoLastAction}
             onOpenSettings={onOpenSettings}
           >
             <Button
               size="lg"
               variant="outline"
-              className="h-14 w-14 rounded-full border-2 border-blue-500/60 text-blue-400 hover:bg-blue-900/20 hover:border-blue-400 shadow-xl bg-black/80 backdrop-blur"
+              className="h-12 w-12 rounded-full border-2 border-blue-500/60 text-blue-400 hover:bg-blue-900/20 hover:border-blue-400 shadow-xl bg-black/80 backdrop-blur"
             >
-              <Settings className="w-6 h-6" />
+              <Settings className="w-5 h-5" />
             </Button>
           </MobileTournamentControlsModal>
         </motion.div>

@@ -14,6 +14,7 @@ export function useRealtimeConnection({ tournamentId, onStateUpdate }: UseRealti
   const maxReconnectAttempts = 5;
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const reconnectIntervalRef = useRef<NodeJS.Timeout>();
 
   const cleanup = useCallback(() => {
     if (channelRef.current) {
@@ -23,6 +24,11 @@ export function useRealtimeConnection({ tournamentId, onStateUpdate }: UseRealti
     }
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = undefined;
+    }
+    if (reconnectIntervalRef.current) {
+      clearInterval(reconnectIntervalRef.current);
+      reconnectIntervalRef.current = undefined;
     }
   }, []);
 
@@ -32,56 +38,68 @@ export function useRealtimeConnection({ tournamentId, onStateUpdate }: UseRealti
     console.log('🔌 Connecting to real-time channel for tournament:', tournamentId);
     setConnectionStatus('connecting');
 
-    const channel = supabase
-      .channel(`tournament_${tournamentId}`, {
-        config: {
-          broadcast: { self: false },
-          presence: { key: tournamentId }
-        }
-      })
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'tournament_states',
-          filter: `tournament_id=eq.${tournamentId}`
-        },
-        (payload) => {
-          console.log('📡 Real-time update received:', payload);
-          onStateUpdate(payload);
-        }
-      )
-      .subscribe((status, err) => {
-        console.log('📡 Real-time channel status:', status, err);
-        
-        if (status === 'SUBSCRIBED') {
-          console.log('✅ Successfully connected to real-time updates');
-          setConnectionStatus('connected');
-          setReconnectAttempts(0);
-        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          console.error('❌ Real-time connection error:', err);
-          setConnectionStatus('error');
+    try {
+      const channel = supabase
+        .channel(`tournament_${tournamentId}`, {
+          config: {
+            broadcast: { self: false },
+            presence: { key: tournamentId }
+          }
+        })
+        .on('postgres_changes', 
+          { 
+            event: '*', 
+            schema: 'public', 
+            table: 'tournament_states',
+            filter: `tournament_id=eq.${tournamentId}`
+          },
+          (payload) => {
+            console.log('📡 Real-time update received:', payload);
+            onStateUpdate(payload);
+          }
+        )
+        .subscribe((status, err) => {
+          console.log('📡 Real-time channel status:', status, err);
           
-          // Auto-reconnect with exponential backoff
-          if (reconnectAttempts < maxReconnectAttempts) {
-            const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
-            console.log(`🔄 Attempting reconnection in ${delay}ms (attempt ${reconnectAttempts + 1}/${maxReconnectAttempts})`);
+          if (status === 'SUBSCRIBED') {
+            console.log('✅ Successfully connected to real-time updates');
+            setConnectionStatus('connected');
+            setReconnectAttempts(0);
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            console.error('❌ Real-time connection error:', err);
+            setConnectionStatus('error');
             
-            reconnectTimeoutRef.current = setTimeout(() => {
-              setReconnectAttempts(prev => prev + 1);
-              connect();
-            }, delay);
-          } else {
-            console.error('💀 Max reconnection attempts reached');
+            // Auto-reconnect with exponential backoff
+            if (reconnectAttempts < maxReconnectAttempts) {
+              const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+              console.log(`🔄 Attempting reconnection in ${delay}ms (attempt ${reconnectAttempts + 1}/${maxReconnectAttempts})`);
+              
+              reconnectTimeoutRef.current = setTimeout(() => {
+                setReconnectAttempts(prev => prev + 1);
+                connect();
+              }, delay);
+            } else {
+              console.error('💀 Max reconnection attempts reached');
+              setConnectionStatus('disconnected');
+              
+              // Set up periodic retry every 30 seconds
+              reconnectIntervalRef.current = setInterval(() => {
+                console.log('🔄 Periodic reconnection attempt...');
+                setReconnectAttempts(0);
+                connect();
+              }, 30000);
+            }
+          } else if (status === 'CLOSED') {
+            console.log('🔌 Real-time channel closed');
             setConnectionStatus('disconnected');
           }
-        } else if (status === 'CLOSED') {
-          console.log('🔌 Real-time channel closed');
-          setConnectionStatus('disconnected');
-        }
-      });
+        });
 
-    channelRef.current = channel;
+      channelRef.current = channel;
+    } catch (error) {
+      console.error('❌ Failed to create real-time channel:', error);
+      setConnectionStatus('error');
+    }
   }, [tournamentId, onStateUpdate, reconnectAttempts, cleanup]);
 
   const reconnect = useCallback(() => {
@@ -104,8 +122,18 @@ export function useRealtimeConnection({ tournamentId, onStateUpdate }: UseRealti
       }
     };
 
+    const handleOnline = () => {
+      console.log('🌐 Network connection restored, reconnecting...');
+      reconnect();
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('online', handleOnline);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('online', handleOnline);
+    };
   }, [connectionStatus, reconnect]);
 
   return {

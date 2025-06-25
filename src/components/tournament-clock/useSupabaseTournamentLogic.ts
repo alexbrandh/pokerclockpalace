@@ -2,13 +2,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSupabaseTournament } from '@/contexts/SupabaseTournamentContext';
 import { useSoundSystem } from '@/hooks/useSoundSystem';
+import { useServerTimer } from '@/hooks/useServerTimer';
+import { useRealtimeConnection } from '@/hooks/useRealtimeConnection';
 
 export function useSupabaseTournamentLogic() {
   const { currentTournament, updateTournamentState, error } = useSupabaseTournament();
   const { playSound } = useSoundSystem();
+  const { serverTimeRemaining, syncWithServer } = useServerTimer(currentTournament?.id || null);
   
   const [lastMinuteAlert, setLastMinuteAlert] = useState(false);
   const [actionHistory, setActionHistory] = useState<Array<Partial<any>>>([]);
+  const [clientTimeRemaining, setClientTimeRemaining] = useState<number>(0);
 
   // Helper function to save state for undo
   const saveStateForUndo = useCallback(() => {
@@ -17,59 +21,90 @@ export function useSupabaseTournamentLogic() {
     }
   }, [currentTournament]);
 
-  // Main timer effect
+  // Real-time connection with auto-reconnection
+  const handleStateUpdate = useCallback((payload: any) => {
+    console.log('📡 Processing real-time update:', payload);
+    syncWithServer(); // Sync with server time when state changes
+  }, [syncWithServer]);
+
+  const { connectionStatus, reconnect, isConnected } = useRealtimeConnection({
+    tournamentId: currentTournament?.id || '',
+    onStateUpdate: handleStateUpdate
+  });
+
+  // Sync client time with server time
+  useEffect(() => {
+    if (serverTimeRemaining !== null) {
+      setClientTimeRemaining(serverTimeRemaining);
+    } else if (currentTournament) {
+      setClientTimeRemaining(currentTournament.timeRemaining);
+    }
+  }, [serverTimeRemaining, currentTournament?.timeRemaining]);
+
+  // Client-side timer for smooth UI updates (syncs with server)
   useEffect(() => {
     if (!currentTournament || !currentTournament.isRunning || currentTournament.isPaused) return;
 
     const interval = setInterval(() => {
-      const newTime = currentTournament.timeRemaining - 1;
-      
-      if (newTime <= 0) {
-        // Level completed, advance to next
-        const nextLevelIndex = currentTournament.currentLevelIndex + 1;
-        const nextLevelData = currentTournament.structure.levels[nextLevelIndex];
+      setClientTimeRemaining(prev => {
+        const newTime = Math.max(0, prev - 1);
         
-        if (nextLevelData) {
-          // Auto-pause if entering a break
-          const shouldAutoPause = nextLevelData.isBreak;
-          
-          updateTournamentState({
-            currentLevelIndex: nextLevelIndex,
-            timeRemaining: nextLevelData.duration * 60,
-            isOnBreak: nextLevelData.isBreak,
-            isPaused: shouldAutoPause
-          });
-          
-          // Play appropriate sound
-          if (nextLevelData.isBreak) {
-            playSound('breakStart');
-            console.log('🎵 Break time! Taking a pause...');
-          } else {
-            playSound('levelChange');
-          }
-        } else {
-          // Tournament ended
-          updateTournamentState({
-            isRunning: false,
-            isPaused: true
-          });
-        }
-        setLastMinuteAlert(false);
-      } else {
-        updateTournamentState({ timeRemaining: newTime });
-        
-        // Last minute alert (only for non-break levels)
+        // Last minute alert
         if (newTime === 60 && !lastMinuteAlert && !currentTournament.isOnBreak) {
           setLastMinuteAlert(true);
           playSound('lastMinute');
         } else if (newTime > 60) {
           setLastMinuteAlert(false);
         }
-      }
+        
+        // Level completion
+        if (newTime === 0) {
+          const nextLevelIndex = currentTournament.currentLevelIndex + 1;
+          const nextLevelData = currentTournament.structure.levels[nextLevelIndex];
+          
+          if (nextLevelData) {
+            const shouldAutoPause = nextLevelData.isBreak;
+            
+            updateTournamentState({
+              currentLevelIndex: nextLevelIndex,
+              timeRemaining: nextLevelData.duration * 60,
+              isOnBreak: nextLevelData.isBreak,
+              isPaused: shouldAutoPause
+            });
+            
+            if (nextLevelData.isBreak) {
+              playSound('breakStart');
+            } else {
+              playSound('levelChange');
+            }
+          } else {
+            updateTournamentState({
+              isRunning: false,
+              isPaused: true
+            });
+          }
+          setLastMinuteAlert(false);
+          return newTime;
+        }
+        
+        return newTime;
+      });
     }, 1000);
 
     return () => clearInterval(interval);
   }, [currentTournament, updateTournamentState, lastMinuteAlert, playSound]);
+
+  // Periodic server sync (every 30 seconds)
+  useEffect(() => {
+    if (!currentTournament?.isRunning || currentTournament?.isPaused) return;
+
+    const syncInterval = setInterval(() => {
+      console.log('🔄 Periodic server sync');
+      syncWithServer();
+    }, 30000);
+
+    return () => clearInterval(syncInterval);
+  }, [currentTournament?.isRunning, currentTournament?.isPaused, syncWithServer]);
 
   const toggleTimer = useCallback(() => {
     if (!currentTournament) return;
@@ -106,7 +141,6 @@ export function useSupabaseTournamentLogic() {
         isPaused: nextLevelData.isBreak
       });
 
-      // Play appropriate sound
       if (nextLevelData.isBreak) {
         playSound('breakStart');
       } else {
@@ -121,7 +155,6 @@ export function useSupabaseTournamentLogic() {
     saveStateForUndo();
     playSound('buttonClick');
     
-    // Skip to the next non-break level
     const nextLevelIndex = currentTournament.currentLevelIndex + 1;
     const nextLevelData = currentTournament.structure.levels[nextLevelIndex];
     
@@ -197,8 +230,13 @@ export function useSupabaseTournamentLogic() {
   }, [actionHistory, updateTournamentState, currentTournament]);
 
   return {
-    tournament: currentTournament,
-    isConnected: true, // Always connected to Supabase
+    tournament: currentTournament ? {
+      ...currentTournament,
+      timeRemaining: clientTimeRemaining // Use client time for smooth UI
+    } : null,
+    isConnected,
+    connectionStatus,
+    reconnect,
     error,
     lastMinuteAlert,
     actionHistory,

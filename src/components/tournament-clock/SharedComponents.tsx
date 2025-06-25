@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Settings, Wifi, WifiOff } from 'lucide-react';
@@ -7,32 +6,61 @@ import { useMobileOptimization } from '@/hooks/useMobileOptimization';
 
 interface ConnectionStatusProps {
   isConnected: boolean;
+  connectionStatus?: string;
+  onReconnect?: () => void;
   onSettingsClick: () => void;
 }
 
-export function ConnectionStatus({ isConnected, onSettingsClick }: ConnectionStatusProps) {
-  const mobileOpt = useMobileOptimization();
-  
+export function ConnectionStatus({ 
+  isConnected, 
+  connectionStatus = 'unknown',
+  onReconnect,
+  onSettingsClick 
+}: ConnectionStatusProps) {
+  const getStatusColor = () => {
+    switch (connectionStatus) {
+      case 'connected': return 'text-green-400';
+      case 'connecting': return 'text-yellow-400';
+      case 'error': return 'text-red-400';
+      case 'disconnected': return 'text-red-400';
+      default: return 'text-gray-400';
+    }
+  };
+
+  const getStatusText = () => {
+    switch (connectionStatus) {
+      case 'connected': return 'Conectado';
+      case 'connecting': return 'Conectando...';
+      case 'error': return 'Error de conexión';
+      case 'disconnected': return 'Desconectado';
+      default: return 'Estado desconocido';
+    }
+  };
+
   return (
-    <div 
-      className={`fixed right-2 flex gap-2 z-50 ${
-        !mobileOpt.isMobile ? 'top-16 md:top-20' : 'top-2'
-      }`} 
-      style={{
-        top: mobileOpt.isMobile && mobileOpt.isFullscreen ? 
-          `${mobileOpt.safeAreaInsets.top + 8}px` : 
-          (mobileOpt.isMobile ? '8px' : undefined)
-      }}
-    >
-      <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${
-        isConnected ? 'bg-green-600' : 'bg-yellow-600'
-      }`}>
-        {isConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-        <span className="hidden sm:inline">{isConnected ? 'Online' : 'Offline'}</span>
+    <div className="fixed top-4 right-4 z-50 flex items-center gap-3">
+      <div className={`flex items-center gap-2 text-sm ${getStatusColor()}`}>
+        <div className={`w-2 h-2 rounded-full ${
+          isConnected ? 'bg-green-400' : 'bg-red-400'
+        } ${isConnected ? 'animate-pulse' : ''}`} />
+        <span>{getStatusText()}</span>
       </div>
-      <Button variant="outline" size="sm" onClick={onSettingsClick}>
-        <Settings className="w-4 h-4" />
-      </Button>
+      
+      {!isConnected && onReconnect && (
+        <button
+          onClick={onReconnect}
+          className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded transition-colors"
+        >
+          Reconectar
+        </button>
+      )}
+      
+      <button
+        onClick={onSettingsClick}
+        className="text-gray-400 hover:text-white p-1 rounded-md hover:bg-white/10 transition-colors"
+      >
+        <Settings className="w-5 h-5" />
+      </button>
     </div>
   );
 }

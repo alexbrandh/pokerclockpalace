@@ -13,6 +13,8 @@ export function TournamentClock() {
   const {
     tournament,
     isConnected,
+    connectionStatus,
+    reconnect,
     error,
     lastMinuteAlert,
     actionHistory,
@@ -92,14 +94,17 @@ export function TournamentClock() {
           resetLevel={resetLevel}
           addPlayer={addPlayer}
           eliminatePlayer={eliminatePlayer}
+          addReentry={addReentry}
           undoLastAction={undoLastAction}
           setShowSettings={setShowSettings}
         />
       )}
 
-      {/* Shared Components */}
+      {/* Enhanced Connection Status with reconnect option */}
       <ConnectionStatus 
         isConnected={isConnected} 
+        connectionStatus={connectionStatus}
+        onReconnect={reconnect}
         onSettingsClick={() => setShowSettings(true)} 
       />
 

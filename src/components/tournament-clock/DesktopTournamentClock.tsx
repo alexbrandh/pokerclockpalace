@@ -24,6 +24,7 @@ interface DesktopTournamentClockProps {
   resetLevel: () => void;
   addPlayer: () => void;
   eliminatePlayer: () => void;
+  addReentry: () => void; // Added missing prop
   undoLastAction: () => void;
   setShowSettings: (show: boolean) => void;
 }
@@ -44,17 +45,19 @@ export function DesktopTournamentClock({
   resetLevel,
   addPlayer,
   eliminatePlayer,
+  addReentry, // Added missing prop
   undoLastAction,
   setShowSettings
 }: DesktopTournamentClockProps) {
   
-  // Desktop hotkeys
+  // Desktop hotkeys (including the missing reentry shortcut)
   useHotkeys('space', () => toggleTimer(), { preventDefault: true });
   useHotkeys('n', () => nextLevel(), { preventDefault: true });
   useHotkeys('r', () => resetLevel(), { preventDefault: true });
   useHotkeys('s', () => setShowSettings(true), { preventDefault: true });
   useHotkeys('ctrl+b', () => addPlayer(), { preventDefault: true });
   useHotkeys('x', () => eliminatePlayer(), { preventDefault: true });
+  useHotkeys('ctrl+r', () => addReentry(), { preventDefault: true }); // Added missing reentry shortcut
   useHotkeys('ctrl+z', () => undoLastAction(), { preventDefault: true });
   useHotkeys('m', () => setShowFloatingControls(!showFloatingControls), { preventDefault: true });
 
@@ -144,7 +147,7 @@ export function DesktopTournamentClock({
           </div>
         </div>
 
-        {/* Desktop Hotkeys Info */}
+        {/* Desktop Hotkeys Info - Updated with reentry shortcut */}
         <div className="fixed bottom-2 left-2 text-xs text-gray-500 hidden xl:block">
           <div className="space-x-4">
             <span>ESPACIO: Play/Pause</span>

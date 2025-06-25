@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useMobileOptimization } from '@/hooks/useMobileOptimization';
 import { TournamentSettings } from '@/components/TournamentSettings';
-import { useTournamentLogic } from '@/components/tournament-clock/useTournamentLogic';
+import { useSupabaseTournamentLogic } from '@/components/tournament-clock/useSupabaseTournamentLogic';
 import { DesktopTournamentClock } from '@/components/tournament-clock/DesktopTournamentClock';
 import { MobileTournamentClock } from '@/components/tournament-clock/MobileTournamentClock';
 import { ConnectionStatus, LastMinuteAlert, LoadingScreen } from '@/components/tournament-clock/SharedComponents';
@@ -24,7 +24,7 @@ export function TournamentClock() {
     eliminatePlayer,
     addReentry,
     undoLastAction
-  } = useTournamentLogic();
+  } = useSupabaseTournamentLogic();
   
   const [showSettings, setShowSettings] = useState(false);
   const [showFloatingControls, setShowFloatingControls] = useState(false);
@@ -112,11 +112,7 @@ export function TournamentClock() {
             tournament={tournament}
             onClose={() => setShowSettings(false)}
             onUpdate={(updates) => {
-              // Handle tournament updates through the context
-              if (tournament) {
-                // This would need to be connected to the tournament context
-                console.log('Tournament updates:', updates);
-              }
+              console.log('Tournament updates:', updates);
             }}
           />
         )}

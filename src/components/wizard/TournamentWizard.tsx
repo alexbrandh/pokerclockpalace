@@ -3,51 +3,24 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { TournamentStructure } from '@/types/tournament';
-import { useTournament } from '@/contexts/TournamentContext';
-import { TournamentInfoStep } from './steps/TournamentInfoStep';
-import { ReentriesStep } from './steps/ReentriesStep';
-import { BlindStructureStep } from './steps/BlindStructureStep';
-import { PrizeDistributionStep } from './steps/PrizeDistributionStep';
-import { ChipDenominationsStep } from './steps/ChipDenominationsStep';
-import { ClockDesignStep } from './steps/ClockDesignStep';
-import { PlayersStep } from './steps/PlayersStep';
-import { SoundsStep } from './steps/SoundsStep';
-import { FinalStep } from './steps/FinalStep';
 
 interface TournamentWizardProps {
-  onTournamentCreated: () => void;
+  onTournamentCreated: (structure: TournamentStructure, city: string) => void;
 }
 
-const WIZARD_STEPS = [
-  'Tournament Info',
-  'Re-entries & Add-ons',
-  'Blind Structure',
-  'Prize Distribution',
-  'Chip Denominations',
-  'Clock Design',
-  'Players & Bounties',
-  'Sounds',
-  'Final'
-];
-
 export function TournamentWizard({ onTournamentCreated }: TournamentWizardProps) {
-  const { createTournament } = useTournament();
   const [currentStep, setCurrentStep] = useState(0);
+  const [city, setCity] = useState('');
   const [wizardData, setWizardData] = useState<Partial<TournamentStructure> & any>({
     name: 'Garage Poker League',
-    location: '',
-    currency: 'USD',
     buyIn: 50,
     reentryFee: 25,
     guaranteedPrizePool: 300,
     initialStack: 10000,
-    allowReentries: true,
-    maxReentriesPerPlayer: 3,
-    allowAddons: false,
-    addonPrice: 0,
-    addonChips: 0,
     levels: [
       { id: '1', smallBlind: 50, bigBlind: 100, ante: 0, duration: 20, isBreak: false },
       { id: '2', smallBlind: 75, bigBlind: 150, ante: 0, duration: 20, isBreak: false },
@@ -55,14 +28,11 @@ export function TournamentWizard({ onTournamentCreated }: TournamentWizardProps)
       { id: 'break1', smallBlind: 0, bigBlind: 0, ante: 0, duration: 15, isBreak: true, breakDuration: 15 }
     ],
     breakAfterLevels: 3,
-    payoutStructure: [50, 30, 20],
-    distributionType: 'Fixed',
-    clockTheme: 'classic',
-    trackPlayers: false,
-    enableBounties: false,
-    enableSounds: false,
-    voiceAnnouncements: false
+    payoutStructure: [50, 30, 20]
   });
+
+  // Simplified wizard with just basic info and city selection
+  const WIZARD_STEPS = ['Información Básica', 'Confirmar'];
 
   const updateWizardData = (stepData: any) => {
     setWizardData(prev => ({ ...prev, ...stepData }));
@@ -93,37 +63,130 @@ export function TournamentWizard({ onTournamentCreated }: TournamentWizardProps)
       payoutStructure: wizardData.payoutStructure
     };
     
-    createTournament(tournamentStructure);
-    onTournamentCreated();
+    onTournamentCreated(tournamentStructure, city);
   };
 
   const renderStep = () => {
     switch (currentStep) {
       case 0:
-        return <TournamentInfoStep data={wizardData} onUpdate={updateWizardData} />;
-      case 1:
-        return <ReentriesStep data={wizardData} onUpdate={updateWizardData} />;
-      case 2:
-        return <BlindStructureStep data={wizardData} onUpdate={updateWizardData} />;
-      case 3:
-        return <PrizeDistributionStep data={wizardData} onUpdate={updateWizardData} />;
-      case 4:
-        return <ChipDenominationsStep data={wizardData} onUpdate={updateWizardData} />;
-      case 5:
-        return <ClockDesignStep data={wizardData} onUpdate={updateWizardData} />;
-      case 6:
-        return <PlayersStep data={wizardData} onUpdate={updateWizardData} />;
-      case 7:
-        return <SoundsStep data={wizardData} onUpdate={updateWizardData} />;
-      case 8:
-        return <FinalStep data={wizardData} onUpdate={updateWizardData} onFinish={finishWizard} />;
-      default:
         return (
-          <div className="text-center py-8">
-            <h3 className="text-lg font-semibold mb-4">Paso {currentStep + 1} - {WIZARD_STEPS[currentStep]}</h3>
-            <p className="text-gray-600">Este paso será implementado próximamente.</p>
+          <div className="space-y-6">
+            <div>
+              <Label htmlFor="city">Ciudad/Sala</Label>
+              <Input
+                id="city"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="ej. Ciudad de México, Guadalajara, Sala Central..."
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="name">Nombre del Torneo</Label>
+              <Input
+                id="name"
+                value={wizardData.name}
+                onChange={(e) => updateWizardData({ name: e.target.value })}
+                placeholder="ej. Torneo Nocturno, MTT Domingo..."
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="buyIn">Buy-in ($)</Label>
+                <Input
+                  id="buyIn"
+                  type="number"
+                  value={wizardData.buyIn}
+                  onChange={(e) => updateWizardData({ buyIn: Number(e.target.value) })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="reentryFee">Re-entry ($)</Label>
+                <Input
+                  id="reentryFee"
+                  type="number"
+                  value={wizardData.reentryFee}
+                  onChange={(e) => updateWizardData({ reentryFee: Number(e.target.value) })}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="guaranteedPrizePool">Prize Pool Garantizado ($)</Label>
+                <Input
+                  id="guaranteedPrizePool"
+                  type="number"
+                  value={wizardData.guaranteedPrizePool}
+                  onChange={(e) => updateWizardData({ guaranteedPrizePool: Number(e.target.value) })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="initialStack">Stack Inicial</Label>
+                <Input
+                  id="initialStack"
+                  type="number"
+                  value={wizardData.initialStack}
+                  onChange={(e) => updateWizardData({ initialStack: Number(e.target.value) })}
+                />
+              </div>
+            </div>
           </div>
         );
+      
+      case 1:
+        return (
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold">Confirmar Detalles del Torneo</h3>
+            
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-semibold mb-2">Información General</h4>
+                <div className="space-y-2 text-sm">
+                  <p><span className="text-gray-600">Ciudad:</span> {city}</p>
+                  <p><span className="text-gray-600">Nombre:</span> {wizardData.name}</p>
+                  <p><span className="text-gray-600">Buy-in:</span> ${wizardData.buyIn}</p>
+                  <p><span className="text-gray-600">Re-entry:</span> ${wizardData.reentryFee}</p>
+                  <p><span className="text-gray-600">Prize Pool:</span> ${wizardData.guaranteedPrizePool}</p>
+                  <p><span className="text-gray-600">Stack Inicial:</span> {wizardData.initialStack.toLocaleString()}</p>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold mb-2">Estructura de Niveles</h4>
+                <div className="space-y-1 text-sm">
+                  {wizardData.levels.slice(0, 5).map((level: any, index: number) => (
+                    <p key={level.id}>
+                      <span className="text-gray-600">Nivel {index + 1}:</span> {
+                        level.isBreak 
+                          ? `Descanso ${level.duration}min`
+                          : `${level.smallBlind}/${level.bigBlind} (${level.duration}min)`
+                      }
+                    </p>
+                  ))}
+                  {wizardData.levels.length > 5 && (
+                    <p className="text-gray-500">...y {wizardData.levels.length - 5} niveles más</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t">
+              <Button 
+                onClick={finishWizard} 
+                className="w-full bg-green-600 hover:bg-green-700"
+                disabled={!city.trim()}
+              >
+                Crear Torneo
+              </Button>
+            </div>
+          </div>
+        );
+      
+      default:
+        return <div>Step not implemented</div>;
     }
   };
 
@@ -156,10 +219,13 @@ export function TournamentWizard({ onTournamentCreated }: TournamentWizardProps)
             
             {currentStep === WIZARD_STEPS.length - 1 ? (
               <div className="ml-auto">
-                {/* El botón "Iniciar Torneo" está en el FinalStep */}
+                {/* Create button is in the step content */}
               </div>
             ) : (
-              <Button onClick={goToNextStep}>
+              <Button 
+                onClick={goToNextStep}
+                disabled={currentStep === 0 && !city.trim()}
+              >
                 Siguiente
                 <ChevronRight className="w-4 h-4 ml-2" />
               </Button>

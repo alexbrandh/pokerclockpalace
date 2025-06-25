@@ -159,7 +159,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_time_remaining: {
+        Args: { p_tournament_id: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

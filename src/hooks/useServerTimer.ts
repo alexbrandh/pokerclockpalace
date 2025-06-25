@@ -11,7 +11,7 @@ export function useServerTimer(tournamentId: string | null) {
     try {
       // Use the generic rpc method with proper error handling
       const { data, error } = await supabase.rpc(
-        'calculate_time_remaining',
+        'calculate_time_remaining' as any,
         { p_tournament_id: tournamentId }
       );
 

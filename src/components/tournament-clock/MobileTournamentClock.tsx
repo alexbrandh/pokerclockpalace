@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { AdvancedTimer } from '@/components/timer/AdvancedTimer';
-import { MobileControls } from '@/components/mobile/MobileControls';
+import { MobileFloatingControls } from '@/components/mobile/MobileFloatingControls';
 import { useMobileOptimization } from '@/hooks/useMobileOptimization';
 import { TournamentState } from '@/types/tournament';
 
@@ -18,6 +18,7 @@ interface MobileTournamentClockProps {
   addPlayer: () => void;
   eliminatePlayer: () => void;
   skipBreak: () => void;
+  setShowSettings: (show: boolean) => void;
 }
 
 export function MobileTournamentClock({
@@ -32,50 +33,55 @@ export function MobileTournamentClock({
   resetLevel,
   addPlayer,
   eliminatePlayer,
-  skipBreak
+  skipBreak,
+  setShowSettings
 }: MobileTournamentClockProps) {
   const mobileOpt = useMobileOptimization();
+
+  // Calculate stats
+  const totalChips = (tournament.entries + tournament.reentries) * tournament.structure.initialStack;
+  const averageStack = tournament.players > 0 ? totalChips / tournament.players : 0;
 
   return (
     <div 
       className="h-full flex flex-col px-4" 
       style={{
         paddingTop: mobileOpt.isFullscreen ? 
-          `${mobileOpt.safeAreaInsets.top}px` : undefined,
-        paddingBottom: '180px'
+          `${mobileOpt.safeAreaInsets.top + 16}px` : '16px',
+        paddingBottom: '120px'
       }}
     >
       
       {/* Tournament Title */}
-      <div className="text-center py-4 flex-shrink-0">
-        <h1 className="text-xl font-bold text-white">
+      <div className="text-center py-6 flex-shrink-0">
+        <h1 className="text-2xl font-bold text-white">
           {tournament.structure.name}
         </h1>
       </div>
 
-      {/* Mobile Stats Bar */}
-      <div className="flex-shrink-0 mb-4">
-        <div className="bg-gray-900/50 backdrop-blur rounded-lg p-3">
-          <div className="grid grid-cols-3 gap-3 text-center text-sm">
+      {/* Compact Stats Row */}
+      <div className="flex-shrink-0 mb-6">
+        <div className="bg-gray-900/50 backdrop-blur rounded-2xl p-4">
+          <div className="grid grid-cols-3 gap-4 text-center text-sm">
             <div>
-              <div className="text-yellow-400 font-semibold">Players</div>
-              <div className="text-white font-bold">{tournament.players}</div>
+              <div className="text-yellow-400 font-semibold text-xs uppercase tracking-wide">Players</div>
+              <div className="text-white font-bold text-xl">{tournament.players}</div>
             </div>
             <div>
-              <div className="text-yellow-400 font-semibold">Prize Pool</div>
-              <div className="text-yellow-400 font-bold">${tournament.currentPrizePool}</div>
+              <div className="text-yellow-400 font-semibold text-xs uppercase tracking-wide">Prize Pool</div>
+              <div className="text-yellow-400 font-bold text-xl">${tournament.currentPrizePool}</div>
             </div>
             <div>
-              <div className="text-yellow-400 font-semibold">Entries</div>
-              <div className="text-white font-bold">{tournament.entries + tournament.reentries}</div>
+              <div className="text-yellow-400 font-semibold text-xs uppercase tracking-wide">Avg Stack</div>
+              <div className="text-white font-bold text-xl">{Math.round(averageStack / 1000)}k</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Mobile Timer - Centered */}
-      <div className="flex-1 flex items-center justify-center">
-        <div className="scale-75">
+      {/* Timer - Much Larger and Centered */}
+      <div className="flex-1 flex items-center justify-center py-8">
+        <div className="scale-90 md:scale-100">
           <AdvancedTimer
             timeRemaining={tournament.timeRemaining}
             currentLevel={currentLevel}
@@ -89,50 +95,42 @@ export function MobileTournamentClock({
         </div>
       </div>
 
-      {/* Mobile Level Info */}
-      <div className="flex-shrink-0 pb-4">
-        <div className="bg-gray-900/50 backdrop-blur rounded-lg p-3">
-          <div className="grid grid-cols-2 gap-3 text-center">
+      {/* Current Level Info - Prominent */}
+      <div className="flex-shrink-0 pb-8">
+        <div className="bg-gray-900/50 backdrop-blur rounded-2xl p-6">
+          <div className="text-center space-y-4">
             
             {/* Current Level */}
-            <div className="space-y-1">
-              <div className={`text-xs font-semibold ${
+            <div>
+              <div className={`text-sm font-semibold uppercase tracking-wide mb-2 ${
                 currentLevel?.isBreak ? 'text-cyan-400' : 'text-yellow-400'
               }`}>
-                {currentLevel?.isBreak ? 'BREAK' : `LEVEL ${tournament.currentLevelIndex + 1}`}
+                {currentLevel?.isBreak ? 'DESCANSO' : `NIVEL ${tournament.currentLevelIndex + 1}`}
               </div>
-              <div className="text-lg font-bold text-white">
+              <div className="text-3xl font-bold text-white">
                 {currentLevel?.isBreak ? 
-                  `${currentLevel.duration}min` :
-                  `${currentLevel?.smallBlind}/${currentLevel?.bigBlind}`
+                  `${currentLevel.duration} minutos` :
+                  `${currentLevel?.smallBlind} / ${currentLevel?.bigBlind}`
                 }
                 {!currentLevel?.isBreak && currentLevel?.ante > 0 && (
-                  <div className="text-xs text-gray-300">({currentLevel.ante})</div>
+                  <div className="text-lg text-gray-300 mt-1">Ante: {currentLevel.ante}</div>
                 )}
               </div>
             </div>
 
-            {/* Next Level or Break Action */}
-            {currentLevel?.isBreak ? (
-              <div className="space-y-1">
-                <div className="text-xs font-semibold text-cyan-400">ACTION</div>
-                <button
-                  onClick={skipBreak}
-                  className="w-full bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1.5 rounded-lg font-medium transition-colors text-sm"
-                >
-                  Skip Break
-                </button>
-              </div>
-            ) : nextLevelData && (
-              <div className="space-y-1">
-                <div className="text-xs font-semibold text-yellow-400">NEXT LEVEL</div>
-                <div className="text-lg font-bold text-white">
+            {/* Next Level Preview */}
+            {nextLevelData && !currentLevel?.isBreak && (
+              <div className="pt-4 border-t border-gray-700/50">
+                <div className="text-xs font-semibold text-yellow-400 uppercase tracking-wide mb-2">
+                  Siguiente Nivel
+                </div>
+                <div className="text-lg font-bold text-gray-300">
                   {nextLevelData.isBreak ? 
-                    `Break ${nextLevelData.duration}min` :
-                    `${nextLevelData.smallBlind}/${nextLevelData.bigBlind}`
+                    `Descanso ${nextLevelData.duration}min` :
+                    `${nextLevelData.smallBlind} / ${nextLevelData.bigBlind}`
                   }
                   {!nextLevelData.isBreak && nextLevelData.ante > 0 && (
-                    <div className="text-xs text-gray-300">({nextLevelData.ante})</div>
+                    <span className="text-sm text-gray-400 ml-2">({nextLevelData.ante})</span>
                   )}
                 </div>
               </div>
@@ -141,19 +139,21 @@ export function MobileTournamentClock({
         </div>
       </div>
 
-      {/* Mobile Controls */}
-      <MobileControls
+      {/* Floating Controls */}
+      <MobileFloatingControls
         isRunning={tournament.isRunning}
         isPaused={tournament.isPaused}
+        isOnBreak={tournament.isOnBreak}
         isFullscreen={mobileOpt.isFullscreen}
+        playersCount={tournament.players}
         onToggleTimer={toggleTimer}
         onNextLevel={nextLevel}
         onResetLevel={resetLevel}
         onAddPlayer={addPlayer}
         onEliminatePlayer={eliminatePlayer}
+        onSkipBreak={skipBreak}
         onToggleFullscreen={mobileOpt.toggleFullscreen}
-        playersCount={tournament.players}
-        isVisible={true}
+        onOpenSettings={() => setShowSettings(true)}
       />
     </div>
   );

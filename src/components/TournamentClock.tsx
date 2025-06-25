@@ -27,15 +27,14 @@ export function TournamentClock() {
   } = useTournamentLogic();
   
   const [showSettings, setShowSettings] = useState(false);
-  const [showControlsPopup, setShowControlsPopup] = useState(false);
   const [showFloatingControls, setShowFloatingControls] = useState(false);
 
   // Show/hide controls popup based on pause state or break
   useEffect(() => {
     if (tournament?.isPaused || tournament?.isOnBreak) {
-      setShowControlsPopup(true);
+      setShowFloatingControls(true);
     } else {
-      setShowControlsPopup(false);
+      setShowFloatingControls(false);
     }
   }, [tournament?.isPaused, tournament?.isOnBreak]);
 
@@ -71,6 +70,7 @@ export function TournamentClock() {
           addPlayer={addPlayer}
           eliminatePlayer={eliminatePlayer}
           skipBreak={skipBreak}
+          setShowSettings={setShowSettings}
         />
       ) : (
         <DesktopTournamentClock

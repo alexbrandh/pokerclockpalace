@@ -55,6 +55,7 @@ export function MobileFloatingControls({
             size="lg"
             variant="outline"
             className="h-12 w-12 rounded-full border-2 border-gray-500/60 text-gray-300 hover:bg-gray-800/50 hover:border-gray-400 shadow-xl bg-black/80 backdrop-blur"
+            title={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa horizontal"}
           >
             {isFullscreen ? (
               <Minimize className="w-5 h-5" />
@@ -111,6 +112,7 @@ export function MobileFloatingControls({
               size="lg"
               variant="outline"
               className="h-12 w-12 rounded-full border-2 border-blue-500/60 text-blue-400 hover:bg-blue-900/20 hover:border-blue-400 shadow-xl bg-black/80 backdrop-blur"
+              title="Controles del torneo"
             >
               <Settings className="w-5 h-5" />
             </Button>

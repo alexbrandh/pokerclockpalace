@@ -66,7 +66,20 @@ export function useMobileOptimization() {
 
   const enterFullscreen = useCallback(async () => {
     try {
+      // Request fullscreen first
       await document.documentElement.requestFullscreen();
+      
+      // Then try to lock orientation to landscape (YouTube-style)
+      if ('screen' in window && 'orientation' in window.screen) {
+        try {
+          await (window.screen.orientation as any).lock('landscape');
+        } catch (orientationError) {
+          console.log('Could not lock orientation:', orientationError);
+          // Fallback: suggest rotation with CSS
+          document.documentElement.style.transform = 'rotate(90deg)';
+          document.documentElement.style.transformOrigin = 'center';
+        }
+      }
     } catch (error) {
       console.warn('Could not enter fullscreen:', error);
     }
@@ -76,6 +89,18 @@ export function useMobileOptimization() {
     try {
       if (document.fullscreenElement) {
         await document.exitFullscreen();
+      }
+      
+      // Unlock orientation
+      if ('screen' in window && 'orientation' in window.screen) {
+        try {
+          await (window.screen.orientation as any).unlock();
+        } catch (orientationError) {
+          console.log('Could not unlock orientation:', orientationError);
+          // Remove CSS transform fallback
+          document.documentElement.style.transform = '';
+          document.documentElement.style.transformOrigin = '';
+        }
       }
     } catch (error) {
       console.warn('Could not exit fullscreen:', error);

@@ -138,7 +138,7 @@ export class TournamentService {
 
     console.log('Tournament state loaded:', tournamentState);
 
-    // Set up real-time subscription with better error handling
+    // Set up real-time subscription with optimized configuration
     const channel = supabase
       .channel(`tournament_${tournamentId}`, {
         config: {
@@ -147,7 +147,7 @@ export class TournamentService {
         }
       });
 
-    console.log('Setting up real-time channel for tournament:', tournamentId);
+    console.log('Setting up optimized real-time channel for tournament:', tournamentId);
 
     return { tournament: tournamentState, channel }
   }
@@ -190,7 +190,7 @@ export class TournamentService {
         throw error;
       }
 
-      console.log('✅ Database update successful:', data);
+      console.log('✅ Database update successful - real-time will sync automatically:', data);
 
       // Log the action with proper JSON conversion
       await supabase

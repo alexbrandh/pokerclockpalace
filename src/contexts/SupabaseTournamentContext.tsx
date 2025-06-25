@@ -49,18 +49,24 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
         // Clean up previous channel
         if (realtimeChannel) {
           console.log('Cleaning up previous channel');
-          realtimeChannel.unsubscribe()
+          await realtimeChannel.unsubscribe()
         }
 
-        // Set up real-time updates with improved error handling
+        // Set up real-time updates with correct postgres_changes configuration
         const channelSetup = channel
           .on('postgres_changes', 
-            { event: '*', schema: 'public', table: 'tournament_states', filter: `tournament_id=eq.${tournamentId}` },
+            { 
+              event: '*', 
+              schema: 'public', 
+              table: 'tournament_states',
+              filter: `tournament_id=eq.${tournamentId}`
+            },
             (payload) => {
-              console.log('Real-time tournament_states update:', payload);
+              console.log('Real-time tournament_states update received:', payload);
+              
               if (payload.new && payload.eventType !== 'DELETE') {
                 const newState = payload.new as TournamentStateDB
-                console.log('Updating tournament state:', {
+                console.log('Processing state update:', {
                   currentLevelIndex: newState.current_level_index,
                   timeRemaining: newState.time_remaining,
                   isRunning: newState.is_running,
@@ -69,7 +75,10 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
                 });
                 
                 setCurrentTournament(prev => {
-                  if (!prev) return null;
+                  if (!prev) {
+                    console.log('No previous tournament state, ignoring update');
+                    return null;
+                  }
                   
                   const updated = {
                     ...prev,
@@ -85,19 +94,26 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
                     startTime: newState.start_time ? Date.parse(newState.start_time) : undefined
                   };
                   
-                  console.log('Tournament state updated from real-time:', updated);
+                  console.log('✅ Tournament state updated from real-time:', updated);
                   return updated;
                 });
               }
             }
           )
-          .subscribe((status) => {
+          .subscribe((status, err) => {
             console.log('Real-time channel subscription status:', status);
+            
             if (status === 'SUBSCRIBED') {
-              console.log('✅ Successfully subscribed to real-time updates');
+              console.log('✅ Successfully subscribed to real-time updates for tournament:', tournamentId);
+              setError(null); // Clear any previous connection errors
             } else if (status === 'CHANNEL_ERROR') {
-              console.error('❌ Real-time channel error');
-              setError('Error connecting to real-time updates');
+              console.error('❌ Real-time channel error:', err);
+              setError('Error conectando a actualizaciones en tiempo real');
+            } else if (status === 'TIMED_OUT') {
+              console.error('❌ Real-time subscription timed out:', err);
+              setError('Conexión en tiempo real expiró');
+            } else if (status === 'CLOSED') {
+              console.log('Real-time channel closed');
             }
           });
 
@@ -131,7 +147,7 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
         return optimisticUpdate;
       });
 
-      // Then persist to database
+      // Then persist to database (this will trigger real-time updates for other clients)
       await TournamentService.updateTournamentState(currentTournament.id, updates);
       console.log('✅ Tournament state updated successfully in database');
       
@@ -144,6 +160,7 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       try {
         const { tournament } = await TournamentService.joinTournament(currentTournament.id);
         setCurrentTournament(tournament);
+        console.log('Reverted to server state after error');
       } catch (refetchErr) {
         console.error('Error refetching tournament state:', refetchErr);
       }
@@ -152,13 +169,14 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
     }
   }
 
-  const leaveTournament = () => {
+  const leaveTournament = async () => {
     if (realtimeChannel) {
       console.log('Leaving tournament - cleaning up real-time channel');
-      realtimeChannel.unsubscribe()
+      await realtimeChannel.unsubscribe()
       setRealtimeChannel(null)
     }
     setCurrentTournament(null)
+    setError(null) // Clear any connection errors when leaving
   }
 
   const loadTournaments = async () => {

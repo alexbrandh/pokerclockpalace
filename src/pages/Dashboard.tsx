@@ -6,17 +6,32 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Search, Play, Pause, Users, Trophy, Clock, QrCode } from 'lucide-react'
+import { Plus, Search, Play, Pause, Users, Trophy, Clock, QrCode, AlertTriangle, Database } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 export default function Dashboard() {
   const navigate = useNavigate()
-  const { tournaments, isLoading, error, loadTournaments, joinTournament } = useSupabaseTournament()
+  const { 
+    tournaments, 
+    isLoading, 
+    error, 
+    loadTournaments, 
+    joinTournament, 
+    isSupabaseConfigured 
+  } = useSupabaseTournament()
+  
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'paused' | 'finished'>('all')
 
+  console.log('Dashboard rendering...');
+  console.log('Tournaments:', tournaments);
+  console.log('Is loading:', isLoading);
+  console.log('Error:', error);
+  console.log('Supabase configured:', isSupabaseConfigured);
+
   useEffect(() => {
+    console.log('Dashboard mounted, loading tournaments...');
     loadTournaments()
   }, [])
 
@@ -98,6 +113,22 @@ export default function Dashboard() {
           </p>
         </div>
 
+        {/* Supabase Configuration Warning */}
+        {!isSupabaseConfigured && (
+          <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <Database className="w-5 h-5 text-orange-600 mt-0.5" />
+              <div>
+                <h3 className="font-semibold text-orange-800">Modo Demo - Base de Datos No Configurada</h3>
+                <p className="text-orange-700 text-sm mt-1">
+                  Actualmente estás usando datos de prueba. Para guardar torneos reales, 
+                  configura las variables de entorno de Supabase.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Actions Bar */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="flex-1 relative">
@@ -134,7 +165,13 @@ export default function Dashboard() {
         {/* Error Display */}
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-600">{error}</p>
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5" />
+              <div>
+                <h3 className="font-semibold text-red-800">Error</h3>
+                <p className="text-red-600 text-sm mt-1">{error}</p>
+              </div>
+            </div>
           </div>
         )}
 

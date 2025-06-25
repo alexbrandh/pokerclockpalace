@@ -48,34 +48,60 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       if (channel) {
         // Clean up previous channel
         if (realtimeChannel) {
+          console.log('Cleaning up previous channel');
           realtimeChannel.unsubscribe()
         }
 
-        // Set up real-time updates
-        channel.on('postgres_changes', 
-          { event: '*', schema: 'public', table: 'tournament_states', filter: `tournament_id=eq.${tournamentId}` },
-          (payload) => {
-            console.log('Real-time update:', payload)
-            if (payload.new) {
-              const newState = payload.new as TournamentStateDB
-              setCurrentTournament(prev => prev ? {
-                ...prev,
-                currentLevelIndex: newState.current_level_index,
-                timeRemaining: newState.time_remaining,
-                isRunning: newState.is_running,
-                isPaused: newState.is_paused,
-                isOnBreak: newState.is_on_break,
-                players: newState.players,
-                entries: newState.entries,
-                reentries: newState.reentries,
-                currentPrizePool: newState.current_prize_pool,
-                startTime: newState.start_time ? Date.parse(newState.start_time) : undefined
-              } : null)
+        // Set up real-time updates with improved error handling
+        const channelSetup = channel
+          .on('postgres_changes', 
+            { event: '*', schema: 'public', table: 'tournament_states', filter: `tournament_id=eq.${tournamentId}` },
+            (payload) => {
+              console.log('Real-time tournament_states update:', payload);
+              if (payload.new && payload.eventType !== 'DELETE') {
+                const newState = payload.new as TournamentStateDB
+                console.log('Updating tournament state:', {
+                  currentLevelIndex: newState.current_level_index,
+                  timeRemaining: newState.time_remaining,
+                  isRunning: newState.is_running,
+                  isPaused: newState.is_paused,
+                  players: newState.players
+                });
+                
+                setCurrentTournament(prev => {
+                  if (!prev) return null;
+                  
+                  const updated = {
+                    ...prev,
+                    currentLevelIndex: newState.current_level_index,
+                    timeRemaining: newState.time_remaining,
+                    isRunning: newState.is_running,
+                    isPaused: newState.is_paused,
+                    isOnBreak: newState.is_on_break,
+                    players: newState.players,
+                    entries: newState.entries,
+                    reentries: newState.reentries,
+                    currentPrizePool: newState.current_prize_pool,
+                    startTime: newState.start_time ? Date.parse(newState.start_time) : undefined
+                  };
+                  
+                  console.log('Tournament state updated from real-time:', updated);
+                  return updated;
+                });
+              }
             }
-          }
-        )
+          )
+          .subscribe((status) => {
+            console.log('Real-time channel subscription status:', status);
+            if (status === 'SUBSCRIBED') {
+              console.log('✅ Successfully subscribed to real-time updates');
+            } else if (status === 'CHANNEL_ERROR') {
+              console.error('❌ Real-time channel error');
+              setError('Error connecting to real-time updates');
+            }
+          });
 
-        setRealtimeChannel(channel)
+        setRealtimeChannel(channelSetup);
       }
 
     } catch (err) {
@@ -89,20 +115,46 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
   }
 
   const updateTournamentState = async (updates: Partial<TournamentState>) => {
-    if (!currentTournament) return
+    if (!currentTournament) {
+      console.warn('No current tournament to update');
+      return;
+    }
 
     try {
-      await TournamentService.updateTournamentState(currentTournament.id, updates)
+      console.log('Updating tournament state:', updates);
+      
+      // Optimistically update the local state first for immediate UI feedback
+      setCurrentTournament(prev => {
+        if (!prev) return null;
+        const optimisticUpdate = { ...prev, ...updates };
+        console.log('Optimistic update applied:', optimisticUpdate);
+        return optimisticUpdate;
+      });
+
+      // Then persist to database
+      await TournamentService.updateTournamentState(currentTournament.id, updates);
+      console.log('✅ Tournament state updated successfully in database');
+      
     } catch (err) {
-      console.error('Error updating tournament:', err);
+      console.error('❌ Error updating tournament state:', err);
       const errorMessage = err instanceof Error ? err.message : 'Error updating tournament';
       setError(errorMessage);
+      
+      // Revert optimistic update on error by refetching current state
+      try {
+        const { tournament } = await TournamentService.joinTournament(currentTournament.id);
+        setCurrentTournament(tournament);
+      } catch (refetchErr) {
+        console.error('Error refetching tournament state:', refetchErr);
+      }
+      
       throw err;
     }
   }
 
   const leaveTournament = () => {
     if (realtimeChannel) {
+      console.log('Leaving tournament - cleaning up real-time channel');
       realtimeChannel.unsubscribe()
       setRealtimeChannel(null)
     }
@@ -134,6 +186,7 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
   useEffect(() => {
     return () => {
       if (realtimeChannel) {
+        console.log('Component unmounting - cleaning up real-time channel');
         realtimeChannel.unsubscribe()
       }
     }

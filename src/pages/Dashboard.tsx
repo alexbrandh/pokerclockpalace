@@ -2,16 +2,18 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSupabaseTournament } from '@/contexts/SupabaseTournamentContext'
+import { useAuth } from '@/hooks/useAuth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Search, Play, Pause, Users, Trophy, Clock, QrCode, AlertTriangle, Database } from 'lucide-react'
+import { Plus, Search, Play, Pause, Users, Trophy, Clock, QrCode, AlertTriangle, Database, LogOut, User } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 export default function Dashboard() {
   const navigate = useNavigate()
+  const { user, signOut } = useAuth()
   const { 
     tournaments, 
     isLoading, 
@@ -29,6 +31,7 @@ export default function Dashboard() {
   console.log('Is loading:', isLoading);
   console.log('Error:', error);
   console.log('Supabase configured:', isSupabaseConfigured);
+  console.log('User:', user?.email);
 
   useEffect(() => {
     console.log('Dashboard mounted, loading tournaments...');
@@ -51,6 +54,15 @@ export default function Dashboard() {
       navigate(`/tournament/${tournamentId}`)
     } catch (error) {
       console.error('Error joining tournament:', error)
+    }
+  }
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+      navigate('/auth')
+    } catch (error) {
+      console.error('Error signing out:', error)
     }
   }
 
@@ -103,14 +115,33 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Panel de Torneos
-          </h1>
-          <p className="text-gray-600">
-            Gestiona y supervisa todos tus torneos de poker
-          </p>
+        {/* Header with User Info */}
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Panel de Torneos
+            </h1>
+            <p className="text-gray-600">
+              Gestiona y supervisa todos tus torneos de poker
+            </p>
+          </div>
+          
+          {/* User Info & Logout */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <User className="w-4 h-4" />
+              <span>{user?.email}</span>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleSignOut}
+              className="flex items-center gap-2"
+            >
+              <LogOut className="w-4 h-4" />
+              Cerrar Sesión
+            </Button>
+          </div>
         </div>
 
         {/* Supabase Configuration Warning */}

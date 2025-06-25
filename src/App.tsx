@@ -6,9 +6,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SupabaseTournamentProvider } from "@/contexts/SupabaseTournamentContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import TournamentNew from "./pages/TournamentNew";
 import TournamentView from "./pages/TournamentView";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -37,9 +39,22 @@ const App = () => {
             <Sonner />
             <BrowserRouter>
               <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/tournament/new" element={<TournamentNew />} />
-                <Route path="/tournament/:id" element={<TournamentView />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/tournament/new" element={
+                  <ProtectedRoute>
+                    <TournamentNew />
+                  </ProtectedRoute>
+                } />
+                <Route path="/tournament/:id" element={
+                  <ProtectedRoute>
+                    <TournamentView />
+                  </ProtectedRoute>
+                } />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

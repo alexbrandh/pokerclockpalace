@@ -32,21 +32,18 @@ export function generateAccessCode(): string {
   return Math.random().toString(36).substring(2, 8).toUpperCase()
 }
 
-// Helper function to get current user ID (for anonymous users)
+// Helper function to get current user ID (for authenticated users)
 export async function getCurrentUserId(): Promise<string> {
   try {
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
-      // Sign in anonymously if no user
-      const { data: { user: anonUser }, error } = await supabase.auth.signInAnonymously()
-      if (error) throw error
-      return anonUser?.id || 'anonymous-' + Math.random().toString(36).substring(2, 8)
+      throw new Error('Usuario no autenticado')
     }
     
     return user.id
   } catch (error) {
     console.error('Error getting user ID:', error);
-    return 'anonymous-' + Math.random().toString(36).substring(2, 8);
+    throw error;
   }
 }

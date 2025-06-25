@@ -1,6 +1,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { detectSafariMobile, addIOSMetaTags, createPseudoFullscreen, exitPseudoFullscreen } from '@/utils/safariMobileUtils';
+import { 
+  detectSafariMobile, 
+  addIOSMetaTags, 
+  createVideoFullscreen, 
+  exitVideoFullscreen,
+  createPseudoFullscreen, 
+  exitPseudoFullscreen 
+} from '@/utils/safariMobileUtils';
 
 export function useSafariFullscreenManager(
   onDebugInfo?: (info: string) => void,
@@ -8,6 +15,7 @@ export function useSafariFullscreenManager(
 ) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false);
+  const [isVideoFullscreen, setIsVideoFullscreen] = useState(false);
   const [safariInfo, setSafariInfo] = useState(detectSafariMobile());
 
   useEffect(() => {
@@ -26,6 +34,10 @@ export function useSafariFullscreenManager(
         (document as any).mozFullScreenElement
       );
       setIsFullscreen(fullscreen);
+      
+      // Check for video fullscreen
+      const videoFullscreen = (document as any).webkitFullscreenElement?.tagName === 'VIDEO';
+      setIsVideoFullscreen(videoFullscreen);
     };
 
     updateFullscreenState();
@@ -46,42 +58,36 @@ export function useSafariFullscreenManager(
     console.log('🍎 Safari fullscreen process starting...', safariInfo);
     
     try {
-      const element = document.documentElement;
-      
-      // For iOS Safari, try native fullscreen first
+      // For iOS Safari, try video-based fullscreen first
       if (safariInfo.isIOSSafari) {
-        onDebugInfo?.('Intentando pantalla completa en Safari iOS...');
+        onDebugInfo?.('Activando pantalla completa Safari...');
         
-        // Try webkit fullscreen first
-        if ((element as any).webkitRequestFullscreen) {
-          console.log('🍎 Using webkitRequestFullscreen for Safari');
-          await (element as any).webkitRequestFullscreen();
-          
-          // Lock orientation after a delay
-          setTimeout(async () => {
-            await lockToLandscape?.();
-            onDebugInfo?.('Pantalla completa activada en Safari');
-            setTimeout(() => onDebugInfo?.(''), 2000);
-          }, 500);
-          
+        const videoSuccess = await createVideoFullscreen();
+        
+        if (videoSuccess) {
+          setIsVideoFullscreen(true);
+          await lockToLandscape?.();
+          onDebugInfo?.('Pantalla completa verdadera activada');
+          setTimeout(() => onDebugInfo?.(''), 2000);
           return true;
-        } 
-        // If native fullscreen fails, use pseudo-fullscreen
-        else {
-          console.log('🍎 Native fullscreen not available, using pseudo-fullscreen');
+        } else {
+          // Fallback to pseudo-fullscreen
+          console.log('🍎 Video fullscreen failed, using pseudo-fullscreen');
           onDebugInfo?.('Usando modo pantalla completa alternativo...');
           
           const success = createPseudoFullscreen();
           setIsPseudoFullscreen(true);
           
           await lockToLandscape?.();
-          onDebugInfo?.('Modo pantalla completa activado. Gira el dispositivo para mejor experiencia.');
-          setTimeout(() => onDebugInfo?.(''), 3000);
+          onDebugInfo?.('Modo alternativo activado. Para mejor experiencia, añade esta página a tu pantalla de inicio.');
+          setTimeout(() => onDebugInfo?.(''), 4000);
           
           return success;
         }
       } else {
         // For other browsers, use standard approach
+        const element = document.documentElement;
+        
         if (element.requestFullscreen) {
           await element.requestFullscreen();
         } else if ((element as any).webkitRequestFullscreen) {
@@ -101,17 +107,17 @@ export function useSafariFullscreenManager(
     } catch (error) {
       console.error('🍎 Safari fullscreen error:', error);
       
-      // Fallback to pseudo-fullscreen on any error
+      // Final fallback to pseudo-fullscreen
       if (safariInfo.isIOSSafari) {
-        console.log('🍎 Falling back to pseudo-fullscreen');
-        onDebugInfo?.('Activando modo pantalla completa alternativo...');
+        console.log('🍎 All methods failed, falling back to pseudo-fullscreen');
+        onDebugInfo?.('Activando modo pantalla completa básico...');
         
         const success = createPseudoFullscreen();
         setIsPseudoFullscreen(true);
         
         await lockToLandscape?.();
-        onDebugInfo?.('Modo alternativo activado. Para mejor experiencia, añade esta página a tu pantalla de inicio.');
-        setTimeout(() => onDebugInfo?.(''), 4000);
+        onDebugInfo?.('Modo básico activado. Añade la página a tu pantalla de inicio para mejor experiencia.');
+        setTimeout(() => onDebugInfo?.(''), 5000);
         
         return success;
       } else {
@@ -126,11 +132,20 @@ export function useSafariFullscreenManager(
     console.log('🍎 Safari exit fullscreen process...');
     
     try {
+      // Exit video fullscreen if active
+      if (isVideoFullscreen) {
+        const success = exitVideoFullscreen();
+        setIsVideoFullscreen(false);
+        onDebugInfo?.('Saliendo de pantalla completa');
+        setTimeout(() => onDebugInfo?.(''), 1000);
+        return success;
+      }
+      
       // Exit pseudo-fullscreen if active
       if (isPseudoFullscreen) {
         exitPseudoFullscreen();
         setIsPseudoFullscreen(false);
-        onDebugInfo?.('Saliendo del modo pantalla completa');
+        onDebugInfo?.('Saliendo del modo alternativo');
         setTimeout(() => onDebugInfo?.(''), 1000);
         return true;
       }
@@ -163,10 +178,10 @@ export function useSafariFullscreenManager(
       setTimeout(() => onDebugInfo?.(''), 3000);
       return false;
     }
-  }, [isPseudoFullscreen, onDebugInfo]);
+  }, [isVideoFullscreen, isPseudoFullscreen, onDebugInfo]);
 
   const toggleFullscreen = useCallback(async () => {
-    const currentlyFullscreen = isFullscreen || isPseudoFullscreen;
+    const currentlyFullscreen = isFullscreen || isPseudoFullscreen || isVideoFullscreen;
     console.log('🍎 Safari toggle fullscreen. Current state:', currentlyFullscreen);
     
     if (currentlyFullscreen) {
@@ -174,13 +189,14 @@ export function useSafariFullscreenManager(
     } else {
       return await enterFullscreen();
     }
-  }, [isFullscreen, isPseudoFullscreen, enterFullscreen, exitFullscreen]);
+  }, [isFullscreen, isPseudoFullscreen, isVideoFullscreen, enterFullscreen, exitFullscreen]);
 
   return {
-    isFullscreen: isFullscreen || isPseudoFullscreen,
+    isFullscreen: isFullscreen || isPseudoFullscreen || isVideoFullscreen,
     fullscreenSupported: safariInfo.supportsFullscreen || safariInfo.isIOSSafari,
     safariInfo,
     isPseudoFullscreen,
+    isVideoFullscreen,
     enterFullscreen,
     exitFullscreen,
     toggleFullscreen

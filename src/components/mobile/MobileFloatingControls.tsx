@@ -49,10 +49,10 @@ export function MobileFloatingControls({
 }: MobileFloatingControlsProps) {
   const safariInfo = detectSafariMobile();
 
-  const handleFullscreenClick = async (e: React.MouseEvent) => {
+  const handleFullscreenClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('🎯 Fullscreen button clicked - Safari iOS:', safariInfo.isIOSSafari);
+    console.log('🎯 Fullscreen button clicked - Browser:', safariInfo.isIOSSafari ? 'Safari iOS' : safariInfo.isChromeMobile ? 'Chrome Mobile' : 'Other');
     
     // Add visual feedback immediately
     const button = e.currentTarget as HTMLButtonElement;
@@ -73,13 +73,37 @@ export function MobileFloatingControls({
     
     if (safariInfo.isIOSSafari) {
       if (safariInfo.isStandalone) {
-        return isFullscreen ? "Salir de pantalla completa" : "Pantalla completa (desde app)";
+        return isFullscreen ? "Salir de pantalla completa" : "Pantalla completa (PWA)";
       } else {
         return isFullscreen ? "Salir de pantalla completa" : "Pantalla completa Safari";
       }
     }
     
-    return isFullscreen ? "Salir de pantalla completa" : "Pantalla completa horizontal";
+    if (safariInfo.isChromeMobile) {
+      return isFullscreen ? "Salir de pantalla completa" : "Pantalla completa Chrome";
+    }
+    
+    return isFullscreen ? "Salir de pantalla completa" : "Pantalla completa";
+  };
+
+  const getButtonColorClass = () => {
+    if (!fullscreenSupported) {
+      return 'border-red-500/60 text-red-400 opacity-50 cursor-not-allowed';
+    }
+    
+    if (isFullscreen) {
+      return 'border-green-500/60 text-green-400 hover:border-green-400 shadow-green-400/20';
+    }
+    
+    if (safariInfo.isIOSSafari) {
+      return 'border-purple-500/60 text-purple-400 hover:border-purple-400 shadow-purple-400/20';
+    }
+    
+    if (safariInfo.isChromeMobile) {
+      return 'border-blue-500/60 text-blue-400 hover:border-blue-400 shadow-blue-400/20';
+    }
+    
+    return 'border-yellow-500/60 text-yellow-400 hover:border-yellow-400 shadow-yellow-400/20';
   };
 
   return (
@@ -98,11 +122,18 @@ export function MobileFloatingControls({
                 <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
                 <span>{debugInfo}</span>
               </div>
-              {/* Safari-specific PWA hint */}
+              
+              {/* Browser-specific hints */}
               {safariInfo.isIOSSafari && !safariInfo.isStandalone && debugInfo.includes('alternativo') && (
                 <div className="mt-2 text-xs text-gray-300 flex items-center justify-center gap-1">
                   <Plus className="w-3 h-3" />
                   <span>Añadir a pantalla de inicio para mejor experiencia</span>
+                </div>
+              )}
+              
+              {safariInfo.isChromeMobile && debugInfo.includes('Error') && (
+                <div className="mt-1 text-xs text-blue-300">
+                  Intenta hacer clic directamente en el botón sin deslizar
                 </div>
               )}
             </div>
@@ -122,15 +153,7 @@ export function MobileFloatingControls({
               size="lg"
               variant="outline"
               disabled={!fullscreenSupported}
-              className={`h-12 w-12 rounded-full border-2 text-gray-300 hover:bg-gray-800/50 shadow-xl bg-black/80 backdrop-blur transition-all duration-200 ${
-                fullscreenSupported 
-                  ? isFullscreen 
-                    ? 'border-green-500/60 text-green-400 hover:border-green-400 shadow-green-400/20' 
-                    : safariInfo.isIOSSafari
-                      ? 'border-orange-500/60 text-orange-400 hover:border-orange-400 shadow-orange-400/20'
-                      : 'border-yellow-500/60 text-yellow-400 hover:border-yellow-400 shadow-yellow-400/20'
-                  : 'border-red-500/60 text-red-400 opacity-50 cursor-not-allowed'
-              }`}
+              className={`h-12 w-12 rounded-full border-2 text-gray-300 hover:bg-gray-800/50 shadow-xl bg-black/80 backdrop-blur transition-all duration-200 ${getButtonColorClass()}`}
               title={getFullscreenButtonTitle()}
             >
               {isFullscreen ? (

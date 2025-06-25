@@ -11,7 +11,7 @@ export function useFullscreenManager(
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fullscreenSupported, setFullscreenSupported] = useState(false);
   
-  // Detect Safari and use appropriate manager
+  // Detect Safari and Chrome mobile
   const safariInfo = detectSafariMobile();
   const safariManager = useSafariFullscreenManager(onDebugInfo, lockToLandscape);
 
@@ -26,7 +26,7 @@ export function useFullscreenManager(
     };
   }
 
-  // For other browsers, use standard fullscreen manager
+  // For Chrome mobile and other browsers
   const updateFullscreenState = useCallback(() => {
     const fullscreen = !!(document.fullscreenElement || (document as any).webkitFullscreenElement || (document as any).mozFullScreenElement);
     setIsFullscreen(fullscreen);
@@ -61,61 +61,108 @@ export function useFullscreenManager(
     };
   }, [updateFullscreenState]);
 
-  const enterFullscreen = useCallback(async () => {
-    console.log('🚀 Starting standard fullscreen process...');
+  const enterFullscreen = useCallback(() => {
+    console.log('🚀 Starting fullscreen process...', safariInfo.isChromeMobile ? 'Chrome Mobile' : 'Standard Browser');
     
-    try {
-      const element = document.documentElement;
+    // For Chrome mobile, make COMPLETELY synchronous call
+    if (safariInfo.isChromeMobile) {
+      console.log('📱 Chrome Mobile detected - using synchronous approach');
+      onDebugInfo?.('Activando pantalla completa Chrome...');
       
-      // Try different fullscreen methods in order of preference
-      if (element.requestFullscreen) {
-        console.log('📱 Using standard requestFullscreen API');
-        await element.requestFullscreen();
-      } else if ((element as any).webkitRequestFullscreen) {
-        console.log('📱 Using webkit requestFullscreen API');
-        await (element as any).webkitRequestFullscreen();
-      } else if ((element as any).mozRequestFullScreen) {
-        console.log('📱 Using moz requestFullScreen API');
-        await (element as any).mozRequestFullScreen();
-      } else if ((element as any).msRequestFullscreen) {
-        console.log('📱 Using ms requestFullscreen API');
-        await (element as any).msRequestFullscreen();
-      } else {
-        throw new Error('Fullscreen API not supported');
-      }
-
-      console.log('✅ Fullscreen request sent successfully');
-      onDebugInfo?.('Activando pantalla completa...');
-      
-      // Try to lock to landscape after a short delay
-      setTimeout(async () => {
-        const orientationLocked = await lockToLandscape?.();
-        if (!orientationLocked) {
-          onDebugInfo?.('Pantalla completa activa. Gira tu dispositivo horizontalmente para mejor experiencia.');
-        } else {
-          onDebugInfo?.('Pantalla completa horizontal activada');
+      try {
+        const element = document.documentElement;
+        
+        // Synchronous call without await
+        if (element.requestFullscreen) {
+          element.requestFullscreen().then(() => {
+            console.log('✅ Chrome fullscreen success');
+            // Lock orientation after fullscreen is active
+            setTimeout(async () => {
+              const orientationLocked = await lockToLandscape?.();
+              if (!orientationLocked) {
+                onDebugInfo?.('Pantalla completa activa. Gira tu dispositivo horizontalmente.');
+              } else {
+                onDebugInfo?.('Pantalla completa horizontal activada');
+              }
+              setTimeout(() => onDebugInfo?.(''), 3000);
+            }, 300);
+          }).catch((error) => {
+            console.error('❌ Chrome fullscreen error:', error);
+            onDebugInfo?.(`Error Chrome: ${error.message}. Intenta de nuevo.`);
+            setTimeout(() => onDebugInfo?.(''), 4000);
+          });
+        } else if ((element as any).webkitRequestFullscreen) {
+          (element as any).webkitRequestFullscreen();
+          setTimeout(async () => {
+            await lockToLandscape?.();
+            onDebugInfo?.('Pantalla completa webkit activada');
+            setTimeout(() => onDebugInfo?.(''), 2000);
+          }, 300);
         }
         
-        // Clear message after 3 seconds
+        return Promise.resolve(true);
+      } catch (error) {
+        console.error('❌ Chrome mobile fullscreen error:', error);
+        onDebugInfo?.(`Error Chrome: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+        setTimeout(() => onDebugInfo?.(''), 4000);
+        return Promise.resolve(false);
+      }
+    }
+    
+    // For other browsers, use async approach
+    return (async () => {
+      try {
+        const element = document.documentElement;
+        
+        if (element.requestFullscreen) {
+          console.log('📱 Using standard requestFullscreen API');
+          await element.requestFullscreen();
+        } else if ((element as any).webkitRequestFullscreen) {
+          console.log('📱 Using webkit requestFullscreen API');
+          await (element as any).webkitRequestFullscreen();
+        } else if ((element as any).mozRequestFullScreen) {
+          console.log('📱 Using moz requestFullScreen API');
+          await (element as any).mozRequestFullScreen();
+        } else if ((element as any).msRequestFullscreen) {
+          console.log('📱 Using ms requestFullscreen API');
+          await (element as any).msRequestFullscreen();
+        } else {
+          throw new Error('Fullscreen API not supported');
+        }
+
+        console.log('✅ Fullscreen request sent successfully');
+        onDebugInfo?.('Activando pantalla completa...');
+        
+        // Try to lock to landscape after a short delay
+        setTimeout(async () => {
+          const orientationLocked = await lockToLandscape?.();
+          if (!orientationLocked) {
+            onDebugInfo?.('Pantalla completa activa. Gira tu dispositivo horizontalmente para mejor experiencia.');
+          } else {
+            onDebugInfo?.('Pantalla completa horizontal activada');
+          }
+          
+          // Clear message after 3 seconds
+          setTimeout(() => {
+            onDebugInfo?.('');
+          }, 3000);
+        }, 500);
+        
+        return true;
+      } catch (error) {
+        console.error('❌ Fullscreen error:', error);
+        const errorMsg = error instanceof Error ? error.message : 'Error desconocido';
+        onDebugInfo?.(`No se pudo activar pantalla completa: ${errorMsg}. Intenta hacer clic directamente en el botón.`);
+        
+        // Clear error message after 4 seconds
         setTimeout(() => {
           onDebugInfo?.('');
-        }, 3000);
-      }, 500);
-      
-      return true;
-    } catch (error) {
-      console.error('❌ Fullscreen error:', error);
-      const errorMsg = error instanceof Error ? error.message : 'Error desconocido';
-      onDebugInfo?.(`No se pudo activar pantalla completa: ${errorMsg}. Intenta hacer clic directamente en el botón.`);
-      
-      // Clear error message after 4 seconds
-      setTimeout(() => {
-        onDebugInfo?.('');
-      }, 4000);
-      
-      return false;
-    }
-  }, [onDebugInfo, lockToLandscape]);
+        }, 4000);
+        
+        return false;
+      }
+    })();
+  }, [onDebugInfo, lockToLandscape, safariInfo.isChromeMobile]);
 
   const exitFullscreen = useCallback(async () => {
     console.log('🔙 Exiting fullscreen...');
@@ -167,14 +214,18 @@ export function useFullscreenManager(
     if (isFullscreen) {
       return await exitFullscreen();
     } else {
-      return await enterFullscreen();
+      const result = enterFullscreen();
+      return result instanceof Promise ? await result : result;
     }
   }, [isFullscreen, enterFullscreen, exitFullscreen]);
 
   return {
     isFullscreen,
     fullscreenSupported,
-    enterFullscreen,
+    enterFullscreen: () => {
+      const result = enterFullscreen();
+      return result instanceof Promise ? result : Promise.resolve(result);
+    },
     exitFullscreen,
     toggleFullscreen
   };

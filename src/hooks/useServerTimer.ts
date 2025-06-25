@@ -9,7 +9,7 @@ export function useServerTimer(tournamentId: string | null) {
     if (!tournamentId) return null;
 
     try {
-      const { data, error } = await supabase.rpc('calculate_time_remaining', {
+      const { data, error } = await supabase.rpc('calculate_time_remaining' as any, {
         p_tournament_id: tournamentId
       });
 

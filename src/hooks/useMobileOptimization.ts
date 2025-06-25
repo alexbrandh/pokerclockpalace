@@ -1,11 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 
-// Extended Screen Orientation interface to include lock method
-interface ExtendedScreenOrientation extends ScreenOrientation {
-  lock?: (orientation: string) => Promise<void>;
-  unlock?: () => void;
-}
-
 interface MobileOptimizationState {
   isMobile: boolean;
   isFullscreen: boolean;
@@ -101,10 +95,10 @@ export function useMobileOptimization() {
     console.log('🔄 Attempting to lock orientation to landscape...');
     
     try {
-      const orientation = screen.orientation as ExtendedScreenOrientation;
+      const orientation = screen.orientation;
       
-      if (orientation && orientation.lock) {
-        await orientation.lock('landscape');
+      if (orientation && (orientation as any).lock) {
+        await (orientation as any).lock('landscape');
         console.log('✅ Orientation locked to landscape');
         return true;
       } else if ((screen as any).lockOrientation) {
@@ -202,9 +196,9 @@ export function useMobileOptimization() {
       
       // Unlock orientation
       try {
-        const orientation = screen.orientation as ExtendedScreenOrientation;
-        if (orientation && orientation.unlock) {
-          orientation.unlock();
+        const orientation = screen.orientation;
+        if (orientation && (orientation as any).unlock) {
+          (orientation as any).unlock();
         }
       } catch (e) {
         console.log('⚠️ Could not unlock orientation:', e);

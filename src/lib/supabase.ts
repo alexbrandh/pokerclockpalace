@@ -51,25 +51,3 @@ export async function getCurrentUserId(): Promise<string> {
     throw error;
   }
 }
-
-// Enhanced connection monitoring
-export function monitorSupabaseConnection() {
-  console.log('🔌 Monitoring Supabase connection...');
-  
-  supabase.realtime.onOpen(() => {
-    console.log('✅ Supabase realtime connection opened');
-  });
-
-  supabase.realtime.onClose(() => {
-    console.log('❌ Supabase realtime connection closed');
-  });
-
-  supabase.realtime.onError((error) => {
-    console.error('❌ Supabase realtime connection error:', error);
-  });
-}
-
-// Initialize connection monitoring
-if (typeof window !== 'undefined') {
-  monitorSupabaseConnection();
-}

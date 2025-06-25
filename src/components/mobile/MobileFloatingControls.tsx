@@ -46,8 +46,20 @@ export function MobileFloatingControls({
   onToggleFullscreen,
   onOpenSettings
 }: MobileFloatingControlsProps) {
-  const handleFullscreenClick = () => {
-    console.log('🎯 Fullscreen button clicked');
+  const handleFullscreenClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('🎯 Fullscreen button clicked - starting process...');
+    
+    // Add visual feedback immediately
+    const button = e.currentTarget as HTMLButtonElement;
+    button.style.transform = 'scale(0.95)';
+    
+    setTimeout(() => {
+      button.style.transform = '';
+    }, 150);
+    
+    // Call the fullscreen function
     onToggleFullscreen();
   };
 
@@ -62,8 +74,11 @@ export function MobileFloatingControls({
             exit={{ opacity: 0, y: -50 }}
             className="fixed top-4 left-4 right-4 z-[60] pointer-events-none"
           >
-            <div className="bg-black/90 backdrop-blur text-white text-sm px-4 py-2 rounded-lg border border-gray-600 text-center">
-              {debugInfo}
+            <div className="bg-black/95 backdrop-blur text-white text-sm px-4 py-3 rounded-xl border border-yellow-400/30 text-center shadow-xl">
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                <span>{debugInfo}</span>
+              </div>
             </div>
           </motion.div>
         )}
@@ -81,11 +96,11 @@ export function MobileFloatingControls({
               size="lg"
               variant="outline"
               disabled={!fullscreenSupported}
-              className={`h-12 w-12 rounded-full border-2 text-gray-300 hover:bg-gray-800/50 shadow-xl bg-black/80 backdrop-blur transition-all ${
+              className={`h-12 w-12 rounded-full border-2 text-gray-300 hover:bg-gray-800/50 shadow-xl bg-black/80 backdrop-blur transition-all duration-200 ${
                 fullscreenSupported 
                   ? isFullscreen 
-                    ? 'border-green-500/60 text-green-400 hover:border-green-400' 
-                    : 'border-gray-500/60 hover:border-gray-400'
+                    ? 'border-green-500/60 text-green-400 hover:border-green-400 shadow-green-400/20' 
+                    : 'border-yellow-500/60 text-yellow-400 hover:border-yellow-400 shadow-yellow-400/20'
                   : 'border-red-500/60 text-red-400 opacity-50 cursor-not-allowed'
               }`}
               title={

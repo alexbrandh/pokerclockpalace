@@ -9,7 +9,7 @@ export class TournamentService {
     const userId = await getCurrentUserId()
     const accessCode = generateAccessCode()
 
-    // Create tournament
+    // Create tournament with proper JSON conversion
     const { data: tournament, error: tournamentError } = await supabase
       .from('tournaments')
       .insert({
@@ -18,9 +18,9 @@ export class TournamentService {
         reentry_fee: structure.reentryFee,
         guaranteed_prize_pool: structure.guaranteedPrizePool,
         initial_stack: structure.initialStack,
-        levels: structure.levels,
+        levels: structure.levels as any, // Convert to JSON
         break_after_levels: structure.breakAfterLevels,
-        payout_structure: structure.payoutStructure,
+        payout_structure: structure.payoutStructure as any, // Convert to JSON
         status: 'created',
         created_by: userId,
         city: city,
@@ -50,13 +50,13 @@ export class TournamentService {
 
     if (stateError) throw stateError
 
-    // Log creation
+    // Log creation with proper JSON conversion
     await supabase
       .from('tournament_logs')
       .insert({
         tournament_id: tournament.id,
         action: 'tournament_created',
-        details: { structure, city },
+        details: { structure, city } as any, // Convert to JSON
         created_by: userId
       })
 
@@ -70,7 +70,13 @@ export class TournamentService {
       .order('created_at', { ascending: false })
 
     if (error) throw error
-    return data || []
+    
+    // Convert the raw Supabase data to our Tournament type
+    return (data || []).map(tournament => ({
+      ...tournament,
+      levels: tournament.levels as any, // Type assertion for JSONB field
+      payout_structure: tournament.payout_structure as any // Type assertion for JSONB field
+    }))
   }
 
   static async joinTournament(tournamentId: string): Promise<{ tournament: TournamentState, channel?: RealtimeChannel }> {
@@ -93,7 +99,7 @@ export class TournamentService {
 
     if (stateError) throw stateError
 
-    // Convert to TournamentState format
+    // Convert to TournamentState format with proper type conversion
     const tournamentState: TournamentState = {
       id: tournament.id,
       structure: {
@@ -103,9 +109,9 @@ export class TournamentService {
         reentryFee: tournament.reentry_fee,
         guaranteedPrizePool: tournament.guaranteed_prize_pool,
         initialStack: tournament.initial_stack,
-        levels: tournament.levels,
+        levels: tournament.levels as any, // Convert from JSON
         breakAfterLevels: tournament.break_after_levels,
-        payoutStructure: tournament.payout_structure
+        payoutStructure: tournament.payout_structure as any // Convert from JSON
       },
       currentLevelIndex: state.current_level_index,
       timeRemaining: state.time_remaining,
@@ -158,13 +164,13 @@ export class TournamentService {
 
     if (error) throw error
 
-    // Log the action
+    // Log the action with proper JSON conversion
     await supabase
       .from('tournament_logs')
       .insert({
         tournament_id: tournamentId,
         action: 'state_updated',
-        details: updates,
+        details: updates as any, // Convert to JSON
         created_by: userId
       })
   }

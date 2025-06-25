@@ -159,6 +159,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_current_level_index: {
+        Args: { p_tournament_id: string }
+        Returns: number
+      }
       calculate_time_remaining: {
         Args: { p_tournament_id: string }
         Returns: number

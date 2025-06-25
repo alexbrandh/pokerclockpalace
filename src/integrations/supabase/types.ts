@@ -161,11 +161,18 @@ export type Database = {
     Functions: {
       calculate_current_level_index: {
         Args: { p_tournament_id: string }
-        Returns: number
+        Returns: {
+          current_level_index: number
+          is_on_break: boolean
+        }[]
       }
       calculate_time_remaining: {
         Args: { p_tournament_id: string }
-        Returns: number
+        Returns: {
+          time_remaining_seconds: number
+          is_on_break: boolean
+          break_time_remaining: number
+        }[]
       }
     }
     Enums: {

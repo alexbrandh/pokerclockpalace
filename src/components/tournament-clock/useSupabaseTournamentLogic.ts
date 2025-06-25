@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useSupabaseTournament } from '@/contexts/SupabaseTournamentContext';
 import { useSoundSystem } from '@/hooks/useSoundSystem';
@@ -11,6 +10,8 @@ export function useSupabaseTournamentLogic() {
   const { 
     serverTimeRemaining, 
     serverLevelIndex, 
+    serverIsOnBreak,
+    breakTimeRemaining,
     syncWithServer 
   } = useServerTimer(currentTournament?.id || null);
   
@@ -18,6 +19,7 @@ export function useSupabaseTournamentLogic() {
   const [actionHistory, setActionHistory] = useState<Array<Partial<any>>>([]);
   const [clientTimeRemaining, setClientTimeRemaining] = useState<number>(0);
   const [clientLevelIndex, setClientLevelIndex] = useState<number>(0);
+  const [clientIsOnBreak, setClientIsOnBreak] = useState<boolean>(false);
 
   // Helper function to save state for undo
   const saveStateForUndo = useCallback(() => {
@@ -39,7 +41,7 @@ export function useSupabaseTournamentLogic() {
     onStateUpdate: handleStateUpdate
   });
 
-  // Sync client time and level with server calculations
+  // Sync client time and level with server calculations (now includes break support)
   useEffect(() => {
     if (serverTimeRemaining !== null) {
       setClientTimeRemaining(serverTimeRemaining);
@@ -52,7 +54,20 @@ export function useSupabaseTournamentLogic() {
     } else if (currentTournament) {
       setClientLevelIndex(currentTournament.currentLevelIndex);
     }
-  }, [serverTimeRemaining, serverLevelIndex, currentTournament?.timeRemaining, currentTournament?.currentLevelIndex]);
+
+    if (serverIsOnBreak !== null) {
+      setClientIsOnBreak(serverIsOnBreak);
+    } else if (currentTournament) {
+      setClientIsOnBreak(currentTournament.isOnBreak);
+    }
+  }, [
+    serverTimeRemaining, 
+    serverLevelIndex, 
+    serverIsOnBreak,
+    currentTournament?.timeRemaining, 
+    currentTournament?.currentLevelIndex,
+    currentTournament?.isOnBreak
+  ]);
 
   // Client-side timer for smooth UI updates - now syncs with mathematical calculation
   useEffect(() => {
@@ -62,19 +77,32 @@ export function useSupabaseTournamentLogic() {
       setClientTimeRemaining(prev => {
         const newTime = Math.max(0, prev - 1);
         
-        // Last minute alert
-        if (newTime === 60 && !lastMinuteAlert && !currentTournament.isOnBreak) {
+        // Last minute alert (only for regular levels, not breaks)
+        if (newTime === 60 && !lastMinuteAlert && !clientIsOnBreak) {
           setLastMinuteAlert(true);
           playSound('lastMinute');
         } else if (newTime > 60) {
           setLastMinuteAlert(false);
         }
         
-        // Level completion - let the mathematical calculation handle this
+        // Level/Break completion - let the mathematical calculation handle this
         if (newTime === 0) {
-          console.log('⏰ Level completed, syncing with server calculation...');
+          console.log('⏰ Level/Break completed, syncing with server calculation...');
           syncWithServer();
           setLastMinuteAlert(false);
+          
+          // Play appropriate sound based on what just finished
+          if (clientIsOnBreak) {
+            playSound('levelChange'); // Break ended, back to regular play
+          } else {
+            // Check if next level is a break
+            const nextLevel = currentTournament.structure.levels[clientLevelIndex + 1];
+            if (nextLevel?.isBreak) {
+              playSound('breakStart');
+            } else {
+              playSound('levelChange');
+            }
+          }
         }
         
         return newTime;
@@ -82,16 +110,16 @@ export function useSupabaseTournamentLogic() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [currentTournament, syncWithServer, lastMinuteAlert, playSound]);
+  }, [currentTournament, syncWithServer, lastMinuteAlert, playSound, clientIsOnBreak, clientLevelIndex]);
 
   // Periodic server sync (less frequent now since it's more reliable)
   useEffect(() => {
     if (!currentTournament?.isRunning || currentTournament?.isPaused) return;
 
     const syncInterval = setInterval(() => {
-      console.log('🔄 Periodic mathematical sync');
+      console.log('🔄 Periodic mathematical sync with break support');
       syncWithServer();
-    }, 60000); // Sync every minute instead of every 30 seconds
+    }, 60000); // Sync every minute
 
     return () => clearInterval(syncInterval);
   }, [currentTournament?.isRunning, currentTournament?.isPaused, syncWithServer]);
@@ -231,7 +259,8 @@ export function useSupabaseTournamentLogic() {
     tournament: currentTournament ? {
       ...currentTournament,
       timeRemaining: clientTimeRemaining, // Use client time for smooth UI
-      currentLevelIndex: clientLevelIndex // Use calculated level index
+      currentLevelIndex: clientLevelIndex, // Use calculated level index
+      isOnBreak: clientIsOnBreak // Use calculated break status
     } : null,
     isConnected,
     connectionStatus,
@@ -239,6 +268,7 @@ export function useSupabaseTournamentLogic() {
     error,
     lastMinuteAlert,
     actionHistory,
+    breakTimeRemaining, // New: expose break time remaining
     toggleTimer,
     nextLevel,
     skipBreak,

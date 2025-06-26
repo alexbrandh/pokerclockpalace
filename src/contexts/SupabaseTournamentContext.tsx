@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { TournamentState } from '@/types/tournament'
 import { Tournament, SupabaseTournamentContextType, TournamentStateDB } from '@/types/tournament-context'
@@ -213,6 +212,40 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
     }
   }
 
+  const deleteTournament = async (tournamentId: string) => {
+    try {
+      setIsLoading(true)
+      setError(null)
+
+      console.log('🗑️ Deleting tournament:', tournamentId);
+      await TournamentService.deleteTournament(tournamentId)
+      
+      // Reload tournaments to reflect the deletion
+      await loadTournaments()
+      
+      toast({
+        title: "Torneo eliminado",
+        description: "El torneo se ha eliminado exitosamente",
+      })
+      
+      console.log('✅ Tournament deleted successfully');
+    } catch (err) {
+      console.error('❌ Error deleting tournament:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Error deleting tournament';
+      setError(errorMessage);
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
+      })
+      
+      throw err;
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   useEffect(() => {
     console.log('🚀 SupabaseTournamentProvider mounted, loading tournaments...');
     loadTournaments()
@@ -230,6 +263,7 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       updateTournamentState,
       leaveTournament,
       loadTournaments,
+      deleteTournament,
       // Simplified connection state for polling
       realtimeConnection: {
         isConnected: pollingConnection.isPolling,

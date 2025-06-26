@@ -17,5 +17,6 @@ export interface SupabaseTournamentContextType {
   updateTournamentState: (updates: Partial<TournamentState>) => Promise<void>
   leaveTournament: () => void
   loadTournaments: () => Promise<void>
+  deleteTournament: (tournamentId: string) => Promise<void>
   realtimeConnection: RealtimeConnectionState & { reconnect: () => void }
 }

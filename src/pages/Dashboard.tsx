@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSupabaseTournament } from '@/contexts/SupabaseTournamentContext'
@@ -7,7 +6,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Search, Play, Pause, Users, Trophy, Clock, QrCode, AlertTriangle, Database, LogOut, User } from 'lucide-react'
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { Plus, Search, Play, Pause, Users, Trophy, Clock, QrCode, AlertTriangle, Database, LogOut, User, Trash2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -19,12 +29,14 @@ export default function Dashboard() {
     isLoading, 
     error, 
     loadTournaments, 
-    joinTournament, 
+    joinTournament,
+    deleteTournament,
     isSupabaseConfigured 
   } = useSupabaseTournament()
   
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'paused' | 'finished'>('all')
+  const [deletingTournamentId, setDeletingTournamentId] = useState<string | null>(null)
 
   console.log('Dashboard rendering...');
   console.log('Tournaments:', tournaments);
@@ -54,6 +66,17 @@ export default function Dashboard() {
       navigate(`/tournament/${tournamentId}`)
     } catch (error) {
       console.error('Error joining tournament:', error)
+    }
+  }
+
+  const handleDeleteTournament = async (tournamentId: string, tournamentName: string) => {
+    try {
+      setDeletingTournamentId(tournamentId)
+      await deleteTournament(tournamentId)
+    } catch (error) {
+      console.error('Error deleting tournament:', error)
+    } finally {
+      setDeletingTournamentId(null)
     }
   }
 
@@ -282,6 +305,37 @@ export default function Dashboard() {
                       <Users className="w-4 h-4 mr-2" />
                       Supervisar
                     </Button>
+                    
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>¿Eliminar torneo?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Esta acción eliminará permanentemente el torneo "{tournament.name}" y todos sus datos asociados. 
+                            Esta acción no se puede deshacer.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteTournament(tournament.id, tournament.name)}
+                            disabled={deletingTournamentId === tournament.id}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            {deletingTournamentId === tournament.id ? 'Eliminando...' : 'Eliminar'}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </CardContent>
               </Card>

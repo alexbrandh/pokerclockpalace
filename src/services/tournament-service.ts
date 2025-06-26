@@ -6,6 +6,7 @@ import { TournamentCreationService } from './tournament-creation.service'
 import { TournamentLoadingService } from './tournament-loading.service'
 import { TournamentJoiningService } from './tournament-joining.service'
 import { TournamentStateUpdateService } from './tournament-state-update.service'
+import { TournamentDeletionService } from './tournament-deletion.service'
 
 export class TournamentService {
   static async createTournament(structure: TournamentStructure, city: string): Promise<string> {
@@ -22,5 +23,9 @@ export class TournamentService {
 
   static async updateTournamentState(tournamentId: string, updates: Partial<TournamentState>): Promise<void> {
     return TournamentStateUpdateService.updateTournamentState(tournamentId, updates);
+  }
+
+  static async deleteTournament(tournamentId: string): Promise<void> {
+    return TournamentDeletionService.deleteTournament(tournamentId);
   }
 }

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSupabaseTournament } from '@/contexts/SupabaseTournamentContext'
@@ -17,7 +18,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Plus, Search, Play, Pause, Users, Trophy, Clock, QrCode, AlertTriangle, Database, LogOut, User, Trash2 } from 'lucide-react'
+import { Plus, Search, Play, Pause, Users, Trophy, Clock, QrCode, AlertTriangle, Database, LogOut, User, Trash2, Loader2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -39,7 +40,8 @@ export default function Dashboard() {
   const [deletingTournamentId, setDeletingTournamentId] = useState<string | null>(null)
 
   console.log('Dashboard rendering...');
-  console.log('Tournaments:', tournaments);
+  console.log('Tournaments count:', tournaments.length);
+  console.log('Tournament IDs:', tournaments.map(t => t.id));
   console.log('Is loading:', isLoading);
   console.log('Error:', error);
   console.log('Supabase configured:', isSupabaseConfigured);
@@ -71,10 +73,15 @@ export default function Dashboard() {
 
   const handleDeleteTournament = async (tournamentId: string, tournamentName: string) => {
     try {
+      console.log(`🗑️ User initiated deletion of tournament: ${tournamentName} (${tournamentId})`);
       setDeletingTournamentId(tournamentId)
+      
       await deleteTournament(tournamentId)
+      
+      console.log('✅ Tournament deletion completed successfully from Dashboard');
+      
     } catch (error) {
-      console.error('Error deleting tournament:', error)
+      console.error('❌ Dashboard: Error deleting tournament:', error)
     } finally {
       setDeletingTournamentId(null)
     }
@@ -145,7 +152,7 @@ export default function Dashboard() {
               Panel de Torneos
             </h1>
             <p className="text-gray-600">
-              Gestiona y supervisa todos tus torneos de poker
+              Gestiona y supervisa todos tus torneos de poker ({tournaments.length} torneos)
             </p>
           </div>
           
@@ -258,6 +265,7 @@ export default function Dashboard() {
                     <div className="flex-1">
                       <CardTitle className="text-lg mb-1">{tournament.name}</CardTitle>
                       <p className="text-sm text-gray-600">{tournament.city}</p>
+                      <p className="text-xs text-gray-400 mt-1">ID: {tournament.id}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       {getStatusIcon(tournament.status)}
@@ -312,8 +320,13 @@ export default function Dashboard() {
                           variant="outline" 
                           size="icon"
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          disabled={deletingTournamentId === tournament.id}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          {deletingTournamentId === tournament.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
@@ -322,6 +335,9 @@ export default function Dashboard() {
                           <AlertDialogDescription>
                             Esta acción eliminará permanentemente el torneo "{tournament.name}" y todos sus datos asociados. 
                             Esta acción no se puede deshacer.
+                            <br />
+                            <br />
+                            <strong>ID del torneo:</strong> {tournament.id}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -331,7 +347,14 @@ export default function Dashboard() {
                             disabled={deletingTournamentId === tournament.id}
                             className="bg-red-600 hover:bg-red-700"
                           >
-                            {deletingTournamentId === tournament.id ? 'Eliminando...' : 'Eliminar'}
+                            {deletingTournamentId === tournament.id ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Eliminando...
+                              </>
+                            ) : (
+                              'Eliminar'
+                            )}
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>

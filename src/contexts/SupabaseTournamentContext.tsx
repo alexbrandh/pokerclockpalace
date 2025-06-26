@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { TournamentState } from '@/types/tournament'
 import { Tournament, SupabaseTournamentContextType, TournamentStateDB } from '@/types/tournament-context'
@@ -195,8 +196,14 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
 
       console.log('📋 Loading tournaments from Supabase...');
       const data = await TournamentService.loadTournaments()
-      setTournaments(data)
-      console.log(`✅ Loaded ${data.length} tournaments`);
+      
+      // Force update by creating new array reference
+      setTournaments([...data])
+      console.log(`✅ Loaded ${data.length} tournaments, state updated`);
+      
+      // Log tournament IDs for debugging
+      console.log('Tournament IDs:', data.map(t => ({ id: t.id, name: t.name })));
+      
     } catch (err) {
       console.error('❌ Error loading tournaments:', err);
       const errorMessage = err instanceof Error ? err.message : 'Error loading tournaments';
@@ -217,25 +224,55 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       setIsLoading(true)
       setError(null)
 
-      console.log('🗑️ Deleting tournament:', tournamentId);
+      console.log('🗑️ Starting tournament deletion process for:', tournamentId);
+      
+      // Store the tournament name for the success message
+      const tournamentToDelete = tournaments.find(t => t.id === tournamentId);
+      const tournamentName = tournamentToDelete?.name || 'Tournament';
+      
+      console.log(`🔄 Deleting tournament: ${tournamentName}`);
+      
+      // Call the deletion service
       await TournamentService.deleteTournament(tournamentId)
       
-      // Reload tournaments to reflect the deletion
+      console.log('✅ Tournament deletion service completed');
+      
+      // Immediately remove from local state for instant UI feedback
+      setTournaments(prev => {
+        const updated = prev.filter(t => t.id !== tournamentId);
+        console.log(`⚡ Optimistically removed tournament from local state. Remaining: ${updated.length}`);
+        return updated;
+      });
+      
+      // Force reload tournaments to ensure consistency with database
+      console.log('🔄 Reloading tournaments to verify deletion...');
       await loadTournaments()
       
-      toast({
-        title: "Torneo eliminado",
-        description: "El torneo se ha eliminado exitosamente",
-      })
+      // Verify the tournament was actually deleted
+      const remainingTournaments = tournaments.filter(t => t.id !== tournamentId);
+      const wasDeleted = !remainingTournaments.find(t => t.id === tournamentId);
       
-      console.log('✅ Tournament deleted successfully');
+      if (wasDeleted) {
+        console.log('🎉 Tournament deletion verified successfully');
+        toast({
+          title: "Torneo eliminado",
+          description: `El torneo "${tournamentName}" se ha eliminado exitosamente`,
+        })
+      } else {
+        console.error('❌ Tournament deletion verification failed');
+        throw new Error('Tournament still exists after deletion attempt');
+      }
+      
     } catch (err) {
       console.error('❌ Error deleting tournament:', err);
       const errorMessage = err instanceof Error ? err.message : 'Error deleting tournament';
       setError(errorMessage);
       
+      // Reload tournaments to restore correct state if deletion failed
+      await loadTournaments();
+      
       toast({
-        title: "Error",
+        title: "Error de eliminación",
         description: errorMessage,
         variant: "destructive"
       })

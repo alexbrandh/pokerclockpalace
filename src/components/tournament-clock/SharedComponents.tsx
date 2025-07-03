@@ -53,7 +53,7 @@ export function ConnectionStatus({
   };
 
   return (
-    <div className="fixed top-4 right-4 z-50 flex items-center gap-3">
+    <div className="fixed top-4 right-4 z-50 flex items-center gap-3 hidden">
       <div className={`flex items-center gap-2 text-sm ${getStatusColor()}`}>
         {getStatusIcon()}
         <span className="hidden sm:inline max-w-48 truncate" title={getStatusText()}>

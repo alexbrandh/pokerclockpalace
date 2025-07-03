@@ -106,51 +106,147 @@ export type Database = {
       tournaments: {
         Row: {
           access_code: string
+          addon_allowed: boolean | null
+          addon_cost: number | null
+          addon_levels: number | null
+          addon_stack: number | null
+          antes_start_level: number | null
+          blind_increase_type: string | null
+          blind_structure_type: string | null
           break_after_levels: number
+          break_duration: number | null
+          break_frequency: number | null
           buy_in: number
+          chip_colors: Json | null
           city: string
           created_at: string
           created_by: string
+          custom_blind_schedule: Json | null
+          custom_level_durations: Json | null
+          dealer_tip_percentage: number | null
+          description: string | null
+          first_break_after: number | null
           guaranteed_prize_pool: number
           id: string
           initial_stack: number
+          late_registration_levels: number | null
+          late_registration_minutes: number | null
+          level_duration_type: string | null
           levels: Json
+          max_players: number | null
+          min_players: number | null
           name: string
+          payout_percentage: number | null
           payout_structure: Json
+          qualifier_seats: number | null
+          rebuy_allowed: boolean | null
+          rebuy_levels: number | null
+          rebuy_stack: number | null
           reentry_fee: number
+          registration_fee: number | null
+          rules: string | null
+          satellite_target: string | null
+          starting_blinds_bb: number | null
+          starting_blinds_sb: number | null
+          starting_chips: number | null
           status: string
+          tournament_date: string | null
         }
         Insert: {
           access_code: string
+          addon_allowed?: boolean | null
+          addon_cost?: number | null
+          addon_levels?: number | null
+          addon_stack?: number | null
+          antes_start_level?: number | null
+          blind_increase_type?: string | null
+          blind_structure_type?: string | null
           break_after_levels?: number
+          break_duration?: number | null
+          break_frequency?: number | null
           buy_in?: number
+          chip_colors?: Json | null
           city: string
           created_at?: string
           created_by: string
+          custom_blind_schedule?: Json | null
+          custom_level_durations?: Json | null
+          dealer_tip_percentage?: number | null
+          description?: string | null
+          first_break_after?: number | null
           guaranteed_prize_pool?: number
           id?: string
           initial_stack?: number
+          late_registration_levels?: number | null
+          late_registration_minutes?: number | null
+          level_duration_type?: string | null
           levels?: Json
+          max_players?: number | null
+          min_players?: number | null
           name: string
+          payout_percentage?: number | null
           payout_structure?: Json
+          qualifier_seats?: number | null
+          rebuy_allowed?: boolean | null
+          rebuy_levels?: number | null
+          rebuy_stack?: number | null
           reentry_fee?: number
+          registration_fee?: number | null
+          rules?: string | null
+          satellite_target?: string | null
+          starting_blinds_bb?: number | null
+          starting_blinds_sb?: number | null
+          starting_chips?: number | null
           status?: string
+          tournament_date?: string | null
         }
         Update: {
           access_code?: string
+          addon_allowed?: boolean | null
+          addon_cost?: number | null
+          addon_levels?: number | null
+          addon_stack?: number | null
+          antes_start_level?: number | null
+          blind_increase_type?: string | null
+          blind_structure_type?: string | null
           break_after_levels?: number
+          break_duration?: number | null
+          break_frequency?: number | null
           buy_in?: number
+          chip_colors?: Json | null
           city?: string
           created_at?: string
           created_by?: string
+          custom_blind_schedule?: Json | null
+          custom_level_durations?: Json | null
+          dealer_tip_percentage?: number | null
+          description?: string | null
+          first_break_after?: number | null
           guaranteed_prize_pool?: number
           id?: string
           initial_stack?: number
+          late_registration_levels?: number | null
+          late_registration_minutes?: number | null
+          level_duration_type?: string | null
           levels?: Json
+          max_players?: number | null
+          min_players?: number | null
           name?: string
+          payout_percentage?: number | null
           payout_structure?: Json
+          qualifier_seats?: number | null
+          rebuy_allowed?: boolean | null
+          rebuy_levels?: number | null
+          rebuy_stack?: number | null
           reentry_fee?: number
+          registration_fee?: number | null
+          rules?: string | null
+          satellite_target?: string | null
+          starting_blinds_bb?: number | null
+          starting_blinds_sb?: number | null
+          starting_chips?: number | null
           status?: string
+          tournament_date?: string | null
         }
         Relationships: []
       }

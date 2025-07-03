@@ -7,7 +7,7 @@ export class TournamentCreationService {
     const userId = await getCurrentUserId()
     const accessCode = generateAccessCode()
 
-    // Create tournament with proper JSON conversion
+    // Create tournament with comprehensive structure and proper JSON conversion
     const { data: tournament, error: tournamentError } = await supabase
       .from('tournaments')
       .insert({

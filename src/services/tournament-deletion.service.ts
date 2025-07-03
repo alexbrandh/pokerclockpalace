@@ -25,36 +25,8 @@ export class TournamentDeletionService {
 
       console.log('✅ Tournament found:', existingTournament.name);
 
-      // Step 2: Delete tournament state first (child record)
-      console.log('🔄 Deleting tournament state...');
-      const { error: stateError, count: stateCount } = await supabase
-        .from('tournament_states')
-        .delete({ count: 'exact' })
-        .eq('tournament_id', tournamentId);
-
-      if (stateError) {
-        console.error('❌ Error deleting tournament state:', stateError);
-        throw new Error(`Error deleting tournament state: ${stateError.message}`);
-      }
-
-      console.log(`✅ Deleted ${stateCount || 0} tournament state records`);
-
-      // Step 3: Delete tournament logs
-      console.log('🔄 Deleting tournament logs...');
-      const { error: logsError, count: logsCount } = await supabase
-        .from('tournament_logs')
-        .delete({ count: 'exact' })
-        .eq('tournament_id', tournamentId);
-
-      if (logsError) {
-        console.error('⚠️ Error deleting tournament logs:', logsError);
-        // Don't throw error for logs, it's not critical
-      } else {
-        console.log(`✅ Deleted ${logsCount || 0} tournament log records`);
-      }
-
-      // Step 4: Delete the tournament itself
-      console.log('🔄 Deleting tournament record...');
+      // Step 2: Delete the tournament (CASCADE will handle related records)
+      console.log('🔄 Deleting tournament and all related records...');
       const { error: tournamentError, count: tournamentCount } = await supabase
         .from('tournaments')
         .delete({ count: 'exact' })
@@ -70,9 +42,9 @@ export class TournamentDeletionService {
         throw new Error('Tournament deletion failed - no records were deleted');
       }
 
-      console.log(`✅ Successfully deleted ${tournamentCount} tournament record`);
+      console.log(`✅ Successfully deleted ${tournamentCount} tournament record and all related data`);
 
-      // Step 5: Verify deletion was successful
+      // Step 3: Verify deletion was successful
       console.log('🔄 Verifying deletion...');
       const { data: verifyTournament, error: verifyError } = await supabase
         .from('tournaments')

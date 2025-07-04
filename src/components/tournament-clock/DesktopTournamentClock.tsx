@@ -66,98 +66,77 @@ export function DesktopTournamentClock({
       <StickyStatsBar tournament={tournament} />
       
       <div className="h-full flex flex-col pt-16 md:pt-20">
-        {/* Professional Layout Structure */}
-        <div className="h-full flex flex-col">
+        {/* Desktop Grid Layout */}
+        <div className="grid grid-cols-12 gap-4 lg:gap-8 h-full items-center">
           
-          {/* Top Section - Current Level */}
-          <div className="flex-shrink-0 text-center py-8">
-            <div className="space-y-4">
-              {/* Level Title */}
-              <div className={`text-2xl font-bold ${
-                currentLevel?.isBreak ? 'text-cyan-400' : 'text-green-400'
-              }`}>
-                {currentLevel?.isBreak ? 'BREAK' : `LEVEL ${tournament.currentLevelIndex + 1}`}
+          {/* Left Side Info */}
+          <div className="col-span-3 h-full flex flex-col justify-center">
+            <div className="space-y-6 lg:space-y-8">
+              <LevelInfo
+                currentLevel={currentLevel}
+                nextLevelData={null}
+                currentLevelIndex={tournament.currentLevelIndex}
+                showNextLevel={false}
+              />
+              
+              {/* Golden separator */}
+              <div className="relative flex items-center justify-center py-2">
+                <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-400/20 to-transparent"></div>
+                <div className="relative bg-black px-4">
+                  <div className="h-1 w-16 bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 rounded-full shadow-lg shadow-yellow-400/30"></div>
+                </div>
               </div>
               
-              {/* Current Blinds/Break Info */}
-              <div className="text-white">
-                {currentLevel?.isBreak ? (
-                  <div className="text-4xl font-bold">
-                    {currentLevel.duration} MINUTES
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="text-6xl font-bold">
-                      {currentLevel?.smallBlind} / {currentLevel?.bigBlind}
-                    </div>
-                    {currentLevel?.ante > 0 && (
-                      <div className="text-2xl text-gray-300">
-                        Ante: {currentLevel.ante}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Center Section - Timer */}
-          <div className="flex-1 flex items-center justify-center">
-            <AdvancedTimer
-              timeRemaining={tournament.timeRemaining}
-              currentLevel={currentLevel}
-              progress={progress}
-              lastMinuteAlert={lastMinuteAlert}
-              currentLevelIndex={tournament.currentLevelIndex}
-              isRunning={tournament.isRunning}
-              isPaused={tournament.isPaused}
-            />
-          </div>
-
-          {/* Bottom Section - Next Level & Info */}
-          <div className="flex-shrink-0 py-8">
-            <div className="grid grid-cols-3 gap-8 items-center">
-              
-              {/* Left - Player Stats */}
-              <div className="text-center">
-                <div className="text-gray-400 text-sm uppercase tracking-wide mb-2">Players</div>
-                <div className="text-3xl font-bold text-white">{tournament.players}</div>
-              </div>
-
-              {/* Center - Next Level */}
+              {/* Next Level Info */}
               {nextLevelData && !currentLevel?.isBreak && (
-                <div className="text-center">
-                  <div className="text-yellow-400 text-sm uppercase tracking-wide mb-2">Next Level</div>
-                  <div className="text-xl font-bold text-white">
+                <div>
+                  <div className="text-yellow-400 text-lg font-semibold mb-2">Next Level</div>
+                  <div className="text-xl lg:text-2xl font-bold">
                     {nextLevelData.isBreak ? 
-                      `Break ${nextLevelData.duration}min` :
+                      `Descanso ${nextLevelData.duration}min` :
                       `${nextLevelData.smallBlind} / ${nextLevelData.bigBlind}`
                     }
                     {!nextLevelData.isBreak && nextLevelData.ante > 0 && (
-                      <div className="text-sm text-gray-300 mt-1">Ante: {nextLevelData.ante}</div>
+                      <div className="text-lg text-gray-300">({nextLevelData.ante})</div>
                     )}
                   </div>
                 </div>
               )}
 
-              {/* Right - Prize Pool */}
-              <div className="text-center">
-                <div className="text-gray-400 text-sm uppercase tracking-wide mb-2">Prize Pool</div>
-                <div className="text-3xl font-bold text-green-400">$25,000</div>
-              </div>
+              {/* Break Actions */}
+              {currentLevel?.isBreak && (
+                <div className="space-y-4">
+                  <div className="text-cyan-400 text-lg font-semibold">Break Actions</div>
+                  <button
+                    onClick={skipBreak}
+                    className="w-full bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Skip Break
+                  </button>
+                </div>
+              )}
             </div>
+          </div>
 
-            {/* Break Actions */}
-            {currentLevel?.isBreak && (
-              <div className="flex justify-center mt-6">
-                <button
-                  onClick={skipBreak}
-                  className="bg-cyan-600 hover:bg-cyan-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
-                >
-                  Skip Break
-                </button>
-              </div>
-            )}
+          {/* Center Timer */}
+          <div className="col-span-6 h-full flex items-center justify-center">
+            <div className="scale-125 lg:scale-150 xl:scale-175">
+              <AdvancedTimer
+                timeRemaining={tournament.timeRemaining}
+                currentLevel={currentLevel}
+                progress={progress}
+                lastMinuteAlert={lastMinuteAlert}
+                nextBreakTime={nextBreakTime}
+                currentLevelIndex={tournament.currentLevelIndex}
+                isRunning={tournament.isRunning}
+                isPaused={tournament.isPaused}
+              />
+            </div>
+          </div>
+
+          {/* Right Side - Prizes */}
+          <div className="col-span-3 h-full flex flex-col justify-center">
+            <PrizeInfo />
           </div>
         </div>
 

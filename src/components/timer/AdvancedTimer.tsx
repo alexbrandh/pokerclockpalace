@@ -50,98 +50,112 @@ export function AdvancedTimer({
 
   return (
     <div className="relative">
-      {/* Main Timer Circle */}
+      {/* Poker Chip Style Timer */}
       <div className="relative w-96 h-96">
-        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-          {/* Outer glow ring */}
+        <svg className="w-full h-full" viewBox="0 0 400 400">
+          {/* Outer Ring - Main chip border */}
           <circle
-            cx="50"
-            cy="50"
-            r="48"
-            stroke={getTimerColor()}
-            strokeWidth="0.2"
+            cx="200"
+            cy="200"
+            r="190"
             fill="none"
-            opacity="0.2"
-            className={shouldPulse ? 'animate-pulse' : ''}
+            stroke="#1f2937"
+            strokeWidth="8"
           />
           
-          {/* Background circle */}
+          {/* Inner Ring - Secondary border */}
           <circle
-            cx="50"
-            cy="50"
-            r="47"
-            stroke={currentLevel?.isBreak ? "rgba(6, 182, 212, 0.2)" : "rgba(212, 175, 55, 0.2)"}
-            strokeWidth="1"
+            cx="200"
+            cy="200"
+            r="175"
             fill="none"
+            stroke="#374151"
+            strokeWidth="4"
           />
           
-          {/* Progress circle with enhanced animation */}
-          <motion.circle
-            cx="50"
-            cy="50"
-            r={radius}
-            stroke={getTimerColor()}
-            strokeWidth="2.5"
-            fill="none"
-            strokeLinecap="round"
-            strokeDasharray={strokeDasharray}
-            strokeDashoffset={strokeDashoffset}
-            initial={{ strokeDashoffset: circumference }}
-            animate={{ 
-              strokeDashoffset,
-              stroke: getTimerColor()
-            }}
-            transition={{ 
-              strokeDashoffset: { duration: 1, ease: "easeOut" },
-              stroke: { duration: 0.3 }
-            }}
-            style={{
-              filter: `drop-shadow(0 0 12px ${getTimerColor()}40)`
-            }}
-          />
-
-          {/* Enhanced clock markers */}
-          {Array.from({ length: 12 }, (_, i) => {
-            const angle = (i * 30) * Math.PI / 180;
-            const x1 = 50 + 41 * Math.cos(angle - Math.PI / 2);
-            const y1 = 50 + 41 * Math.sin(angle - Math.PI / 2);
-            const x2 = 50 + 45 * Math.cos(angle - Math.PI / 2);
-            const y2 = 50 + 45 * Math.sin(angle - Math.PI / 2);
-            const isMainMark = i % 3 === 0;
+          {/* Poker Chip Segments - 8 segments around the edge */}
+          {Array.from({ length: 8 }, (_, i) => {
+            const angle = (i * 45) * Math.PI / 180;
+            const x1 = 200 + 160 * Math.cos(angle);
+            const y1 = 200 + 160 * Math.sin(angle);
+            const x2 = 200 + 185 * Math.cos(angle);
+            const y2 = 200 + 185 * Math.sin(angle);
+            
+            const segmentColor = currentLevel?.isBreak ? '#06B6D4' : 
+                               i % 2 === 0 ? '#EF4444' : '#FFFFFF';
             
             return (
-              <motion.line
-                key={i}
-                x1={x1}
-                y1={y1}
-                x2={x2}
-                y2={y2}
-                stroke={getTimerColor()}
-                strokeWidth={isMainMark ? "1.2" : "0.6"}
-                opacity={isMainMark ? "0.9" : "0.6"}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: isMainMark ? 0.9 : 0.6 }}
-                transition={{ delay: i * 0.05 }}
-              />
+              <g key={i}>
+                {/* Segment rectangles */}
+                <rect
+                  x={x1 - 8}
+                  y={y1 - 15}
+                  width="16"
+                  height="30"
+                  fill={segmentColor}
+                  transform={`rotate(${i * 45} ${x1} ${y1})`}
+                  rx="2"
+                />
+              </g>
             );
           })}
           
-          {/* Center dot with pulse */}
-          <motion.circle
-            cx="50"
-            cy="50"
-            r="1.5"
-            fill={getTimerColor()}
-            animate={shouldPulse ? {
-              scale: [1, 1.3, 1],
-              opacity: [1, 0.7, 1]
-            } : {}}
-            transition={shouldPulse ? {
-              duration: 1,
-              repeat: Infinity,
-              ease: "easeInOut"
-            } : {}}
+          {/* Main chip background */}
+          <circle
+            cx="200"
+            cy="200"
+            r="150"
+            fill="url(#chipGradient)"
+            stroke="#4B5563"
+            strokeWidth="2"
           />
+          
+          {/* Inner decorative circles */}
+          <circle
+            cx="200"
+            cy="200"
+            r="130"
+            fill="none"
+            stroke={currentLevel?.isBreak ? '#06B6D4' : '#D4AF37'}
+            strokeWidth="2"
+            opacity="0.6"
+          />
+          
+          <circle
+            cx="200"
+            cy="200"
+            r="110"
+            fill="none"
+            stroke={currentLevel?.isBreak ? '#0891B2' : '#B45309'}
+            strokeWidth="1"
+            opacity="0.4"
+          />
+          
+          {/* Progress arc */}
+          <circle
+            cx="200"
+            cy="200"
+            r="140"
+            fill="none"
+            stroke={getTimerColor()}
+            strokeWidth="6"
+            strokeLinecap="round"
+            strokeDasharray={`${2 * Math.PI * 140}`}
+            strokeDashoffset={`${2 * Math.PI * 140 * (1 - progress / 100)}`}
+            transform="rotate(-90 200 200)"
+            style={{
+              filter: `drop-shadow(0 0 8px ${getTimerColor()}60)`
+            }}
+          />
+          
+          {/* Gradient definitions */}
+          <defs>
+            <radialGradient id="chipGradient" cx="0.3" cy="0.3" r="0.8">
+              <stop offset="0%" stopColor="#1F2937" />
+              <stop offset="50%" stopColor="#111827" />
+              <stop offset="100%" stopColor="#000000" />
+            </radialGradient>
+          </defs>
         </svg>
         
         {/* Timer Content */}

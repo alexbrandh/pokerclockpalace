@@ -50,112 +50,146 @@ export function AdvancedTimer({
 
   return (
     <div className="relative">
-      {/* Poker Chip Style Timer */}
+      {/* Professional Poker Chip Timer */}
       <div className="relative w-96 h-96">
         <svg className="w-full h-full" viewBox="0 0 400 400">
-          {/* Outer Ring - Main chip border */}
-          <circle
-            cx="200"
-            cy="200"
-            r="190"
-            fill="none"
-            stroke="#1f2937"
-            strokeWidth="8"
-          />
-          
-          {/* Inner Ring - Secondary border */}
-          <circle
-            cx="200"
-            cy="200"
-            r="175"
-            fill="none"
-            stroke="#374151"
-            strokeWidth="4"
-          />
-          
-          {/* Poker Chip Segments - 8 segments around the edge */}
-          {Array.from({ length: 8 }, (_, i) => {
-            const angle = (i * 45) * Math.PI / 180;
-            const x1 = 200 + 160 * Math.cos(angle);
-            const y1 = 200 + 160 * Math.sin(angle);
-            const x2 = 200 + 185 * Math.cos(angle);
-            const y2 = 200 + 185 * Math.sin(angle);
+          <defs>
+            {/* Main chip gradient - realistic 3D effect */}
+            <radialGradient id="chipGradient" cx="0.3" cy="0.3" r="0.9">
+              <stop offset="0%" stopColor="#2D3748" />
+              <stop offset="30%" stopColor="#1A202C" />
+              <stop offset="70%" stopColor="#0F1419" />
+              <stop offset="100%" stopColor="#000000" />
+            </radialGradient>
             
-            const segmentColor = currentLevel?.isBreak ? '#06B6D4' : 
-                               i % 2 === 0 ? '#EF4444' : '#FFFFFF';
+            {/* Segment gradients for 3D effect */}
+            <linearGradient id="redSegment" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#F56565" />
+              <stop offset="50%" stopColor="#E53E3E" />
+              <stop offset="100%" stopColor="#C53030" />
+            </linearGradient>
+            
+            <linearGradient id="whiteSegment" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FFFFFF" />
+              <stop offset="50%" stopColor="#F7FAFC" />
+              <stop offset="100%" stopColor="#EDF2F7" />
+            </linearGradient>
+            
+            <linearGradient id="blueSegment" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#4299E1" />
+              <stop offset="50%" stopColor="#3182CE" />
+              <stop offset="100%" stopColor="#2B6CB0" />
+            </linearGradient>
+            
+            {/* Shadow filter */}
+            <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="2" dy="2" stdDeviation="3" floodOpacity="0.3"/>
+            </filter>
+          </defs>
+          
+          {/* Outer shadow ring */}
+          <circle
+            cx="200"
+            cy="200"
+            r="195"
+            fill="none"
+            stroke="rgba(0,0,0,0.3)"
+            strokeWidth="2"
+          />
+          
+          {/* Main chip body */}
+          <circle
+            cx="200"
+            cy="200"
+            r="180"
+            fill="url(#chipGradient)"
+            stroke="#2D3748"
+            strokeWidth="3"
+            filter="url(#shadow)"
+          />
+          
+          {/* Poker Chip Edge Segments - 12 larger segments like real chips */}
+          {Array.from({ length: 12 }, (_, i) => {
+            const angle = (i * 30) * Math.PI / 180;
+            const innerRadius = 150;
+            const outerRadius = 180;
+            
+            // Calculate arc path
+            const x1 = 200 + innerRadius * Math.cos(angle - Math.PI / 12);
+            const y1 = 200 + innerRadius * Math.sin(angle - Math.PI / 12);
+            const x2 = 200 + outerRadius * Math.cos(angle - Math.PI / 12);
+            const y2 = 200 + outerRadius * Math.sin(angle - Math.PI / 12);
+            const x3 = 200 + outerRadius * Math.cos(angle + Math.PI / 12);
+            const y3 = 200 + outerRadius * Math.sin(angle + Math.PI / 12);
+            const x4 = 200 + innerRadius * Math.cos(angle + Math.PI / 12);
+            const y4 = 200 + innerRadius * Math.sin(angle + Math.PI / 12);
+            
+            const pathData = `M ${x1} ${y1} L ${x2} ${y2} A ${outerRadius} ${outerRadius} 0 0 1 ${x3} ${y3} L ${x4} ${y4} A ${innerRadius} ${innerRadius} 0 0 0 ${x1} ${y1}`;
+            
+            const segmentColor = currentLevel?.isBreak ? 
+              (i % 2 === 0 ? 'url(#blueSegment)' : 'url(#whiteSegment)') :
+              (i % 2 === 0 ? 'url(#redSegment)' : 'url(#whiteSegment)');
             
             return (
-              <g key={i}>
-                {/* Segment rectangles */}
-                <rect
-                  x={x1 - 8}
-                  y={y1 - 15}
-                  width="16"
-                  height="30"
-                  fill={segmentColor}
-                  transform={`rotate(${i * 45} ${x1} ${y1})`}
-                  rx="2"
-                />
-              </g>
+              <path
+                key={i}
+                d={pathData}
+                fill={segmentColor}
+                stroke="#1A202C"
+                strokeWidth="1"
+                opacity="0.9"
+              />
             );
           })}
           
-          {/* Main chip background */}
+          {/* Inner chip area */}
           <circle
             cx="200"
             cy="200"
-            r="150"
+            r="145"
             fill="url(#chipGradient)"
-            stroke="#4B5563"
+            stroke="#4A5568"
             strokeWidth="2"
           />
           
-          {/* Inner decorative circles */}
+          {/* Decorative inner rings */}
           <circle
             cx="200"
             cy="200"
-            r="130"
+            r="120"
             fill="none"
-            stroke={currentLevel?.isBreak ? '#06B6D4' : '#D4AF37'}
+            stroke={currentLevel?.isBreak ? '#4299E1' : '#D69E2E'}
+            strokeWidth="3"
+            opacity="0.7"
+          />
+          
+          <circle
+            cx="200"
+            cy="200"
+            r="100"
+            fill="none"
+            stroke={currentLevel?.isBreak ? '#3182CE' : '#B7791F'}
             strokeWidth="2"
-            opacity="0.6"
+            opacity="0.5"
           />
           
+          {/* Progress indicator - follows chip edge */}
           <circle
             cx="200"
             cy="200"
-            r="110"
-            fill="none"
-            stroke={currentLevel?.isBreak ? '#0891B2' : '#B45309'}
-            strokeWidth="1"
-            opacity="0.4"
-          />
-          
-          {/* Progress arc */}
-          <circle
-            cx="200"
-            cy="200"
-            r="140"
+            r="165"
             fill="none"
             stroke={getTimerColor()}
-            strokeWidth="6"
+            strokeWidth="8"
             strokeLinecap="round"
-            strokeDasharray={`${2 * Math.PI * 140}`}
-            strokeDashoffset={`${2 * Math.PI * 140 * (1 - progress / 100)}`}
+            strokeDasharray={`${2 * Math.PI * 165}`}
+            strokeDashoffset={`${2 * Math.PI * 165 * (1 - progress / 100)}`}
             transform="rotate(-90 200 200)"
+            opacity="0.8"
             style={{
-              filter: `drop-shadow(0 0 8px ${getTimerColor()}60)`
+              filter: `drop-shadow(0 0 12px ${getTimerColor()}80)`
             }}
           />
-          
-          {/* Gradient definitions */}
-          <defs>
-            <radialGradient id="chipGradient" cx="0.3" cy="0.3" r="0.8">
-              <stop offset="0%" stopColor="#1F2937" />
-              <stop offset="50%" stopColor="#111827" />
-              <stop offset="100%" stopColor="#000000" />
-            </radialGradient>
-          </defs>
         </svg>
         
         {/* Timer Content */}

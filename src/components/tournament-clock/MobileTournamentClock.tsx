@@ -59,7 +59,6 @@ export function MobileTournamentClock({
               currentLevel={currentLevel}
               progress={progress}
               lastMinuteAlert={lastMinuteAlert}
-              nextBreakTime={nextBreakTime}
               currentLevelIndex={tournament.currentLevelIndex}
               isRunning={tournament.isRunning}
               isPaused={tournament.isPaused}
@@ -211,7 +210,6 @@ export function MobileTournamentClock({
                 currentLevel={currentLevel}
                 progress={progress}
                 lastMinuteAlert={lastMinuteAlert}
-                nextBreakTime={nextBreakTime}
                 currentLevelIndex={tournament.currentLevelIndex}
                 isRunning={tournament.isRunning}
                 isPaused={tournament.isPaused}

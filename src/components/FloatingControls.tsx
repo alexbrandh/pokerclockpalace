@@ -67,7 +67,7 @@ export function FloatingControls({
       >
         <div className={`backdrop-blur-md border rounded-full px-3 md:px-4 py-2 flex gap-1 md:gap-2 shadow-2xl transition-all duration-300 ${
           isOnBreak 
-            ? 'bg-cyan-900/95 border-cyan-400/40 shadow-cyan-400/20' 
+            ? 'bg-yellow-900/95 border-yellow-400/40 shadow-yellow-400/20' 
             : 'bg-black/95 border-yellow-400/40 shadow-yellow-400/20'
         }`}>
           
@@ -84,7 +84,7 @@ export function FloatingControls({
               size="sm"
               className={`rounded-full w-10 h-10 md:w-12 md:h-12 transition-all duration-200 ${
                 isOnBreak
-                  ? 'bg-cyan-600 hover:bg-cyan-700 shadow-lg shadow-cyan-600/30'
+                  ? 'bg-yellow-600 hover:bg-yellow-700 shadow-lg shadow-yellow-600/30'
                   : isRunning && !isPaused 
                     ? 'bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/30' 
                     : 'bg-green-600 hover:bg-green-700 shadow-lg shadow-green-600/30'
@@ -113,8 +113,8 @@ export function FloatingControls({
                 size="sm" 
                 className={`rounded-full w-10 h-10 transition-all duration-200 ${
                   showConfirmation === 'skipBreak'
-                    ? 'bg-cyan-500 hover:bg-cyan-600 text-white ring-2 ring-cyan-300'
-                    : 'bg-cyan-700 hover:bg-cyan-800 text-white'
+                    ? 'bg-yellow-500 hover:bg-yellow-600 text-black ring-2 ring-yellow-300'
+                    : 'bg-yellow-700 hover:bg-yellow-800 text-white'
                 }`}
               >
                 <Coffee className="w-4 h-4" />
@@ -216,7 +216,7 @@ export function FloatingControls({
                 onClick={onUndo}
                 variant="secondary" 
                 size="sm" 
-                className="rounded-full w-10 h-10 bg-blue-700 hover:bg-blue-600 text-white transition-all duration-200"
+                className="rounded-full w-10 h-10 bg-yellow-700 hover:bg-yellow-600 text-white transition-all duration-200"
               >
                 <Undo2 className="w-4 h-4" />
               </Button>
@@ -285,7 +285,7 @@ export function FloatingControls({
                   onClick={onUndo}
                   variant="secondary" 
                   size="sm"
-                  className="rounded-full w-8 h-8 bg-blue-700 hover:bg-blue-600 text-white"
+                  className="rounded-full w-8 h-8 bg-yellow-700 hover:bg-yellow-600 text-white"
                 >
                   <Undo2 className="w-3 h-3" />
                 </Button>

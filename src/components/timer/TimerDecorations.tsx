@@ -7,7 +7,7 @@ interface TimerDecorationsProps {
 
 export function TimerDecorations({ isBreak }: TimerDecorationsProps) {
   const gradientClass = isBreak 
-    ? 'from-cyan-400 via-cyan-300 to-transparent' 
+    ? 'from-yellow-400 via-yellow-300 to-transparent' 
     : 'from-yellow-400 via-yellow-300 to-transparent';
 
   return (

@@ -44,7 +44,7 @@ export function TimerOverlays({ timeRemaining, isBreak }: TimerOverlaysProps) {
               repeat: Infinity,
               ease: "easeInOut"
             }}
-            className="absolute inset-0 border-4 border-cyan-400 rounded-full pointer-events-none"
+            className="absolute inset-0 border-4 border-yellow-400 rounded-full pointer-events-none"
           />
         )}
       </AnimatePresence>

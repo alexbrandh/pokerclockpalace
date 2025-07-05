@@ -72,12 +72,12 @@ export function DesktopTournamentClock({
           {/* Left Column - Tournament Stats */}
           <div className="space-y-12">
             <div className="text-center">
-              <div className="text-cyan-400 text-sm font-semibold uppercase tracking-wide mb-2">Players</div>
+              <div className="text-yellow-400 text-sm font-semibold uppercase tracking-wide mb-2">Players</div>
               <div className="text-white text-4xl font-bold">{tournament.players}</div>
             </div>
             
             <div className="text-center">
-              <div className="text-cyan-400 text-sm font-semibold uppercase tracking-wide mb-2">Entries</div>
+              <div className="text-yellow-400 text-sm font-semibold uppercase tracking-wide mb-2">Entries</div>
               <div className="text-white text-3xl font-bold">
                 {tournament.entries + tournament.reentries}
                 {tournament.reentries > 0 && (
@@ -89,12 +89,12 @@ export function DesktopTournamentClock({
             </div>
             
             <div className="text-center">
-              <div className="text-cyan-400 text-sm font-semibold uppercase tracking-wide mb-2">Prize Pool</div>
+              <div className="text-yellow-400 text-sm font-semibold uppercase tracking-wide mb-2">Prize Pool</div>
               <div className="text-yellow-400 text-3xl font-bold">${tournament.currentPrizePool}</div>
             </div>
             
             <div className="text-center">
-              <div className="text-cyan-400 text-sm font-semibold uppercase tracking-wide mb-2">Average Stack</div>
+              <div className="text-yellow-400 text-sm font-semibold uppercase tracking-wide mb-2">Average Stack</div>
               <div className="text-white text-2xl font-bold">
                 {Math.round(averageStack / 1000)}k
                 {!currentLevel?.isBreak && averageStackInBBs > 0 && (
@@ -123,7 +123,7 @@ export function DesktopTournamentClock({
           {/* Right Column - Level Info */}
           <div className="space-y-12">
             <div className="text-center">
-              <div className="text-cyan-400 text-sm font-semibold uppercase tracking-wide mb-2">
+              <div className="text-yellow-400 text-sm font-semibold uppercase tracking-wide mb-2">
                 Level {tournament.currentLevelIndex + 1}
               </div>
               <div className="text-white text-3xl font-bold">
@@ -139,7 +139,7 @@ export function DesktopTournamentClock({
             
             {nextLevelData && (
               <div className="text-center">
-                <div className="text-cyan-400 text-sm font-semibold uppercase tracking-wide mb-2">Next Level</div>
+                <div className="text-yellow-400 text-sm font-semibold uppercase tracking-wide mb-2">Next Level</div>
                 <div className="text-white text-2xl font-bold">
                   {nextLevelData.isBreak ? 
                     `Break ${nextLevelData.duration}min` :
@@ -157,7 +157,7 @@ export function DesktopTournamentClock({
               <div className="text-center">
                 <button
                   onClick={skipBreak}
-                  className="bg-cyan-600 hover:bg-cyan-700 text-white px-8 py-3 rounded-lg font-medium transition-colors text-lg"
+                  className="bg-yellow-600 hover:bg-yellow-700 text-black px-8 py-3 rounded-lg font-medium transition-colors text-lg"
                 >
                   Skip Break
                 </button>
@@ -165,7 +165,7 @@ export function DesktopTournamentClock({
             )}
             
             <div className="text-center">
-              <div className="text-cyan-400 text-sm font-semibold uppercase tracking-wide mb-2">Total Chips</div>
+              <div className="text-yellow-400 text-sm font-semibold uppercase tracking-wide mb-2">Total Chips</div>
               <div className="text-white text-xl font-bold">
                 {totalChips.toLocaleString()}
               </div>

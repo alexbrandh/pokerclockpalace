@@ -5,7 +5,7 @@ export const formatTime = (seconds: number): string => {
 };
 
 export const getTimerColor = (isBreak: boolean, lastMinuteAlert: boolean, timeRemaining: number): string => {
-  if (isBreak) return '#06B6D4'; // cyan-500 for breaks
+  if (isBreak) return '#D4AF37'; // gold for breaks
   if (lastMinuteAlert) return '#EF4444'; // red-500
   if (timeRemaining <= 300) return '#F59E0B'; // amber-500
   return '#D4AF37'; // gold

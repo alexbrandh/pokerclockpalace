@@ -66,38 +66,74 @@ export function DesktopTournamentClock({
       <StickyStatsBar tournament={tournament} />
       
       <div className="h-full flex flex-col pt-16 md:pt-20">
-        {/* Desktop Grid Layout */}
-        <div className="grid grid-cols-12 gap-4 lg:gap-8 h-full items-center">
+        {/* Reference Layout Structure - Similar to image */}
+        <div className="h-full flex flex-col">
           
-          {/* Left Side Info */}
-          <div className="col-span-3 h-full flex flex-col justify-center">
-            <div className="space-y-6 lg:space-y-8">
-              <LevelInfo
-                currentLevel={currentLevel}
-                nextLevelData={null}
-                currentLevelIndex={tournament.currentLevelIndex}
-                showNextLevel={false}
-              />
+          {/* Main Content Area */}
+          <div className="flex-1 grid grid-cols-4 gap-8 items-center px-8">
+            
+            {/* Left Stats */}
+            <div className="col-span-1 space-y-8">
+              <div className="text-center">
+                <div className="text-cyan-400 text-sm font-semibold uppercase tracking-wide">Total</div>
+                <div className="text-white text-3xl font-bold">{tournament.entries + tournament.reentries}</div>
+              </div>
               
-              {/* Golden separator */}
-              <div className="relative flex items-center justify-center py-2">
-                <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-400/20 to-transparent"></div>
-                <div className="relative bg-black px-4">
-                  <div className="h-1 w-16 bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 rounded-full shadow-lg shadow-yellow-400/30"></div>
+              <div className="text-center">
+                <div className="text-cyan-400 text-sm font-semibold uppercase tracking-wide">Average</div>
+                <div className="text-white text-xl font-bold">
+                  {Math.round(((tournament.entries + tournament.reentries) * tournament.structure.initialStack) / tournament.players / 1000)}k
+                  <div className="text-sm text-gray-300">
+                    {currentLevel && !currentLevel.isBreak ? 
+                      `${Math.round(((tournament.entries + tournament.reentries) * tournament.structure.initialStack) / tournament.players / currentLevel.bigBlind)} BBs` :
+                      '0 BBs'
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Center Timer */}
+            <div className="col-span-2 flex items-center justify-center">
+              <div className="scale-110">
+                <AdvancedTimer
+                  timeRemaining={tournament.timeRemaining}
+                  currentLevel={currentLevel}
+                  progress={progress}
+                  lastMinuteAlert={lastMinuteAlert}
+                  nextBreakTime={nextBreakTime}
+                  currentLevelIndex={tournament.currentLevelIndex}
+                  isRunning={tournament.isRunning}
+                  isPaused={tournament.isPaused}
+                />
+              </div>
+            </div>
+
+            {/* Right Stats */}
+            <div className="col-span-1 space-y-8">
+              <div className="text-center">
+                <div className="text-cyan-400 text-sm font-semibold uppercase tracking-wide">Level {tournament.currentLevelIndex + 1}</div>
+                <div className="text-white text-2xl font-bold">
+                  {currentLevel?.isBreak ? 
+                    `Descanso ${currentLevel.duration}min` :
+                    `${currentLevel?.smallBlind} / ${currentLevel?.bigBlind}`
+                  }
+                  {!currentLevel?.isBreak && currentLevel?.ante > 0 && (
+                    <div className="text-lg text-gray-300">({currentLevel.ante})</div>
+                  )}
                 </div>
               </div>
               
-              {/* Next Level Info */}
-              {nextLevelData && !currentLevel?.isBreak && (
-                <div>
-                  <div className="text-yellow-400 text-lg font-semibold mb-2">Next Level</div>
-                  <div className="text-xl lg:text-2xl font-bold">
+              {nextLevelData && (
+                <div className="text-center">
+                  <div className="text-cyan-400 text-sm font-semibold uppercase tracking-wide">Next Level</div>
+                  <div className="text-white text-xl font-bold">
                     {nextLevelData.isBreak ? 
                       `Descanso ${nextLevelData.duration}min` :
                       `${nextLevelData.smallBlind} / ${nextLevelData.bigBlind}`
                     }
                     {!nextLevelData.isBreak && nextLevelData.ante > 0 && (
-                      <div className="text-lg text-gray-300">({nextLevelData.ante})</div>
+                      <div className="text-sm text-gray-300">({nextLevelData.ante})</div>
                     )}
                   </div>
                 </div>
@@ -105,38 +141,16 @@ export function DesktopTournamentClock({
 
               {/* Break Actions */}
               {currentLevel?.isBreak && (
-                <div className="space-y-4">
-                  <div className="text-cyan-400 text-lg font-semibold">Break Actions</div>
+                <div className="text-center">
                   <button
                     onClick={skipBreak}
-                    className="w-full bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
                   >
                     Skip Break
                   </button>
                 </div>
               )}
             </div>
-          </div>
-
-          {/* Center Timer */}
-          <div className="col-span-6 h-full flex items-center justify-center">
-            <div className="scale-125 lg:scale-150 xl:scale-175">
-              <AdvancedTimer
-                timeRemaining={tournament.timeRemaining}
-                currentLevel={currentLevel}
-                progress={progress}
-                lastMinuteAlert={lastMinuteAlert}
-                nextBreakTime={nextBreakTime}
-                currentLevelIndex={tournament.currentLevelIndex}
-                isRunning={tournament.isRunning}
-                isPaused={tournament.isPaused}
-              />
-            </div>
-          </div>
-
-          {/* Right Side - Prizes */}
-          <div className="col-span-3 h-full flex flex-col justify-center">
-            <PrizeInfo />
           </div>
         </div>
 

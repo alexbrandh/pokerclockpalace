@@ -5,7 +5,7 @@ import { Tournament, SupabaseTournamentContextType, TournamentStateDB } from '@/
 import { TournamentService } from '@/services/tournament-service'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
-import { useSimplePolling } from '@/hooks/useSimplePolling'
+import { useSupabaseRealtime } from '@/hooks/useSupabaseRealtime'
 
 const SupabaseTournamentContext = createContext<SupabaseTournamentContextType | null>(null)
 
@@ -61,20 +61,20 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
     }
   };
 
-  const pollingConnection = useSimplePolling({
+  const realtimeConnection = useSupabaseRealtime({
     tournamentId: currentTournament?.id || '',
     onStateUpdate: handleStateUpdate,
     enabled: !!currentTournament?.id
   });
 
-  // Clear errors when polling is working
+  // Clear errors when real-time is working
   useEffect(() => {
-    if (pollingConnection.isPolling && !pollingConnection.error) {
+    if (realtimeConnection.isConnected && !realtimeConnection.error) {
       setError(null);
-    } else if (pollingConnection.error) {
-      setError(pollingConnection.error);
+    } else if (realtimeConnection.error) {
+      setError(realtimeConnection.error);
     }
-  }, [pollingConnection.isPolling, pollingConnection.error]);
+  }, [realtimeConnection.isConnected, realtimeConnection.error]);
 
   const createTournament = async (structure: any, city: string): Promise<string> => {
     try {
@@ -156,8 +156,10 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       await TournamentService.updateTournamentState(currentTournament.id, updates);
       console.log('✅ Tournament state updated successfully in database');
       
-      // Refresh polling data immediately after update
-      pollingConnection.refresh();
+      // Force refresh if not connected to real-time
+      if (!realtimeConnection.isConnected) {
+        realtimeConnection.reconnect();
+      }
       
     } catch (err) {
       console.error('❌ Error updating tournament state:', err);
@@ -293,7 +295,7 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       tournaments,
       currentTournament,
       isLoading,
-      error: error || pollingConnection.error,
+      error: error || realtimeConnection.error,
       isSupabaseConfigured: isSupabaseConfigured(),
       createTournament,
       joinTournament,
@@ -301,15 +303,8 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       leaveTournament,
       loadTournaments,
       deleteTournament,
-      // Simplified connection state for polling
-      realtimeConnection: {
-        isConnected: pollingConnection.isPolling,
-        status: pollingConnection.isPolling ? 'polling' : 'disconnected',
-        error: pollingConnection.error,
-        reconnectAttempts: 0,
-        lastError: pollingConnection.error,
-        reconnect: pollingConnection.refresh
-      }
+      // Real-time connection state
+      realtimeConnection
     }}>
       {children}
     </SupabaseTournamentContext.Provider>

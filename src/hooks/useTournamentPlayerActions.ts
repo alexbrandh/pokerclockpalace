@@ -7,17 +7,31 @@ export function useTournamentPlayerActions() {
   const { currentTournament, updateTournamentState } = useSupabaseTournament();
   const { playSound } = useSoundSystem();
 
+  const calculatePrizePool = useCallback((entries: number, reentries: number, guaranteedPool: number, buyIn: number, reentryFee: number) => {
+    const totalCollected = (entries * buyIn) + (reentries * reentryFee);
+    return Math.max(totalCollected, guaranteedPool);
+  }, []);
+
   const addPlayer = useCallback(() => {
     if (!currentTournament) return;
     
     playSound('buttonClick');
     
+    const newEntries = currentTournament.entries + 1;
+    const newPrizePool = calculatePrizePool(
+      newEntries,
+      currentTournament.reentries,
+      currentTournament.structure.guaranteedPrizePool,
+      currentTournament.structure.buyIn,
+      currentTournament.structure.reentryFee
+    );
+    
     updateTournamentState({
       players: currentTournament.players + 1,
-      entries: currentTournament.entries + 1,
-      currentPrizePool: currentTournament.currentPrizePool + currentTournament.structure.buyIn
+      entries: newEntries,
+      currentPrizePool: newPrizePool
     });
-  }, [currentTournament, playSound, updateTournamentState]);
+  }, [currentTournament, playSound, updateTournamentState, calculatePrizePool]);
 
   const eliminatePlayer = useCallback(() => {
     if (!currentTournament || currentTournament.players <= 0) return;
@@ -34,12 +48,21 @@ export function useTournamentPlayerActions() {
     
     playSound('buttonClick');
     
+    const newReentries = currentTournament.reentries + 1;
+    const newPrizePool = calculatePrizePool(
+      currentTournament.entries,
+      newReentries,
+      currentTournament.structure.guaranteedPrizePool,
+      currentTournament.structure.buyIn,
+      currentTournament.structure.reentryFee
+    );
+    
     updateTournamentState({
       players: currentTournament.players + 1,
-      reentries: currentTournament.reentries + 1,
-      currentPrizePool: currentTournament.currentPrizePool + currentTournament.structure.reentryFee
+      reentries: newReentries,
+      currentPrizePool: newPrizePool
     });
-  }, [currentTournament, playSound, updateTournamentState]);
+  }, [currentTournament, playSound, updateTournamentState, calculatePrizePool]);
 
   return {
     addPlayer,

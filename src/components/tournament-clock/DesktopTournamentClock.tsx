@@ -158,6 +158,23 @@ export function DesktopTournamentClock({
               </div>
             </div>
             
+            {/* Prizes */}
+            <div className="text-center">
+              <PrizeInfo />
+            </div>
+
+            {/* Break Actions */}
+            {currentLevel?.isBreak && (
+              <div className="text-center">
+                <button
+                  onClick={skipBreak}
+                  className="bg-yellow-600 hover:bg-yellow-700 text-black px-8 py-3 rounded-lg font-medium transition-colors text-lg"
+                >
+                  Skip Break
+                </button>
+              </div>
+            )}
+
             {/* Next Level */}
             {nextLevelData && (
               <div className="text-center">
@@ -173,23 +190,6 @@ export function DesktopTournamentClock({
                 </div>
               </div>
             )}
-
-            {/* Break Actions */}
-            {currentLevel?.isBreak && (
-              <div className="text-center">
-                <button
-                  onClick={skipBreak}
-                  className="bg-yellow-600 hover:bg-yellow-700 text-black px-8 py-3 rounded-lg font-medium transition-colors text-lg"
-                >
-                  Skip Break
-                </button>
-              </div>
-            )}
-            
-            {/* Prizes */}
-            <div className="text-center">
-              <PrizeInfo />
-            </div>
           </div>
         </div>
       </div>

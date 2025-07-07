@@ -1,11 +1,11 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { TournamentState } from '@/types/tournament'
 import { Tournament, SupabaseTournamentContextType, TournamentStateDB } from '@/types/tournament-context'
 import { TournamentService } from '@/services/tournament-service'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
-import { useRobustRealtime } from '@/hooks/useRobustRealtime'
+import { useSimpleRealtime } from '@/hooks/useSimpleRealtime'
 
 const SupabaseTournamentContext = createContext<SupabaseTournamentContextType | null>(null)
 
@@ -19,29 +19,17 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
   console.log('SupabaseTournamentProvider initialized');
   console.log('Supabase configured:', isSupabaseConfigured());
 
-  // Robust real-time connection with instant sync
-  const handleStateUpdate = (payload: any) => {
-    console.log('📡 Processing robust real-time update:', {
-      event: payload.eventType,
-      timestamp: new Date().toISOString()
-    });
+  // Simple real-time connection
+  const handleStateUpdate = useCallback((payload: any) => {
+    console.log('📡 Processing update:', payload.eventType);
     
     if (payload.new && payload.eventType !== 'DELETE') {
       const newState = payload.new as TournamentStateDB
-      console.log('📊 Processing state update:', {
-        level: newState.current_level_index,
-        time: newState.time_remaining,
-        running: newState.is_running,
-        players: newState.players
-      });
       
       setCurrentTournament(prev => {
-        if (!prev) {
-          console.log('⚠️ No previous tournament state, ignoring update');
-          return null;
-        }
+        if (!prev) return null;
         
-        const updated = {
+        return {
           ...prev,
           currentLevelIndex: newState.current_level_index,
           timeRemaining: newState.time_remaining,
@@ -54,28 +42,24 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
           currentPrizePool: newState.current_prize_pool,
           startTime: newState.start_time ? Date.parse(newState.start_time) : undefined
         };
-        
-        console.log('✅ Tournament state updated via robust real-time');
-        return updated;
       });
     }
-  };
+  }, []);
 
-  const realtimeConnection = useRobustRealtime({
+  const realtimeConnection = useSimpleRealtime({
     tournamentId: currentTournament?.id || '',
     onStateUpdate: handleStateUpdate,
     enabled: !!currentTournament?.id
   });
 
-  // Clear errors when robust real-time is working
+  // Clear errors when connected
   useEffect(() => {
-    if (realtimeConnection.isConnected && !realtimeConnection.error) {
+    if (realtimeConnection.isConnected) {
       setError(null);
-    } else if (realtimeConnection.error && realtimeConnection.status !== 'retrying') {
-      // Only show error if not actively retrying
+    } else if (realtimeConnection.error) {
       setError(realtimeConnection.error);
     }
-  }, [realtimeConnection.isConnected, realtimeConnection.error, realtimeConnection.status]);
+  }, [realtimeConnection.isConnected, realtimeConnection.error]);
 
   const createTournament = async (structure: any, city: string): Promise<string> => {
     try {
@@ -157,9 +141,8 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       await TournamentService.updateTournamentState(currentTournament.id, updates);
       console.log('✅ Tournament state updated successfully in database');
       
-      // Force reconnection if not connected (robust system will handle it gracefully)
+      // Trigger reconnection if disconnected
       if (!realtimeConnection.isConnected) {
-        console.log('🔄 Triggering reconnection after state update');
         realtimeConnection.reconnect();
       }
       

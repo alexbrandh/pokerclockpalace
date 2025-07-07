@@ -9,7 +9,6 @@ interface ConnectionStatusProps {
   isConnected: boolean;
   connectionStatus?: string;
   error?: string;
-  reconnectAttempts?: number;
   onReconnect?: () => void;
   onSettingsClick: () => void;
 }
@@ -18,7 +17,6 @@ export function ConnectionStatus({
   isConnected, 
   connectionStatus = 'disconnected',
   error,
-  reconnectAttempts = 0,
   onReconnect,
   onSettingsClick 
 }: ConnectionStatusProps) {

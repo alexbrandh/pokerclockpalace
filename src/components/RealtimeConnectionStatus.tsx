@@ -2,9 +2,7 @@ import { useSupabaseTournament } from '@/contexts/SupabaseTournamentContext'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Wifi, WifiOff, Users, RefreshCw, Zap, Clock } from 'lucide-react'
-import { formatDistanceToNow } from 'date-fns'
-import { es } from 'date-fns/locale'
+import { Wifi, WifiOff, RefreshCw, Zap } from 'lucide-react'
 
 export function RealtimeConnectionStatus() {
   const { realtimeConnection } = useSupabaseTournament()
@@ -12,13 +10,11 @@ export function RealtimeConnectionStatus() {
   const getStatusColor = () => {
     switch (realtimeConnection.status) {
       case 'connected':
-        return realtimeConnection.connectionQuality === 'excellent' ? 'bg-green-500' : 
-               realtimeConnection.connectionQuality === 'good' ? 'bg-yellow-500' : 'bg-orange-500'
+        return 'bg-green-500'
       case 'connecting':
-      case 'retrying':
-      case 'syncing':
         return 'bg-blue-500 animate-pulse'
-      case 'error':
+      case 'polling':
+        return 'bg-yellow-500'
       case 'disconnected':
         return 'bg-red-500'
       default:
@@ -29,12 +25,11 @@ export function RealtimeConnectionStatus() {
   const getStatusIcon = () => {
     switch (realtimeConnection.status) {
       case 'connected':
-        return realtimeConnection.connectionQuality === 'excellent' ? <Zap className="w-3 h-3" /> : <Wifi className="w-3 h-3" />
+        return <Zap className="w-3 h-3" />
       case 'connecting':
-      case 'retrying':
         return <RefreshCw className="w-3 h-3 animate-spin" />
-      case 'syncing':
-        return <Clock className="w-3 h-3 animate-pulse" />
+      case 'polling':
+        return <Wifi className="w-3 h-3" />
       default:
         return <WifiOff className="w-3 h-3" />
     }
@@ -43,15 +38,11 @@ export function RealtimeConnectionStatus() {
   const getStatusText = () => {
     switch (realtimeConnection.status) {
       case 'connected':
-        return `Conectado (${realtimeConnection.connectionQuality})`
+        return 'Conectado'
       case 'connecting':
         return 'Conectando...'
-      case 'retrying':
-        return `Reintentando (${realtimeConnection.reconnectAttempts})`
-      case 'syncing':
-        return 'Sincronizando...'
-      case 'error':
-        return 'Error de conexión'
+      case 'polling':
+        return 'Modo Respaldo'
       case 'disconnected':
         return 'Desconectado'
       default:
@@ -60,29 +51,11 @@ export function RealtimeConnectionStatus() {
   }
 
   const getTooltipContent = () => {
-    const parts = [
-      `Estado: ${getStatusText()}`,
-      `Calidad: ${realtimeConnection.connectionQuality}`,
-      `Usuarios conectados: ${realtimeConnection.connectedUsers}`,
-      `Versión de sincronización: ${realtimeConnection.syncVersion}`
-    ]
-
-    if (realtimeConnection.lastPing) {
-      parts.push(`Último ping: ${formatDistanceToNow(realtimeConnection.lastPing, { 
-        addSuffix: true, 
-        locale: es 
-      })}`)
-    }
+    const parts = [`Estado: ${getStatusText()}`]
 
     if (realtimeConnection.lastSync) {
-      parts.push(`Última sincronización: ${formatDistanceToNow(realtimeConnection.lastSync, { 
-        addSuffix: true, 
-        locale: es 
-      })}`)
-    }
-
-    if (realtimeConnection.reconnectAttempts > 0) {
-      parts.push(`Intentos de reconexión: ${realtimeConnection.reconnectAttempts}`)
+      const timeAgo = Math.floor((Date.now() - realtimeConnection.lastSync) / 1000)
+      parts.push(`Última sincronización: hace ${timeAgo}s`)
     }
 
     if (realtimeConnection.error) {
@@ -113,34 +86,6 @@ export function RealtimeConnectionStatus() {
             </div>
           </TooltipContent>
         </Tooltip>
-
-        {realtimeConnection.connectedUsers > 0 && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Badge variant="secondary" className="text-xs">
-                <Users className="w-3 h-3 mr-1" />
-                {realtimeConnection.connectedUsers}
-              </Badge>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{realtimeConnection.connectedUsers} usuario(s) conectado(s)</p>
-            </TooltipContent>
-          </Tooltip>
-        )}
-
-        {realtimeConnection.reconnectAttempts > 0 && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Badge variant="destructive" className="text-xs animate-pulse">
-                <RefreshCw className="w-3 h-3 mr-1" />
-                {realtimeConnection.reconnectAttempts}
-              </Badge>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{realtimeConnection.reconnectAttempts} intento(s) de reconexión</p>
-            </TooltipContent>
-          </Tooltip>
-        )}
 
         {(!realtimeConnection.isConnected || realtimeConnection.error) && (
           <Button

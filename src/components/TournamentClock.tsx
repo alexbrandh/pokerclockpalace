@@ -15,7 +15,6 @@ export function TournamentClock() {
     isConnected,
     connectionStatus,
     error,
-    reconnectAttempts,
     reconnect,
     lastMinuteAlert,
     actionHistory,
@@ -106,7 +105,6 @@ export function TournamentClock() {
         isConnected={isConnected} 
         connectionStatus={connectionStatus}
         error={error || undefined}
-        reconnectAttempts={reconnectAttempts}
         onReconnect={reconnect}
         onSettingsClick={() => setShowSettings(true)} 
       />

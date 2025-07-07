@@ -42,7 +42,6 @@ export function useSupabaseTournamentLogic() {
     isConnected: realtimeConnection.isConnected,
     connectionStatus: realtimeConnection.status,
     error: error || realtimeConnection.error,
-    reconnectAttempts: realtimeConnection.reconnectAttempts,
     reconnect: realtimeConnection.reconnect,
     lastMinuteAlert,
     actionHistory,

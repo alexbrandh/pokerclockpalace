@@ -19,9 +19,9 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   },
   realtime: {
     params: {
-      eventsPerSecond: 10,
-      timeout: 20000,
-      heartbeatIntervalMs: 30000
+      eventsPerSecond: 5,
+      timeout: 10000,
+      heartbeatIntervalMs: 15000
     }
   }
 });

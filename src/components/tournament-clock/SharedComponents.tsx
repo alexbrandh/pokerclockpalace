@@ -22,30 +22,27 @@ export function ConnectionStatus({
 }: ConnectionStatusProps) {
   const getStatusColor = () => {
     switch (connectionStatus) {
-      case 'polling': return 'text-blue-400';
-      case 'connected': return 'text-green-400';
+      case 'active': return 'text-green-400';
+      case 'paused': return 'text-blue-400';
       case 'error': return 'text-red-400';
-      case 'disconnected': return 'text-gray-400';
       default: return 'text-gray-400';
     }
   };
 
   const getStatusText = () => {
     switch (connectionStatus) {
-      case 'polling': return 'Actualizando';
-      case 'connected': return 'Conectado';
+      case 'active': return 'Sincronizado';
+      case 'paused': return 'Sincronizando';
       case 'error': return 'Error';
-      case 'disconnected': return 'Desconectado';
       default: return 'Estado desconocido';
     }
   };
 
   const getStatusIcon = () => {
     switch (connectionStatus) {
-      case 'polling': return <Clock className="w-4 h-4" />;
-      case 'connected': return <Wifi className="w-4 h-4" />;
+      case 'active': return <Wifi className="w-4 h-4" />;
+      case 'paused': return <Clock className="w-4 h-4" />;
       case 'error': return <AlertTriangle className="w-4 h-4" />;
-      case 'disconnected': return <WifiOff className="w-4 h-4" />;
       default: return <AlertTriangle className="w-4 h-4" />;
     }
   };
@@ -59,10 +56,10 @@ export function ConnectionStatus({
         </span>
       </div>
       
-      {connectionStatus === 'polling' && (
-        <div className="text-xs bg-blue-600/20 text-blue-300 px-2 py-1 rounded border border-blue-600/30">
-          <span className="hidden sm:inline">Cada 5s</span>
-          <span className="sm:hidden">5s</span>
+      {connectionStatus === 'active' && (
+        <div className="text-xs bg-green-600/20 text-green-300 px-2 py-1 rounded border border-green-600/30">
+          <span className="hidden sm:inline">1s</span>
+          <span className="sm:hidden">1s</span>
         </div>
       )}
       

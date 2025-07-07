@@ -3,7 +3,7 @@ import { TournamentState, TournamentStructure } from '@/types/tournament'
 import { Database } from '@/types/supabase'
 interface SimpleRealtimeState {
   isConnected: boolean
-  status: 'connecting' | 'connected' | 'disconnected' | 'polling'
+  status: 'active' | 'paused' | 'error'
   error: string | null
   lastSync: number | null
   reconnect: () => void

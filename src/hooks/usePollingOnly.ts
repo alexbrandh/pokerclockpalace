@@ -1,47 +1,45 @@
-
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 
-export interface SimplePollingState {
-  isPolling: boolean;
+export interface PollingState {
+  isActive: boolean;
   lastUpdate: Date | null;
   error: string | null;
+  status: 'active' | 'paused' | 'error';
 }
 
-interface UseSimplePollingProps {
+interface UsePollingOnlyProps {
   tournamentId: string;
   onStateUpdate: (payload: any) => void;
   enabled?: boolean;
+  interval?: number;
 }
 
-export function useSimplePolling({ 
+export function usePollingOnly({ 
   tournamentId, 
   onStateUpdate, 
-  enabled = true 
-}: UseSimplePollingProps) {
-  const [pollingState, setPollingState] = useState<SimplePollingState>({
-    isPolling: false,
+  enabled = true,
+  interval = 1000 
+}: UsePollingOnlyProps) {
+  const [pollingState, setPollingState] = useState<PollingState>({
+    isActive: false,
     lastUpdate: null,
-    error: null
+    error: null,
+    status: 'paused'
   });
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastDataRef = useRef<any>(null);
   const enabledRef = useRef(enabled);
 
-  // Update enabled ref when prop changes
   useEffect(() => {
     enabledRef.current = enabled;
   }, [enabled]);
 
-  const pollForUpdates = useCallback(async () => {
-    if (!enabledRef.current || !tournamentId) {
-      return;
-    }
+  const pollData = useCallback(async () => {
+    if (!enabledRef.current || !tournamentId) return;
 
     try {
-      console.log('📊 Polling for tournament updates...');
-      
       const { data, error } = await supabase
         .from('tournament_states')
         .select('*')
@@ -49,23 +47,21 @@ export function useSimplePolling({
         .single();
 
       if (error) {
-        console.warn('⚠️ Polling error:', error.message);
         setPollingState(prev => ({
           ...prev,
-          error: `Polling error: ${error.message}`
+          error: `Error polling: ${error.message}`,
+          status: 'error'
         }));
         return;
       }
 
       if (data) {
-        // Only update if data has actually changed
+        // Compare with last data to avoid unnecessary updates
         const dataString = JSON.stringify(data);
         const lastDataString = JSON.stringify(lastDataRef.current);
         
         if (dataString !== lastDataString) {
-          console.log('📡 New data detected, updating state');
           lastDataRef.current = data;
-          
           onStateUpdate({
             eventType: 'UPDATE',
             new: data,
@@ -76,15 +72,16 @@ export function useSimplePolling({
         setPollingState(prev => ({
           ...prev,
           lastUpdate: new Date(),
-          error: null
+          error: null,
+          status: 'active'
         }));
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown polling error';
-      console.error('❌ Polling failed:', error);
       setPollingState(prev => ({
         ...prev,
-        error: errorMessage
+        error: errorMessage,
+        status: 'error'
       }));
     }
   }, [tournamentId, onStateUpdate]);
@@ -94,27 +91,29 @@ export function useSimplePolling({
       clearInterval(intervalRef.current);
     }
 
-    console.log('🔄 Starting polling every 5 seconds');
-    setPollingState(prev => ({ ...prev, isPolling: true }));
-
-    // Poll immediately on start
-    pollForUpdates();
-
-    // Then poll every 5 seconds
-    intervalRef.current = setInterval(pollForUpdates, 5000);
-  }, [pollForUpdates]);
+    setPollingState(prev => ({ ...prev, isActive: true, status: 'active' }));
+    
+    // Poll immediately
+    pollData();
+    
+    // Then poll at interval
+    intervalRef.current = setInterval(pollData, interval);
+  }, [pollData, interval]);
 
   const stopPolling = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-    
-    console.log('⏹️ Stopped polling');
-    setPollingState(prev => ({ ...prev, isPolling: false }));
+    setPollingState(prev => ({ ...prev, isActive: false, status: 'paused' }));
   }, []);
 
-  // Start/stop polling based on enabled and tournamentId
+  const reconnect = useCallback(() => {
+    stopPolling();
+    setTimeout(startPolling, 100);
+  }, [startPolling, stopPolling]);
+
+  // Start/stop based on enabled and tournamentId
   useEffect(() => {
     if (enabled && tournamentId) {
       startPolling();
@@ -122,26 +121,26 @@ export function useSimplePolling({
       stopPolling();
     }
 
-    return () => {
-      stopPolling();
-    };
+    return stopPolling;
   }, [enabled, tournamentId, startPolling, stopPolling]);
 
-  // Handle page visibility changes
+  // Handle page visibility
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && enabled && tournamentId) {
-        console.log('👁️ Page became visible, refreshing data');
-        pollForUpdates();
+        pollData();
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [enabled, tournamentId, pollForUpdates]);
+  }, [enabled, tournamentId, pollData]);
 
   return {
-    ...pollingState,
-    refresh: pollForUpdates
+    isConnected: pollingState.status === 'active',
+    status: pollingState.status,
+    error: pollingState.error,
+    lastSync: pollingState.lastUpdate?.getTime() || null,
+    reconnect
   };
 }

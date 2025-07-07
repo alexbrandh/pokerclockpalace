@@ -9,13 +9,11 @@ export function RealtimeConnectionStatus() {
 
   const getStatusColor = () => {
     switch (realtimeConnection.status) {
-      case 'connected':
+      case 'active':
         return 'bg-green-500'
-      case 'connecting':
-        return 'bg-blue-500 animate-pulse'
-      case 'polling':
-        return 'bg-yellow-500'
-      case 'disconnected':
+      case 'paused':
+        return 'bg-blue-500'
+      case 'error':
         return 'bg-red-500'
       default:
         return 'bg-gray-500'
@@ -24,12 +22,12 @@ export function RealtimeConnectionStatus() {
 
   const getStatusIcon = () => {
     switch (realtimeConnection.status) {
-      case 'connected':
+      case 'active':
         return <Zap className="w-3 h-3" />
-      case 'connecting':
+      case 'paused':
         return <RefreshCw className="w-3 h-3 animate-spin" />
-      case 'polling':
-        return <Wifi className="w-3 h-3" />
+      case 'error':
+        return <WifiOff className="w-3 h-3" />
       default:
         return <WifiOff className="w-3 h-3" />
     }
@@ -37,14 +35,12 @@ export function RealtimeConnectionStatus() {
 
   const getStatusText = () => {
     switch (realtimeConnection.status) {
-      case 'connected':
-        return 'Conectado'
-      case 'connecting':
-        return 'Conectando...'
-      case 'polling':
-        return 'Modo Respaldo'
-      case 'disconnected':
-        return 'Desconectado'
+      case 'active':
+        return 'Sincronizado'
+      case 'paused':
+        return 'Sincronizando...'
+      case 'error':
+        return 'Error'
       default:
         return 'Estado desconocido'
     }

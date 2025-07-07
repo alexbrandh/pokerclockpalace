@@ -5,7 +5,7 @@ import { Tournament, SupabaseTournamentContextType, TournamentStateDB } from '@/
 import { TournamentService } from '@/services/tournament-service'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
-import { useSimpleRealtime } from '@/hooks/useSimpleRealtime'
+import { usePollingOnly } from '@/hooks/usePollingOnly'
 
 const SupabaseTournamentContext = createContext<SupabaseTournamentContextType | null>(null)
 
@@ -46,10 +46,11 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
     }
   }, []);
 
-  const realtimeConnection = useSimpleRealtime({
+  const realtimeConnection = usePollingOnly({
     tournamentId: currentTournament?.id || '',
     onStateUpdate: handleStateUpdate,
-    enabled: !!currentTournament?.id
+    enabled: !!currentTournament?.id,
+    interval: 1000
   });
 
   // Clear errors when connected

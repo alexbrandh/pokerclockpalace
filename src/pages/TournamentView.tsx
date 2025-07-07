@@ -5,6 +5,7 @@ import { useSupabaseTournament } from '@/contexts/SupabaseTournamentContext'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Settings } from 'lucide-react'
 import { TournamentClock } from '@/components/TournamentClock'
+import { RealtimeConnectionStatus } from '@/components/RealtimeConnectionStatus'
 
 export default function TournamentView() {
   const { id } = useParams<{ id: string }>()
@@ -84,6 +85,11 @@ export default function TournamentView() {
           </Button>
         </div>
       )}
+
+      {/* Real-time Connection Status */}
+      <div className="fixed top-4 right-4 z-50">
+        <RealtimeConnectionStatus />
+      </div>
 
       {/* Tournament Clock */}
       <TournamentClock />

@@ -5,10 +5,14 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 
 export interface RealtimeConnectionState {
   isConnected: boolean;
-  status: 'connecting' | 'connected' | 'disconnected' | 'error' | 'retrying' | 'polling';
+  status: 'connecting' | 'connected' | 'disconnected' | 'error' | 'retrying' | 'polling' | 'syncing';
   error: string | null;
   reconnectAttempts: number;
   lastError: string | null;
+  lastPing: number | null;
+  connectionQuality: 'excellent' | 'good' | 'poor' | 'offline';
+  connectedUsers: number;
+  lastSync: number | null;
 }
 
 interface UseSupabaseRealtimeProps {
@@ -27,7 +31,11 @@ export function useSupabaseRealtime({
     status: 'disconnected',
     error: null,
     reconnectAttempts: 0,
-    lastError: null
+    lastError: null,
+    lastPing: null,
+    connectionQuality: 'offline',
+    connectedUsers: 0,
+    lastSync: null
   });
 
   // Use refs to avoid circular dependencies

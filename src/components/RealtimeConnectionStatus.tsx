@@ -63,7 +63,8 @@ export function RealtimeConnectionStatus() {
     const parts = [
       `Estado: ${getStatusText()}`,
       `Calidad: ${realtimeConnection.connectionQuality}`,
-      `Usuarios conectados: ${realtimeConnection.connectedUsers}`
+      `Usuarios conectados: ${realtimeConnection.connectedUsers}`,
+      `Versión de sincronización: ${realtimeConnection.syncVersion}`
     ]
 
     if (realtimeConnection.lastPing) {

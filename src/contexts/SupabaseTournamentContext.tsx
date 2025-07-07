@@ -5,7 +5,7 @@ import { Tournament, SupabaseTournamentContextType, TournamentStateDB } from '@/
 import { TournamentService } from '@/services/tournament-service'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
-import { useSupabaseRealtime } from '@/hooks/useSupabaseRealtime'
+import { useRobustRealtime } from '@/hooks/useRobustRealtime'
 
 const SupabaseTournamentContext = createContext<SupabaseTournamentContextType | null>(null)
 
@@ -19,9 +19,9 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
   console.log('SupabaseTournamentProvider initialized');
   console.log('Supabase configured:', isSupabaseConfigured());
 
-  // Simple polling connection with improved error handling
+  // Robust real-time connection with instant sync
   const handleStateUpdate = (payload: any) => {
-    console.log('📡 Processing tournament update via polling:', {
+    console.log('📡 Processing robust real-time update:', {
       event: payload.eventType,
       timestamp: new Date().toISOString()
     });
@@ -55,26 +55,27 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
           startTime: newState.start_time ? Date.parse(newState.start_time) : undefined
         };
         
-        console.log('✅ Tournament state updated via polling');
+        console.log('✅ Tournament state updated via robust real-time');
         return updated;
       });
     }
   };
 
-  const realtimeConnection = useSupabaseRealtime({
+  const realtimeConnection = useRobustRealtime({
     tournamentId: currentTournament?.id || '',
     onStateUpdate: handleStateUpdate,
     enabled: !!currentTournament?.id
   });
 
-  // Clear errors when real-time is working
+  // Clear errors when robust real-time is working
   useEffect(() => {
     if (realtimeConnection.isConnected && !realtimeConnection.error) {
       setError(null);
-    } else if (realtimeConnection.error) {
+    } else if (realtimeConnection.error && realtimeConnection.status !== 'retrying') {
+      // Only show error if not actively retrying
       setError(realtimeConnection.error);
     }
-  }, [realtimeConnection.isConnected, realtimeConnection.error]);
+  }, [realtimeConnection.isConnected, realtimeConnection.error, realtimeConnection.status]);
 
   const createTournament = async (structure: any, city: string): Promise<string> => {
     try {
@@ -156,8 +157,9 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       await TournamentService.updateTournamentState(currentTournament.id, updates);
       console.log('✅ Tournament state updated successfully in database');
       
-      // Force refresh if not connected to real-time
+      // Force reconnection if not connected (robust system will handle it gracefully)
       if (!realtimeConnection.isConnected) {
+        console.log('🔄 Triggering reconnection after state update');
         realtimeConnection.reconnect();
       }
       

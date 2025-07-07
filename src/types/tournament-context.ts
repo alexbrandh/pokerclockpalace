@@ -1,7 +1,7 @@
 
 import { TournamentState, TournamentStructure } from '@/types/tournament'
 import { Database } from '@/types/supabase'
-import { RealtimeConnectionState } from '@/hooks/useSupabaseRealtime'
+import { RobustRealtimeState } from '@/hooks/useRobustRealtime'
 
 export type Tournament = Database['public']['Tables']['tournaments']['Row']
 export type TournamentStateDB = Database['public']['Tables']['tournament_states']['Row']
@@ -18,5 +18,5 @@ export interface SupabaseTournamentContextType {
   leaveTournament: () => void
   loadTournaments: () => Promise<void>
   deleteTournament: (tournamentId: string) => Promise<void>
-  realtimeConnection: RealtimeConnectionState & { reconnect: () => void }
+  realtimeConnection: RobustRealtimeState & { reconnect: () => void }
 }

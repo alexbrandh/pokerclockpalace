@@ -6,8 +6,9 @@ import { Progress } from '@/components/ui/progress';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { TournamentStructure } from '@/types/tournament';
 import { BasicInfoStep } from './steps/BasicInfoStep';
-import { BuyInStructureStep } from './steps/BuyInStructureStep';
-import { BlindStructureAdvancedStep } from './steps/BlindStructureAdvancedStep';
+import { FeeStructureStep } from './steps/FeeStructureStep';
+import { TournamentTypeStep } from './steps/TournamentTypeStep';
+import { IntelligentLevelGeneratorStep } from './steps/IntelligentLevelGeneratorStep';
 import { BreaksAndTimingStep } from './steps/BreaksAndTimingStep';
 import { PayoutStructureStep } from './steps/PayoutStructureStep';
 
@@ -27,23 +28,28 @@ export function TournamentWizard({ onTournamentCreated }: TournamentWizardProps)
     rules: '',
     min_players: 2,
     max_players: 100,
+    is_freeroll: false,
     
-    // Buy-in Structure
+    // Fee Structure
+    fee_type: 'percentage',
+    fee_percentage: 10,
+    fee_exact_amount: 5,
+    
+    // Tournament Type & Buy-in
+    tournament_elimination_type: 'reentry',
     buyIn: 50,
-    registration_fee: 0,
-    reentryFee: 25,
+    reentryFee: 50,
     guaranteedPrizePool: 300,
     starting_chips: 10000,
-    rebuy_allowed: false,
-    rebuy_levels: 3,
-    rebuy_stack: 10000,
-    rebuy_cost: 50,
+    reentry_allowed: true,
+    reentry_stack: 10000,
     addon_allowed: false,
-    addon_levels: 3,
     addon_stack: 5000,
     addon_cost: 25,
-    payout_percentage: 100,
-    dealer_tip_percentage: 0,
+    
+    // Unified Late Registration
+    late_registration_levels: 4,
+    late_registration_minutes: 60,
     
     // Blind Structure
     blind_structure_type: 'standard',
@@ -64,8 +70,6 @@ export function TournamentWizard({ onTournamentCreated }: TournamentWizardProps)
     break_frequency: 4,
     break_duration: 15,
     first_break_after: 4,
-    late_registration_levels: 4,
-    late_registration_minutes: 60,
     
     // Payout Structure
     tournament_type: 'regular',
@@ -80,9 +84,10 @@ export function TournamentWizard({ onTournamentCreated }: TournamentWizardProps)
 
   const WIZARD_STEPS = [
     'Información Básica',
-    'Estructura de Buy-in',
+    'Fee/Rake',
+    'Tipo de Torneo',
     'Estructura de Ciegas',
-    'Descansos y Tiempo',
+    'Registro y Tiempo',
     'Premios',
     'Confirmar'
   ];
@@ -124,12 +129,14 @@ export function TournamentWizard({ onTournamentCreated }: TournamentWizardProps)
       case 0:
         return wizardData.name && wizardData.city;
       case 1:
-        return wizardData.buyIn > 0;
+        return true; // Fee structure is optional
       case 2:
-        return wizardData.levels && wizardData.levels.length > 0;
+        return wizardData.buyIn >= 0; // Allow 0 for freerolls
       case 3:
-        return true; // Breaks are optional
+        return wizardData.levels && wizardData.levels.length > 0;
       case 4:
+        return true; // Breaks are optional
+      case 5:
         return wizardData.payoutStructure && wizardData.payoutStructure.length > 0;
       default:
         return true;
@@ -142,18 +149,21 @@ export function TournamentWizard({ onTournamentCreated }: TournamentWizardProps)
         return <BasicInfoStep data={wizardData} onUpdate={updateWizardData} />;
       
       case 1:
-        return <BuyInStructureStep data={wizardData} onUpdate={updateWizardData} />;
+        return <FeeStructureStep data={wizardData} onUpdate={updateWizardData} />;
       
       case 2:
-        return <BlindStructureAdvancedStep data={wizardData} onUpdate={updateWizardData} />;
-        
+        return <TournamentTypeStep data={wizardData} onUpdate={updateWizardData} />;
+      
       case 3:
-        return <BreaksAndTimingStep data={wizardData} onUpdate={updateWizardData} />;
+        return <IntelligentLevelGeneratorStep data={wizardData} onUpdate={updateWizardData} />;
         
       case 4:
+        return <BreaksAndTimingStep data={wizardData} onUpdate={updateWizardData} />;
+        
+      case 5:
         return <PayoutStructureStep data={wizardData} onUpdate={updateWizardData} />;
       
-      case 5:
+      case 6:
         return (
           <div className="space-y-6">
             <h3 className="text-xl font-semibold">Confirmar Detalles del Torneo</h3>
@@ -164,9 +174,10 @@ export function TournamentWizard({ onTournamentCreated }: TournamentWizardProps)
                 <div className="space-y-2 text-sm">
                   <p><span className="text-muted-foreground">Ciudad:</span> {wizardData.city}</p>
                   <p><span className="text-muted-foreground">Nombre:</span> {wizardData.name}</p>
+                  <p><span className="text-muted-foreground">Tipo:</span> {wizardData.is_freeroll ? 'Freeroll' : 'Torneo Pagado'}</p>
                   <p><span className="text-muted-foreground">Fecha:</span> {wizardData.tournament_date || 'No especificada'}</p>
                   <p><span className="text-muted-foreground">Buy-in:</span> {wizardData.currency} {wizardData.buyIn}</p>
-                  <p><span className="text-muted-foreground">Re-entry:</span> {wizardData.currency} {wizardData.reentryFee}</p>
+                  <p><span className="text-muted-foreground">Modalidad:</span> {wizardData.tournament_elimination_type === 'reentry' ? 'Re-Entry' : 'Re-Buy'}</p>
                   <p><span className="text-muted-foreground">Prize Pool:</span> {wizardData.currency} {wizardData.guaranteedPrizePool}</p>
                   <p><span className="text-muted-foreground">Stack Inicial:</span> {wizardData.starting_chips?.toLocaleString()}</p>
                 </div>
@@ -193,22 +204,24 @@ export function TournamentWizard({ onTournamentCreated }: TournamentWizardProps)
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h4 className="font-semibold mb-2">Configuración de Recompras</h4>
+                <h4 className="font-semibold mb-2">Configuración de Reentradas</h4>
                 <div className="space-y-2 text-sm">
-                  <p><span className="text-muted-foreground">Recompra:</span> {wizardData.rebuy_allowed ? 'Permitida' : 'No permitida'}</p>
-                  {wizardData.rebuy_allowed && (
+                  <p><span className="text-muted-foreground">Tipo:</span> {wizardData.tournament_elimination_type === 'reentry' ? 'Re-Entry' : 'Re-Buy'}</p>
+                  <p><span className="text-muted-foreground">Permitido:</span> {wizardData.reentry_allowed ? 'Sí' : 'No'}</p>
+                  {wizardData.reentry_allowed && (
                     <>
-                      <p><span className="text-muted-foreground">Hasta nivel:</span> {wizardData.rebuy_levels}</p>
-                      <p><span className="text-muted-foreground">Costo:</span> {wizardData.currency} {wizardData.rebuy_cost}</p>
+                      <p><span className="text-muted-foreground">Costo:</span> {wizardData.currency} {wizardData.reentryFee}</p>
+                      <p><span className="text-muted-foreground">Stack:</span> {wizardData.reentry_stack?.toLocaleString()}</p>
                     </>
                   )}
                   <p><span className="text-muted-foreground">Add-on:</span> {wizardData.addon_allowed ? 'Permitido' : 'No permitido'}</p>
                   {wizardData.addon_allowed && (
                     <>
-                      <p><span className="text-muted-foreground">Hasta nivel:</span> {wizardData.addon_levels}</p>
                       <p><span className="text-muted-foreground">Costo:</span> {wizardData.currency} {wizardData.addon_cost}</p>
+                      <p><span className="text-muted-foreground">Stack:</span> {wizardData.addon_stack?.toLocaleString()}</p>
                     </>
                   )}
+                  <p><span className="text-muted-foreground">Registro tardío hasta:</span> Nivel {wizardData.late_registration_levels}</p>
                 </div>
               </div>
               

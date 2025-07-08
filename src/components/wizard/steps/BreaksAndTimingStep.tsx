@@ -106,13 +106,14 @@ export function BreaksAndTimingStep({ data, onUpdate }: BreaksAndTimingStepProps
 
           <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
             <h4 className="font-semibold mb-2 text-blue-900 dark:text-blue-100">
-              Política de Registro Tardío
+              Política de Registro Tardío Unificada
             </h4>
             <div className="text-sm text-blue-800 dark:text-blue-200">
-              <p>Los jugadores podrán registrarse hasta:</p>
-              <p>• El nivel {data.late_registration_levels || 4}, O</p>
-              <p>• {data.late_registration_minutes || 60} minutos después del inicio</p>
-              <p className="mt-2 font-medium">Lo que ocurra primero cerrará el registro</p>
+              <p>Se aplica a todos los conceptos:</p>
+              <p>• Buy-in inicial hasta nivel {data.late_registration_levels || 4}</p>
+              <p>• Re-entry/Re-buy hasta nivel {data.late_registration_levels || 4}</p>
+              <p>• Add-on hasta nivel {data.late_registration_levels || 4}</p>
+              <p className="mt-2 font-medium">O {data.late_registration_minutes || 60} minutos después del inicio</p>
             </div>
           </div>
         </CardContent>

@@ -2,8 +2,9 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MapPin, Calendar, Users, FileText } from 'lucide-react';
+import { MapPin, Calendar, Users, FileText, Gift } from 'lucide-react';
 
 interface BasicInfoStepProps {
   data: any;
@@ -95,6 +96,44 @@ export function BasicInfoStep({ data, onUpdate }: BasicInfoStepProps) {
               className="min-h-[80px]"
             />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Gift className="w-5 h-5" />
+            Tipo de Torneo
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div>
+              <Label htmlFor="is_freeroll">Freeroll</Label>
+              <p className="text-sm text-muted-foreground">
+                Torneo gratuito sin buy-in
+              </p>
+            </div>
+            <Switch
+              id="is_freeroll"
+              checked={data.is_freeroll || false}
+              onCheckedChange={(checked) => {
+                handleChange('is_freeroll', checked);
+                if (checked) {
+                  handleChange('buyIn', 0);
+                  handleChange('reentryFee', 0);
+                  handleChange('guaranteedPrizePool', 0);
+                }
+              }}
+            />
+          </div>
+          {data.is_freeroll && (
+            <div className="p-3 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
+              <p className="text-sm text-green-800 dark:text-green-200">
+                ✓ Modo freeroll activado. Todos los costos se han puesto en $0.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 

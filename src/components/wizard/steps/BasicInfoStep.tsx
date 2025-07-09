@@ -13,7 +13,15 @@ interface BasicInfoStepProps {
 
 export function BasicInfoStep({ data, onUpdate }: BasicInfoStepProps) {
   const handleChange = (field: string, value: any) => {
-    onUpdate({ [field]: value });
+    const updatedData = { ...data, [field]: value };
+    
+    // If freeroll is enabled, only set initial buy_in to 0
+    // Rebuys, reentries, and addons can still have costs
+    if (field === 'is_freeroll' && value) {
+      updatedData.buyIn = 0;
+    }
+    
+    onUpdate(updatedData);
   };
 
   return (
@@ -117,20 +125,14 @@ export function BasicInfoStep({ data, onUpdate }: BasicInfoStepProps) {
             <Switch
               id="is_freeroll"
               checked={data.is_freeroll || false}
-              onCheckedChange={(checked) => {
-                handleChange('is_freeroll', checked);
-                if (checked) {
-                  handleChange('buyIn', 0);
-                  handleChange('reentryFee', 0);
-                  handleChange('guaranteedPrizePool', 0);
-                }
-              }}
+              onCheckedChange={(checked) => handleChange('is_freeroll', checked)}
             />
           </div>
           {data.is_freeroll && (
             <div className="p-3 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
               <p className="text-sm text-green-800 dark:text-green-200">
-                ✓ Modo freeroll activado. Todos los costos se han puesto en $0.
+                ✓ Modo freeroll activado. Solo el buy-in inicial es gratuito. 
+                Los rebuys, reentries y addons pueden tener costo.
               </p>
             </div>
           )}

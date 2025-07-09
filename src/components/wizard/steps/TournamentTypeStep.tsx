@@ -25,8 +25,8 @@ export function TournamentTypeStep({ data, onUpdate }: TournamentTypeStepProps) 
     }
   };
 
-  const calculateTotal = (amount: number) => {
-    return amount + calculateFee(amount);
+  const calculatePrizePool = (amount: number) => {
+    return amount - calculateFee(amount);
   };
 
   return (
@@ -43,11 +43,12 @@ export function TournamentTypeStep({ data, onUpdate }: TournamentTypeStepProps) 
               id="tournament_elimination_type"
               value={data.tournament_elimination_type || 'reentry'}
               onChange={(e) => {
-                handleChange('tournament_elimination_type', e.target.value);
-                // If switching to re-entry, disable add-on
+                const updatedData = { ...data, tournament_elimination_type: e.target.value };
+                // Reset conflicting options when changing type
                 if (e.target.value === 'reentry') {
-                  handleChange('addon_allowed', false);
+                  updatedData.addon_allowed = false;
                 }
+                onUpdate(updatedData);
               }}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -137,9 +138,9 @@ export function TournamentTypeStep({ data, onUpdate }: TournamentTypeStepProps) 
                   <span>Fee:</span>
                   <span>{data.currency} {calculateFee(data.buyIn || 0)}</span>
                 </div>
-                <div className="flex justify-between font-bold border-t pt-1">
-                  <span>Total buy-in:</span>
-                  <span>{data.currency} {calculateTotal(data.buyIn || 0)}</span>
+                <div className="flex justify-between font-bold border-t pt-1 text-green-600">
+                  <span>Al prize pool:</span>
+                  <span>{data.currency} {calculatePrizePool(data.buyIn || 0)}</span>
                 </div>
               </div>
             </div>
@@ -191,7 +192,7 @@ export function TournamentTypeStep({ data, onUpdate }: TournamentTypeStepProps) 
                 />
                 {!data.is_freeroll && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Total con fee: {data.currency} {calculateTotal(data.reentryFee || data.buyIn || 0)}
+                    Al prize pool: {data.currency} {calculatePrizePool(data.reentryFee || data.buyIn || 0)}
                   </p>
                 )}
               </div>
@@ -248,7 +249,7 @@ export function TournamentTypeStep({ data, onUpdate }: TournamentTypeStepProps) 
                   />
                   {!data.is_freeroll && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      Total con fee: {data.currency} {calculateTotal(data.addon_cost || Math.floor((data.buyIn || 50) / 2))}
+                      Al prize pool: {data.currency} {calculatePrizePool(data.addon_cost || Math.floor((data.buyIn || 50) / 2))}
                     </p>
                   )}
                 </div>

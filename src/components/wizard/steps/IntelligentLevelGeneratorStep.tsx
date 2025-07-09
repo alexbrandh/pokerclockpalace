@@ -30,36 +30,58 @@ export function IntelligentLevelGeneratorStep({ data, onUpdate }: IntelligentLev
 
   const generateLevels = () => {
     const levels: TournamentLevel[] = [];
-    let sb = generatorConfig.starting_sb;
-    let bb = generatorConfig.starting_bb;
     
     const totalMinutes = generatorConfig.duration_hours * 60;
     const totalGameTime = totalMinutes - (Math.floor(totalMinutes / (generatorConfig.level_duration * generatorConfig.break_frequency)) * generatorConfig.break_duration);
     const estimatedLevels = Math.floor(totalGameTime / generatorConfig.level_duration);
 
-    const multipliers = {
-      'turbo': [1.5, 2, 2, 2.5, 2.5, 3],
-      'standard': [1.5, 1.5, 2, 2, 2.5, 2.5],
-      'deep': [1.25, 1.5, 1.5, 2, 2, 2]
-    };
+    // Generate realistic blind progression used in real tournaments
+    const baseProgression = [
+      { sb: 25, bb: 50 },
+      { sb: 50, bb: 100 },
+      { sb: 75, bb: 150 },
+      { sb: 100, bb: 200 },
+      { sb: 150, bb: 300 },
+      { sb: 200, bb: 400 },
+      { sb: 300, bb: 600 },
+      { sb: 500, bb: 1000 },
+      { sb: 750, bb: 1500 },
+      { sb: 1000, bb: 2000 },
+      { sb: 1500, bb: 3000 },
+      { sb: 2000, bb: 4000 },
+      { sb: 3000, bb: 6000 },
+      { sb: 5000, bb: 10000 },
+      { sb: 7500, bb: 15000 },
+      { sb: 10000, bb: 20000 },
+      { sb: 15000, bb: 30000 },
+      { sb: 25000, bb: 50000 },
+      { sb: 40000, bb: 80000 },
+      { sb: 60000, bb: 120000 },
+    ];
 
-    const selectedMultipliers = multipliers[generatorConfig.template as keyof typeof multipliers] || multipliers.standard;
+    // Start from configured starting blinds or find closest match
+    let startIndex = baseProgression.findIndex(p => p.bb >= generatorConfig.starting_bb);
+    if (startIndex === -1) startIndex = 0;
     
-    for (let i = 1; i <= estimatedLevels && i <= 20; i++) {
+    const blindProgression = baseProgression.slice(startIndex);
+    
+    for (let i = 0; i < Math.min(estimatedLevels, blindProgression.length); i++) {
+      const blinds = blindProgression[i];
+      
       // Add regular level
       levels.push({
-        id: i.toString(),
-        smallBlind: sb,
-        bigBlind: bb,
-        ante: i >= generatorConfig.antes_start ? Math.floor(bb * 0.1) : 0,
+        id: (i + 1).toString(),
+        smallBlind: blinds.sb,
+        bigBlind: blinds.bb,
+        ante: blinds.bb, // Ante always equals big blind and starts from level 1
         duration: generatorConfig.level_duration,
         isBreak: false
       });
 
       // Add break every X levels
-      if (i % generatorConfig.break_frequency === 0 && i < estimatedLevels) {
+      if ((i + 1) % generatorConfig.break_frequency === 0 && i < blindProgression.length - 1) {
         levels.push({
-          id: `break${Math.floor(i / generatorConfig.break_frequency)}`,
+          id: `break${Math.floor((i + 1) / generatorConfig.break_frequency)}`,
           smallBlind: 0,
           bigBlind: 0,
           ante: 0,
@@ -67,19 +89,6 @@ export function IntelligentLevelGeneratorStep({ data, onUpdate }: IntelligentLev
           isBreak: true,
           breakDuration: generatorConfig.break_duration
         });
-      }
-
-      // Calculate next blinds
-      const multiplierIndex = Math.min(Math.floor(i / 3), selectedMultipliers.length - 1);
-      const multiplier = selectedMultipliers[multiplierIndex];
-      
-      sb = Math.floor(sb * multiplier);
-      bb = Math.floor(bb * multiplier);
-
-      // Round to nice numbers
-      if (bb >= 100) {
-        bb = Math.round(bb / 25) * 25;
-        sb = Math.round(bb / 2 / 25) * 25;
       }
     }
 
@@ -191,16 +200,11 @@ export function IntelligentLevelGeneratorStep({ data, onUpdate }: IntelligentLev
                 max="8"
               />
             </div>
-            <div>
-              <Label htmlFor="antes_start">Antes desde nivel</Label>
-              <Input
-                id="antes_start"
-                type="number"
-                value={generatorConfig.antes_start}
-                onChange={(e) => setGeneratorConfig(prev => ({ ...prev, antes_start: +e.target.value }))}
-                min="1"
-                max="15"
-              />
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-700">
+                <strong>Configuración de Antes:</strong> Los antes siempre serán iguales al big blind 
+                y estarán activos desde el nivel 1 en todos los torneos.
+              </p>
             </div>
           </div>
 

@@ -24,8 +24,9 @@ export function FeeStructureStep({ data, onUpdate }: FeeStructureStepProps) {
     }
   };
 
-  const calculateTotal = (amount: number) => {
-    return amount + calculateFee(amount);
+  const calculatePrizePool = (amount: number) => {
+    // Fee is subtracted from the buy-in, not added to it
+    return amount - calculateFee(amount);
   };
 
   return (
@@ -86,21 +87,24 @@ export function FeeStructureStep({ data, onUpdate }: FeeStructureStepProps) {
               )}
 
               <div className="p-4 bg-muted rounded-lg">
-                <h4 className="font-semibold mb-3">Calculadora de Fees</h4>
+                <h4 className="font-semibold mb-3">Desglose de Buy-in</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-muted-foreground">Buy-in base:</span>
-                    <span className="ml-2 font-medium">{data.currency} {data.buyIn || 0}</span>
+                    <span className="text-muted-foreground">Buy-in total:</span>
+                    <span className="ml-2 font-medium">{data.currency || '$'} {data.buyIn || 0}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Fee:</span>
-                    <span className="ml-2 font-medium">{data.currency} {calculateFee(data.buyIn || 0)}</span>
+                    <span className="text-muted-foreground">Rake/Fee ({data.fee_type === 'percentage' ? `${data.fee_percentage || 0}%` : 'exacto'}):</span>
+                    <span className="ml-2 font-medium text-red-600">-{data.currency || '$'} {calculateFee(data.buyIn || 0)}</span>
                   </div>
                   <div className="col-span-2 pt-2 border-t">
-                    <span className="text-muted-foreground">Total buy-in:</span>
-                    <span className="ml-2 font-bold text-primary">{data.currency} {calculateTotal(data.buyIn || 0)}</span>
+                    <span className="text-muted-foreground">Al prize pool:</span>
+                    <span className="ml-2 font-bold text-green-600">{data.currency || '$'} {calculatePrizePool(data.buyIn || 0)}</span>
                   </div>
                 </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Este desglose se aplica automáticamente a buy-in, rebuys, reentries y addons.
+                </p>
               </div>
             </>
           ) : (

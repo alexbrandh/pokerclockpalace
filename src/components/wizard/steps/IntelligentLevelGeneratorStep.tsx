@@ -73,7 +73,7 @@ export function IntelligentLevelGeneratorStep({ data, onUpdate }: IntelligentLev
         id: (i + 1).toString(),
         smallBlind: blinds.sb,
         bigBlind: blinds.bb,
-        ante: blinds.bb, // Ante always equals big blind and starts from level 1
+        ante: blinds.bb, // Ante always equals big blind from level 1
         duration: generatorConfig.level_duration,
         isBreak: false
       });
@@ -200,12 +200,24 @@ export function IntelligentLevelGeneratorStep({ data, onUpdate }: IntelligentLev
                 max="8"
               />
             </div>
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-700">
-                <strong>Configuración de Antes:</strong> Los antes siempre serán iguales al big blind 
-                y estarán activos desde el nivel 1 en todos los torneos.
-              </p>
+            <div>
+              <Label htmlFor="break_duration">Duración Breaks (min)</Label>
+              <Input
+                id="break_duration"
+                type="number"
+                value={generatorConfig.break_duration}
+                onChange={(e) => setGeneratorConfig(prev => ({ ...prev, break_duration: +e.target.value }))}
+                min="5"
+                max="30"
+              />
             </div>
+          </div>
+
+          <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
+            <p className="text-sm text-blue-700 dark:text-blue-300">
+              <strong>Configuración de Antes:</strong> Los antes siempre serán iguales al big blind 
+              y estarán activos desde el nivel 1 en todos los torneos.
+            </p>
           </div>
 
           <Button onClick={generateLevels} className="w-full" size="lg">

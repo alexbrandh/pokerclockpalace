@@ -86,24 +86,46 @@ export function FeeStructureStep({ data, onUpdate }: FeeStructureStepProps) {
                 </div>
               )}
 
+              <div>
+                <Label htmlFor="staff_fee">Aportación para Staff</Label>
+                <Input
+                  id="staff_fee"
+                  type="number"
+                  value={data.staff_fee || 0}
+                  onChange={(e) => handleChange('staff_fee', +e.target.value)}
+                  min="0"
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Fee fijo adicional que va directamente al staff (no al prize pool)
+                </p>
+              </div>
+
               <div className="p-4 bg-muted rounded-lg">
                 <h4 className="font-semibold mb-3">Desglose de Buy-in</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-muted-foreground">Buy-in total:</span>
+                    <span className="text-muted-foreground">Buy-in base:</span>
                     <span className="ml-2 font-medium">{data.currency || '$'} {data.buyIn || 0}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Rake/Fee ({data.fee_type === 'percentage' ? `${data.fee_percentage || 0}%` : 'exacto'}):</span>
+                    <span className="text-muted-foreground">Staff fee:</span>
+                    <span className="ml-2 font-medium text-blue-600">+{data.currency || '$'} {data.staff_fee || 0}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Rake ({data.fee_type === 'percentage' ? `${data.fee_percentage || 0}%` : 'exacto'}):</span>
                     <span className="ml-2 font-medium text-red-600">-{data.currency || '$'} {calculateFee(data.buyIn || 0)}</span>
                   </div>
                   <div className="col-span-2 pt-2 border-t">
+                    <span className="text-muted-foreground">Total que paga jugador:</span>
+                    <span className="ml-2 font-bold text-blue-600">{data.currency || '$'} {(data.buyIn || 0) + (data.staff_fee || 0)}</span>
+                  </div>
+                  <div className="col-span-2">
                     <span className="text-muted-foreground">Al prize pool:</span>
                     <span className="ml-2 font-bold text-green-600">{data.currency || '$'} {calculatePrizePool(data.buyIn || 0)}</span>
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Este desglose se aplica automáticamente a buy-in, rebuys, reentries y addons.
+                  El staff fee se suma al total del jugador pero no va al prize pool.
                 </p>
               </div>
             </>

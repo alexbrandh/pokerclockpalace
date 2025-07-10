@@ -8,8 +8,9 @@ import { TournamentStructure } from '@/types/tournament';
 import { BasicInfoStep } from './steps/BasicInfoStep';
 import { FeeStructureStep } from './steps/FeeStructureStep';
 import { TournamentTypeStep } from './steps/TournamentTypeStep';
+import { DoubleStackStep } from './steps/DoubleStackStep';
+import { EarlyEntryStep } from './steps/EarlyEntryStep';
 import { IntelligentLevelGeneratorStep } from './steps/IntelligentLevelGeneratorStep';
-import { BreaksAndTimingStep } from './steps/BreaksAndTimingStep';
 import { PayoutStructureStep } from './steps/PayoutStructureStep';
 
 interface TournamentWizardProps {
@@ -86,8 +87,9 @@ export function TournamentWizard({ onTournamentCreated }: TournamentWizardProps)
     'Información Básica',
     'Fee/Rake',
     'Tipo de Torneo',
+    'Entrada Doble',
+    'Bono Temprano',
     'Estructura de Ciegas',
-    'Registro y Tiempo',
     'Premios',
     'Confirmar'
   ];
@@ -133,10 +135,12 @@ export function TournamentWizard({ onTournamentCreated }: TournamentWizardProps)
       case 2:
         return wizardData.buyIn >= 0; // Allow 0 for freerolls
       case 3:
-        return wizardData.levels && wizardData.levels.length > 0;
+        return true; // Double stack is optional
       case 4:
-        return true; // Breaks are optional
+        return true; // Early entry bonus is optional
       case 5:
+        return wizardData.levels && wizardData.levels.length > 0;
+      case 6:
         return wizardData.payoutStructure && wizardData.payoutStructure.length > 0;
       default:
         return true;
@@ -155,15 +159,18 @@ export function TournamentWizard({ onTournamentCreated }: TournamentWizardProps)
         return <TournamentTypeStep data={wizardData} onUpdate={updateWizardData} />;
       
       case 3:
-        return <IntelligentLevelGeneratorStep data={wizardData} onUpdate={updateWizardData} />;
+        return <DoubleStackStep data={wizardData} onUpdate={updateWizardData} />;
         
       case 4:
-        return <BreaksAndTimingStep data={wizardData} onUpdate={updateWizardData} />;
+        return <EarlyEntryStep data={wizardData} onUpdate={updateWizardData} />;
         
       case 5:
+        return <IntelligentLevelGeneratorStep data={wizardData} onUpdate={updateWizardData} />;
+        
+      case 6:
         return <PayoutStructureStep data={wizardData} onUpdate={updateWizardData} />;
       
-      case 6:
+      case 7:
         return (
           <div className="space-y-6">
             <h3 className="text-xl font-semibold">Confirmar Detalles del Torneo</h3>

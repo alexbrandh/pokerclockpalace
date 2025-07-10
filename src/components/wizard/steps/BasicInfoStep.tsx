@@ -142,32 +142,24 @@ export function BasicInfoStep({ data, onUpdate }: BasicInfoStepProps) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            Límites de Jugadores
+            <Calendar className="w-5 h-5" />
+            Registro Tardío
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="min_players">Mínimo de Jugadores</Label>
-              <Input
-                id="min_players"
-                type="number"
-                value={data.min_players || 2}
-                onChange={(e) => handleChange('min_players', +e.target.value)}
-                min="2"
-              />
-            </div>
-            <div>
-              <Label htmlFor="max_players">Máximo de Jugadores</Label>
-              <Input
-                id="max_players"
-                type="number"
-                value={data.max_players || 100}
-                onChange={(e) => handleChange('max_players', +e.target.value)}
-                min="2"
-              />
-            </div>
+          <div>
+            <Label htmlFor="late_registration_levels">Registro Tardío hasta Nivel</Label>
+            <Input
+              id="late_registration_levels"
+              type="number"
+              value={data.late_registration_levels || 4}
+              onChange={(e) => handleChange('late_registration_levels', +e.target.value)}
+              min="1"
+              max="10"
+            />
+            <p className="text-sm text-muted-foreground mt-1">
+              Los jugadores podrán registrarse hasta el final de este nivel
+            </p>
           </div>
         </CardContent>
       </Card>

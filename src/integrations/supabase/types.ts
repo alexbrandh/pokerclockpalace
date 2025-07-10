@@ -53,6 +53,8 @@ export type Database = {
         Row: {
           current_level_index: number
           current_prize_pool: number
+          double_entries: number | null
+          early_entry_players: number | null
           entries: number
           id: string
           is_on_break: boolean
@@ -69,6 +71,8 @@ export type Database = {
         Insert: {
           current_level_index?: number
           current_prize_pool?: number
+          double_entries?: number | null
+          early_entry_players?: number | null
           entries?: number
           id?: string
           is_on_break?: boolean
@@ -85,6 +89,8 @@ export type Database = {
         Update: {
           current_level_index?: number
           current_prize_pool?: number
+          double_entries?: number | null
+          early_entry_players?: number | null
           entries?: number
           id?: string
           is_on_break?: boolean
@@ -130,6 +136,12 @@ export type Database = {
           custom_level_durations: Json | null
           dealer_tip_percentage: number | null
           description: string | null
+          double_stack_allowed: boolean | null
+          double_stack_cost: number | null
+          double_stack_multiplier: number | null
+          early_entry_bonus: boolean | null
+          early_entry_levels: number | null
+          early_entry_percentage: number | null
           first_break_after: number | null
           guaranteed_prize_pool: number
           id: string
@@ -143,6 +155,7 @@ export type Database = {
           name: string
           payout_percentage: number | null
           payout_structure: Json
+          prize_pool_visible: boolean | null
           qualifier_seats: number | null
           rebuy_allowed: boolean | null
           rebuy_levels: number | null
@@ -151,6 +164,7 @@ export type Database = {
           registration_fee: number | null
           rules: string | null
           satellite_target: string | null
+          staff_fee: number | null
           starting_blinds_bb: number | null
           starting_blinds_sb: number | null
           starting_chips: number | null
@@ -178,6 +192,12 @@ export type Database = {
           custom_level_durations?: Json | null
           dealer_tip_percentage?: number | null
           description?: string | null
+          double_stack_allowed?: boolean | null
+          double_stack_cost?: number | null
+          double_stack_multiplier?: number | null
+          early_entry_bonus?: boolean | null
+          early_entry_levels?: number | null
+          early_entry_percentage?: number | null
           first_break_after?: number | null
           guaranteed_prize_pool?: number
           id?: string
@@ -191,6 +211,7 @@ export type Database = {
           name: string
           payout_percentage?: number | null
           payout_structure?: Json
+          prize_pool_visible?: boolean | null
           qualifier_seats?: number | null
           rebuy_allowed?: boolean | null
           rebuy_levels?: number | null
@@ -199,6 +220,7 @@ export type Database = {
           registration_fee?: number | null
           rules?: string | null
           satellite_target?: string | null
+          staff_fee?: number | null
           starting_blinds_bb?: number | null
           starting_blinds_sb?: number | null
           starting_chips?: number | null
@@ -226,6 +248,12 @@ export type Database = {
           custom_level_durations?: Json | null
           dealer_tip_percentage?: number | null
           description?: string | null
+          double_stack_allowed?: boolean | null
+          double_stack_cost?: number | null
+          double_stack_multiplier?: number | null
+          early_entry_bonus?: boolean | null
+          early_entry_levels?: number | null
+          early_entry_percentage?: number | null
           first_break_after?: number | null
           guaranteed_prize_pool?: number
           id?: string
@@ -239,6 +267,7 @@ export type Database = {
           name?: string
           payout_percentage?: number | null
           payout_structure?: Json
+          prize_pool_visible?: boolean | null
           qualifier_seats?: number | null
           rebuy_allowed?: boolean | null
           rebuy_levels?: number | null
@@ -247,6 +276,7 @@ export type Database = {
           registration_fee?: number | null
           rules?: string | null
           satellite_target?: string | null
+          staff_fee?: number | null
           starting_blinds_bb?: number | null
           starting_blinds_sb?: number | null
           starting_chips?: number | null

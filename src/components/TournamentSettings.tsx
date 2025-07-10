@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
-import { X, Settings, Volume2 } from 'lucide-react';
+import { X, Settings, Volume2, Trophy, Users, Clock, DollarSign, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SoundSettings } from '@/components/SoundSettings';
+import { EnhancedLevelEditor } from '@/components/level-editor/EnhancedLevelEditor';
+import { TournamentLevel } from '@/types/tournament';
 import { useSoundSystem } from '@/hooks/useSoundSystem';
 
 interface TournamentSettingsProps {
@@ -15,6 +20,20 @@ interface TournamentSettingsProps {
 export function TournamentSettings({ tournament, onClose, onUpdate }: TournamentSettingsProps) {
   const { soundSettings, updateSoundSettings, playSound } = useSoundSystem();
   const [activeTab, setActiveTab] = useState('general');
+  const [localData, setLocalData] = useState(tournament || {});
+
+  const handleSave = () => {
+    onUpdate(localData);
+    onClose();
+  };
+
+  const updateData = (field: string, value: any) => {
+    setLocalData((prev: any) => ({ ...prev, [field]: value }));
+  };
+
+  const handleLevelsChange = (levels: TournamentLevel[]) => {
+    updateData('levels', levels);
+  };
 
   return (
     <motion.div
@@ -45,20 +64,200 @@ export function TournamentSettings({ tournament, onClose, onUpdate }: Tournament
         {/* Content */}
         <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mx-6 mt-4">
-              <TabsTrigger value="general">General</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-5 mx-6 mt-4">
+              <TabsTrigger value="general">
+                <Settings className="w-4 h-4 mr-1" />
+                General
+              </TabsTrigger>
+              <TabsTrigger value="levels">
+                <Clock className="w-4 h-4 mr-1" />
+                Niveles
+              </TabsTrigger>
+              <TabsTrigger value="prizes">
+                <Trophy className="w-4 h-4 mr-1" />
+                Premios
+              </TabsTrigger>
+              <TabsTrigger value="players">
+                <Users className="w-4 h-4 mr-1" />
+                Jugadores
+              </TabsTrigger>
               <TabsTrigger value="sounds">
-                <Volume2 className="w-4 h-4 mr-2" />
+                <Volume2 className="w-4 h-4 mr-1" />
                 Sonidos
               </TabsTrigger>
-              <TabsTrigger value="display">Pantalla</TabsTrigger>
             </TabsList>
 
             <div className="p-6">
               <TabsContent value="general" className="space-y-6">
-                <div className="text-center text-gray-400">
-                  <p>Configuraciones generales del torneo</p>
-                  <p className="text-sm mt-2">Próximamente: edición de estructura, jugadores, premios</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Nombre del Torneo</Label>
+                    <Input
+                      id="name"
+                      value={localData.name || ''}
+                      onChange={(e) => updateData('name', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="city">Ciudad</Label>
+                    <Input
+                      id="city"
+                      value={localData.city || ''}
+                      onChange={(e) => updateData('city', e.target.value)}
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="buy_in">Buy-in</Label>
+                    <Input
+                      id="buy_in"
+                      type="number"
+                      value={localData.buy_in || 0}
+                      onChange={(e) => updateData('buy_in', +e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="staff_fee">Staff Fee</Label>
+                    <Input
+                      id="staff_fee"
+                      type="number"
+                      value={localData.staff_fee || 0}
+                      onChange={(e) => updateData('staff_fee', +e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="guaranteed_prize_pool">Prize Pool Garantizado</Label>
+                    <Input
+                      id="guaranteed_prize_pool"
+                      type="number"
+                      value={localData.guaranteed_prize_pool || 0}
+                      onChange={(e) => updateData('guaranteed_prize_pool', +e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center justify-between p-4 border border-gray-600 rounded-lg">
+                    <div>
+                      <Label>Double Stack Permitido</Label>
+                      <p className="text-sm text-gray-400">Permite entrada con doble stack</p>
+                    </div>
+                    <Switch
+                      checked={localData.double_stack_allowed || false}
+                      onCheckedChange={(checked) => updateData('double_stack_allowed', checked)}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 border border-gray-600 rounded-lg">
+                    <div>
+                      <Label>Bono por Entrada Temprana</Label>
+                      <p className="text-sm text-gray-400">Incentivo para primeros jugadores</p>
+                    </div>
+                    <Switch
+                      checked={localData.early_entry_bonus || false}
+                      onCheckedChange={(checked) => updateData('early_entry_bonus', checked)}
+                    />
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="levels" className="space-y-6">
+                <div className="bg-gray-800 border border-gray-600 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-white mb-4">Estructura de Niveles</h3>
+                  <EnhancedLevelEditor 
+                    levels={localData.levels || []} 
+                    onLevelsChange={handleLevelsChange}
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="prizes" className="space-y-6">
+                <div className="flex items-center justify-between p-4 border border-gray-600 rounded-lg">
+                  <div>
+                    <Label>Premios Visibles</Label>
+                    <p className="text-sm text-gray-400">Mostrar estructura de premios a los jugadores</p>
+                  </div>
+                  <Switch
+                    checked={localData.prize_pool_visible !== false}
+                    onCheckedChange={(checked) => updateData('prize_pool_visible', checked)}
+                  />
+                </div>
+
+                <div>
+                  <Label>Estructura de Porcentajes (%)</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                    {(localData.payout_structure || [50, 30, 20]).map((percentage: number, index: number) => (
+                      <div key={index}>
+                        <Label className="text-xs text-gray-400">Lugar {index + 1}</Label>
+                        <Input
+                          type="number"
+                          value={percentage}
+                          onChange={(e) => {
+                            const newStructure = [...(localData.payout_structure || [])];
+                            newStructure[index] = +e.target.value;
+                            updateData('payout_structure', newStructure);
+                          }}
+                          min="0"
+                          max="100"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="players" className="space-y-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <Label>Jugadores Actuales</Label>
+                    <Input
+                      type="number"
+                      value={localData.players || 0}
+                      onChange={(e) => updateData('players', +e.target.value)}
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <Label>Entradas</Label>
+                    <Input
+                      type="number"
+                      value={localData.entries || 0}
+                      onChange={(e) => updateData('entries', +e.target.value)}
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <Label>Re-entradas</Label>
+                    <Input
+                      type="number"
+                      value={localData.reentries || 0}
+                      onChange={(e) => updateData('reentries', +e.target.value)}
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <Label>Entradas Dobles</Label>
+                    <Input
+                      type="number"
+                      value={localData.double_entries || 0}
+                      onChange={(e) => updateData('double_entries', +e.target.value)}
+                      min="0"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="late_registration_levels">Registro Tardío hasta Nivel</Label>
+                  <Input
+                    id="late_registration_levels"
+                    type="number"
+                    value={localData.late_registration_levels || 4}
+                    onChange={(e) => updateData('late_registration_levels', +e.target.value)}
+                    min="1"
+                    max="20"
+                  />
                 </div>
               </TabsContent>
 
@@ -69,13 +268,17 @@ export function TournamentSettings({ tournament, onClose, onUpdate }: Tournament
                   onPlaySound={playSound}
                 />
               </TabsContent>
+            </div>
 
-              <TabsContent value="display" className="space-y-6">
-                <div className="text-center text-gray-400">
-                  <p>Configuraciones de visualización</p>
-                  <p className="text-sm mt-2">Próximamente: temas, colores, layout personalizado</p>
-                </div>
-              </TabsContent>
+            {/* Save Button */}
+            <div className="flex justify-end gap-2 p-6 pt-4 border-t border-gray-700">
+              <Button variant="outline" onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
+                <Save className="w-4 h-4 mr-2" />
+                Guardar Cambios
+              </Button>
             </div>
           </Tabs>
         </div>

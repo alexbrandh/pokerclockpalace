@@ -89,37 +89,37 @@ export function DesktopTournamentClock({
             {/* Top Section - Players, Entries, Reentries in a row */}
             <div className="grid grid-cols-3 gap-6 text-center">
               <div>
-                <div className="text-yellow-400 text-sm font-semibold uppercase tracking-wide mb-2">Players</div>
-                <div className="text-white text-3xl font-bold">{tournament.players}</div>
+                <div className="text-yellow-400 text-lg font-semibold uppercase tracking-wide mb-3">Players</div>
+                <div className="text-white text-5xl font-bold">{tournament.players}</div>
               </div>
               <div>
-                <div className="text-yellow-400 text-sm font-semibold uppercase tracking-wide mb-2">Entries</div>
-                <div className="text-white text-3xl font-bold">{tournament.entries}</div>
+                <div className="text-yellow-400 text-lg font-semibold uppercase tracking-wide mb-3">Entries</div>
+                <div className="text-white text-5xl font-bold">{tournament.entries}</div>
               </div>
               <div>
-                <div className="text-yellow-400 text-sm font-semibold uppercase tracking-wide mb-2">Re-entries</div>
-                <div className="text-white text-3xl font-bold">{tournament.reentries}</div>
+                <div className="text-yellow-400 text-lg font-semibold uppercase tracking-wide mb-3">Re-entries</div>
+                <div className="text-white text-5xl font-bold">{tournament.reentries}</div>
               </div>
             </div>
             
             {/* Center Section - Prize Pool (Prominent) */}
             <div className="text-center">
-              <div className="text-yellow-400 text-2xl font-semibold uppercase tracking-wide mb-4">Prize Pool</div>
-              <div className="text-yellow-400 text-6xl font-bold">${tournament.currentPrizePool}</div>
+              <div className="text-yellow-400 text-3xl font-semibold uppercase tracking-wide mb-6">Prize Pool</div>
+              <div className="text-yellow-400 text-7xl font-bold">${tournament.currentPrizePool?.toLocaleString()}</div>
             </div>
             
             {/* Bottom Section - Total and Average in a row */}
             <div className="grid grid-cols-2 gap-6 text-center">
               <div>
-                <div className="text-yellow-400 text-sm font-semibold uppercase tracking-wide mb-2">Total Chips</div>
-                <div className="text-white text-2xl font-bold">{totalChips.toLocaleString()}</div>
+                <div className="text-yellow-400 text-lg font-semibold uppercase tracking-wide mb-3">Total Chips</div>
+                <div className="text-white text-4xl font-bold">{totalChips.toLocaleString()}</div>
               </div>
               <div>
-                <div className="text-yellow-400 text-sm font-semibold uppercase tracking-wide mb-2">Average Stack</div>
-                <div className="text-white text-2xl font-bold">
+                <div className="text-yellow-400 text-lg font-semibold uppercase tracking-wide mb-3">Average Stack</div>
+                <div className="text-white text-4xl font-bold">
                   {Math.round(averageStack / 1000)}k
                   {!currentLevel?.isBreak && averageStackInBBs > 0 && (
-                    <div className="text-sm text-gray-300 mt-1">({averageStackInBBs} BBs)</div>
+                    <div className="text-lg text-gray-300 mt-2">({averageStackInBBs} BBs)</div>
                   )}
                 </div>
               </div>
@@ -144,16 +144,16 @@ export function DesktopTournamentClock({
           <div className="flex flex-col justify-between py-16 space-y-8">
             {/* Current Level */}
             <div className="text-center">
-              <div className="text-yellow-400 text-sm font-semibold uppercase tracking-wide mb-2">
+              <div className="text-yellow-400 text-2xl font-semibold uppercase tracking-wide mb-4">
                 Level {tournament.currentLevelIndex + 1}
               </div>
-              <div className="text-white text-3xl font-bold">
+              <div className="text-white text-5xl font-bold">
                 {currentLevel?.isBreak ? 
                   `Break ${currentLevel.duration}min` :
                   `${currentLevel?.smallBlind} / ${currentLevel?.bigBlind}`
                 }
                 {!currentLevel?.isBreak && currentLevel?.ante > 0 && (
-                  <div className="text-xl text-gray-300 mt-1">({currentLevel.ante})</div>
+                  <div className="text-3xl text-gray-300 mt-2">Ante: {currentLevel.ante}</div>
                 )}
               </div>
             </div>
@@ -178,14 +178,14 @@ export function DesktopTournamentClock({
             {/* Next Level */}
             {nextLevelData && (
               <div className="text-center">
-                <div className="text-yellow-400 text-sm font-semibold uppercase tracking-wide mb-2">Next Level</div>
-                <div className="text-white text-2xl font-bold">
+                <div className="text-yellow-400 text-xl font-semibold uppercase tracking-wide mb-3">Next Level</div>
+                <div className="text-white text-3xl font-bold">
                   {nextLevelData.isBreak ? 
                     `Break ${nextLevelData.duration}min` :
                     `${nextLevelData.smallBlind} / ${nextLevelData.bigBlind}`
                   }
                   {!nextLevelData.isBreak && nextLevelData.ante > 0 && (
-                    <div className="text-lg text-gray-300 mt-1">({nextLevelData.ante})</div>
+                    <div className="text-xl text-gray-300 mt-2">Ante: {nextLevelData.ante}</div>
                   )}
                 </div>
               </div>
@@ -195,8 +195,8 @@ export function DesktopTournamentClock({
       </div>
 
       {/* Desktop Hotkeys Info */}
-      <div className="fixed bottom-4 left-4 text-xs text-gray-500 hidden xl:block">
-        <div className="space-x-4">
+      <div className="fixed bottom-4 left-4 text-sm text-gray-400 hidden xl:block">
+        <div className="space-x-6">
           <span>ESPACIO: Play/Pause</span>
           <span>N: Siguiente</span>
           <span>R: Reset</span>

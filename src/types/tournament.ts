@@ -7,6 +7,8 @@ export interface TournamentLevel {
   duration: number; // in minutes
   isBreak: boolean;
   breakDuration?: number;
+  colorUpAmount?: number;
+  colorUpFrom?: string;
 }
 
 export interface TournamentStructure {

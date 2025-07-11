@@ -30,7 +30,7 @@ export function DoubleStackStep({ data, onUpdate }: DoubleStackStepProps) {
   };
 
   const doubleStackCost = (data.buyIn || 0) * 2;
-  const doubleStackWithStaff = doubleStackCost + (data.staff_fee || 0);
+  const doubleStackWithStaff = doubleStackCost; // No staff fee for double entries
 
   return (
     <div className="space-y-6">
@@ -113,14 +113,17 @@ export function DoubleStackStep({ data, onUpdate }: DoubleStackStepProps) {
                         <span>Buy-in doble:</span>
                         <span>{data.currency} {doubleStackCost}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Staff fee:</span>
-                        <span>{data.currency} {data.staff_fee || 0}</span>
-                      </div>
-                      <div className="flex justify-between font-medium border-t pt-1">
-                        <span>Total:</span>
-                        <span>{data.currency} {doubleStackWithStaff}</span>
-                      </div>
+                       <div className="flex justify-between">
+                         <span>Staff fee:</span>
+                         <span>{data.currency} 0</span>
+                       </div>
+                       <div className="text-xs text-blue-600 mt-1">
+                         * No se cobra staff fee en entradas dobles (ya pagado en primera entrada)
+                       </div>
+                       <div className="flex justify-between font-medium border-t pt-1">
+                         <span>Total:</span>
+                         <span>{data.currency} {doubleStackCost}</span>
+                       </div>
                       <div className="flex justify-between text-blue-600">
                         <span>Stack:</span>
                         <span>{((data.starting_chips || 10000) * (data.double_stack_multiplier || 2)).toLocaleString()}</span>

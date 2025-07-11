@@ -53,6 +53,7 @@ export function DesktopTournamentClock({
   useHotkeys('n', () => nextLevel(), { preventDefault: true });
   useHotkeys('r', () => resetLevel(), { preventDefault: true });
   useHotkeys('s', () => setShowSettings(true), { preventDefault: true });
+  useHotkeys('d', () => window.location.href = '/', { preventDefault: true });
   useHotkeys('ctrl+b', () => addPlayer(), { preventDefault: true });
   useHotkeys('x', () => eliminatePlayer(), { preventDefault: true });
   useHotkeys('ctrl+r', () => addReentry(), { preventDefault: true }); // Added missing reentry shortcut
@@ -147,13 +148,16 @@ export function DesktopTournamentClock({
               <div className="text-yellow-400 text-2xl font-semibold uppercase tracking-wide mb-4">
                 Level {tournament.currentLevelIndex + 1}
               </div>
-              <div className="text-white text-5xl font-bold">
+              <div className="text-white text-6xl font-bold">
                 {currentLevel?.isBreak ? 
                   `Break ${currentLevel.duration}min` :
                   `${currentLevel?.smallBlind} / ${currentLevel?.bigBlind}`
                 }
                 {!currentLevel?.isBreak && currentLevel?.ante > 0 && (
-                  <div className="text-3xl text-gray-300 mt-2">Ante: {currentLevel.ante}</div>
+                  <div className="text-4xl text-gray-300 mt-2">Ante: {currentLevel.ante}</div>
+                )}
+                {currentLevel?.isBreak && currentLevel?.colorUpAmount && (
+                  <div className="text-3xl text-yellow-300 mt-2">Color Up: {currentLevel.colorUpAmount} {currentLevel.colorUpFrom}</div>
                 )}
               </div>
             </div>
@@ -179,13 +183,13 @@ export function DesktopTournamentClock({
             {nextLevelData && (
               <div className="text-center">
                 <div className="text-yellow-400 text-xl font-semibold uppercase tracking-wide mb-3">Next Level</div>
-                <div className="text-white text-3xl font-bold">
+                <div className="text-white text-4xl font-bold">
                   {nextLevelData.isBreak ? 
                     `Break ${nextLevelData.duration}min` :
                     `${nextLevelData.smallBlind} / ${nextLevelData.bigBlind}`
                   }
                   {!nextLevelData.isBreak && nextLevelData.ante > 0 && (
-                    <div className="text-xl text-gray-300 mt-2">Ante: {nextLevelData.ante}</div>
+                    <div className="text-2xl text-gray-300 mt-2">Ante: {nextLevelData.ante}</div>
                   )}
                 </div>
               </div>
@@ -205,6 +209,7 @@ export function DesktopTournamentClock({
           <span>X: -Jugador</span>
           <span>CTRL+R: Re-entry</span>
           <span>CTRL+Z: Deshacer</span>
+          <span>D: Dashboard</span>
           <span>M: Controles</span>
         </div>
       </div>

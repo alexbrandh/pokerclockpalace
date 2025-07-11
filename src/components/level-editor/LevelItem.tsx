@@ -55,6 +55,7 @@ export function LevelItem({ level, index, onUpdate, onRemove }: LevelItemProps) 
             <span className="text-sm font-medium text-blue-600">DESCANSO</span>
           </div>
           <div className="w-20">
+            <Label className="text-xs text-gray-500">Min</Label>
             <Input
               type="number"
               value={level.duration}
@@ -64,7 +65,27 @@ export function LevelItem({ level, index, onUpdate, onRemove }: LevelItemProps) 
               min="1"
             />
           </div>
-          <span className="text-xs text-gray-500">min</span>
+          <div className="w-24">
+            <Label className="text-xs text-gray-500">Color Up</Label>
+            <Input
+              type="number"
+              value={level.colorUpAmount || 0}
+              onChange={(e) => onUpdate({ colorUpAmount: +e.target.value })}
+              placeholder="0"
+              className="text-sm h-8"
+              min="0"
+            />
+          </div>
+          <div className="w-20">
+            <Label className="text-xs text-gray-500">De</Label>
+            <Input
+              type="text"
+              value={level.colorUpFrom || ''}
+              onChange={(e) => onUpdate({ colorUpFrom: e.target.value })}
+              placeholder="25"
+              className="text-sm h-8"
+            />
+          </div>
         </div>
       ) : (
         <div className="flex items-center gap-3 flex-1">

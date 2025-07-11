@@ -20,11 +20,32 @@ interface TournamentSettingsProps {
 export function TournamentSettings({ tournament, onClose, onUpdate }: TournamentSettingsProps) {
   const { soundSettings, updateSoundSettings, playSound } = useSoundSystem();
   const [activeTab, setActiveTab] = useState('general');
-  const [localData, setLocalData] = useState(tournament || {});
+  const [localData, setLocalData] = useState({
+    name: tournament?.name || '',
+    city: tournament?.city || '',
+    buy_in: tournament?.buy_in || 0,
+    staff_fee: tournament?.staff_fee || 0,
+    guaranteed_prize_pool: tournament?.guaranteed_prize_pool || 0,
+    double_stack_allowed: tournament?.double_stack_allowed || false,
+    early_entry_bonus: tournament?.early_entry_bonus || false,
+    prize_pool_visible: tournament?.prize_pool_visible !== false,
+    levels: tournament?.levels || [],
+    payout_structure: tournament?.payout_structure || [50, 30, 20],
+    players: tournament?.players || 0,
+    entries: tournament?.entries || 0,
+    reentries: tournament?.reentries || 0,
+    double_entries: tournament?.double_entries || 0,
+    late_registration_levels: tournament?.late_registration_levels || 4,
+    ...tournament
+  });
 
-  const handleSave = () => {
-    onUpdate(localData);
-    onClose();
+  const handleSave = async () => {
+    try {
+      await onUpdate(localData);
+      onClose();
+    } catch (error) {
+      console.error('Error saving tournament settings:', error);
+    }
   };
 
   const updateData = (field: string, value: any) => {

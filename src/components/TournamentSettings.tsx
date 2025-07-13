@@ -20,28 +20,37 @@ interface TournamentSettingsProps {
 export function TournamentSettings({ tournament, onClose, onUpdate }: TournamentSettingsProps) {
   const { soundSettings, updateSoundSettings, playSound } = useSoundSystem();
   const [activeTab, setActiveTab] = useState('general');
-  const [localData, setLocalData] = useState({
-    name: tournament?.name || '',
-    city: tournament?.city || '',
-    buy_in: tournament?.buy_in || 0,
-    staff_fee: tournament?.staff_fee || 0,
-    guaranteed_prize_pool: tournament?.guaranteed_prize_pool || 0,
-    double_stack_allowed: tournament?.double_stack_allowed || false,
-    early_entry_bonus: tournament?.early_entry_bonus || false,
-    prize_pool_visible: tournament?.prize_pool_visible !== false,
-    levels: tournament?.levels || [],
-    payout_structure: tournament?.payout_structure || [50, 30, 20],
-    players: tournament?.players || 0,
-    entries: tournament?.entries || 0,
-    reentries: tournament?.reentries || 0,
-    double_entries: tournament?.double_entries || 0,
-    late_registration_levels: tournament?.late_registration_levels || 4,
-    ...tournament
+  
+  console.log('TournamentSettings - Received tournament:', tournament);
+  
+  const [localData, setLocalData] = useState(() => {
+    const data = {
+      name: tournament?.name || '',
+      city: tournament?.city || '',
+      buy_in: tournament?.buy_in || 0,
+      staff_fee: tournament?.staff_fee || 0,
+      guaranteed_prize_pool: tournament?.guaranteed_prize_pool || 0,
+      double_stack_allowed: tournament?.double_stack_allowed || false,
+      early_entry_bonus: tournament?.early_entry_bonus || false,
+      prize_pool_visible: tournament?.prize_pool_visible !== false,
+      levels: tournament?.levels || [],
+      payout_structure: tournament?.payout_structure || [50, 30, 20],
+      players: tournament?.players || 0,
+      entries: tournament?.entries || 0,
+      reentries: tournament?.reentries || 0,
+      double_entries: tournament?.double_entries || 0,
+      late_registration_levels: tournament?.late_registration_levels || 4,
+      ...tournament
+    };
+    console.log('TournamentSettings - Initial localData:', data);
+    return data;
   });
 
   const handleSave = async () => {
     try {
+      console.log('TournamentSettings - Saving data:', localData);
       await onUpdate(localData);
+      console.log('TournamentSettings - Save successful');
       onClose();
     } catch (error) {
       console.error('Error saving tournament settings:', error);
@@ -49,7 +58,12 @@ export function TournamentSettings({ tournament, onClose, onUpdate }: Tournament
   };
 
   const updateData = (field: string, value: any) => {
-    setLocalData((prev: any) => ({ ...prev, [field]: value }));
+    console.log(`TournamentSettings - Updating ${field} to:`, value);
+    setLocalData((prev: any) => {
+      const newData = { ...prev, [field]: value };
+      console.log('TournamentSettings - New localData:', newData);
+      return newData;
+    });
   };
 
   const handleLevelsChange = (levels: TournamentLevel[]) => {
@@ -68,12 +82,12 @@ export function TournamentSettings({ tournament, onClose, onUpdate }: Tournament
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-2xl max-h-[90vh] overflow-hidden"
+        className="bg-card rounded-xl border border-border w-full max-w-2xl max-h-[90vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <h2 className="text-xl font-bold text-card-foreground flex items-center gap-2">
             <Settings className="w-5 h-5" />
             Configuración del Torneo
           </h2>
@@ -160,10 +174,10 @@ export function TournamentSettings({ tournament, onClose, onUpdate }: Tournament
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center justify-between p-4 border border-gray-600 rounded-lg">
+                <div className="flex items-center justify-between p-4 border border-border rounded-lg">
                     <div>
                       <Label>Double Stack Permitido</Label>
-                      <p className="text-sm text-gray-400">Permite entrada con doble stack</p>
+                      <p className="text-sm text-muted-foreground">Permite entrada con doble stack</p>
                     </div>
                     <Switch
                       checked={localData.double_stack_allowed || false}
@@ -171,10 +185,10 @@ export function TournamentSettings({ tournament, onClose, onUpdate }: Tournament
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-4 border border-gray-600 rounded-lg">
+                  <div className="flex items-center justify-between p-4 border border-border rounded-lg">
                     <div>
                       <Label>Bono por Entrada Temprana</Label>
-                      <p className="text-sm text-gray-400">Incentivo para primeros jugadores</p>
+                      <p className="text-sm text-muted-foreground">Incentivo para primeros jugadores</p>
                     </div>
                     <Switch
                       checked={localData.early_entry_bonus || false}
@@ -185,8 +199,8 @@ export function TournamentSettings({ tournament, onClose, onUpdate }: Tournament
               </TabsContent>
 
               <TabsContent value="levels" className="space-y-6">
-                <div className="bg-gray-800 border border-gray-600 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-white mb-4">Estructura de Niveles</h3>
+                <div className="bg-muted border border-border rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-card-foreground mb-4">Estructura de Niveles</h3>
                   <EnhancedLevelEditor 
                     levels={localData.levels || []} 
                     onLevelsChange={handleLevelsChange}
@@ -195,10 +209,10 @@ export function TournamentSettings({ tournament, onClose, onUpdate }: Tournament
               </TabsContent>
 
               <TabsContent value="prizes" className="space-y-6">
-                <div className="flex items-center justify-between p-4 border border-gray-600 rounded-lg">
+                <div className="flex items-center justify-between p-4 border border-border rounded-lg">
                   <div>
                     <Label>Premios Visibles</Label>
-                    <p className="text-sm text-gray-400">Mostrar estructura de premios a los jugadores</p>
+                    <p className="text-sm text-muted-foreground">Mostrar estructura de premios a los jugadores</p>
                   </div>
                   <Switch
                     checked={localData.prize_pool_visible !== false}
@@ -211,7 +225,7 @@ export function TournamentSettings({ tournament, onClose, onUpdate }: Tournament
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
                     {(localData.payout_structure || [50, 30, 20]).map((percentage: number, index: number) => (
                       <div key={index}>
-                        <Label className="text-xs text-gray-400">Lugar {index + 1}</Label>
+                        <Label className="text-xs text-muted-foreground">Lugar {index + 1}</Label>
                         <Input
                           type="number"
                           value={percentage}
@@ -292,11 +306,11 @@ export function TournamentSettings({ tournament, onClose, onUpdate }: Tournament
             </div>
 
             {/* Save Button */}
-            <div className="flex justify-end gap-2 p-6 pt-4 border-t border-gray-700">
+            <div className="flex justify-end gap-2 p-6 pt-4 border-t border-border">
               <Button variant="outline" onClick={onClose}>
                 Cancelar
               </Button>
-              <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
+              <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700 text-white">
                 <Save className="w-4 h-4 mr-2" />
                 Guardar Cambios
               </Button>

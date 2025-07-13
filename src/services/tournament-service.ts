@@ -25,6 +25,20 @@ export class TournamentService {
     return TournamentStateUpdateService.updateTournamentState(tournamentId, updates);
   }
 
+  static async updateTournament(tournamentId: string, updates: any): Promise<void> {
+    const { supabase } = await import('@/integrations/supabase/client');
+    
+    const { error } = await supabase
+      .from('tournaments')
+      .update(updates)
+      .eq('id', tournamentId);
+
+    if (error) {
+      console.error('Error updating tournament:', error);
+      throw new Error(error.message);
+    }
+  }
+
   static async deleteTournament(tournamentId: string): Promise<void> {
     return TournamentDeletionService.deleteTournament(tournamentId);
   }

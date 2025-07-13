@@ -207,6 +207,44 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
     }
   }
 
+  const updateTournament = async (tournamentId: string, updates: any) => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      
+      console.log('🔄 Updating tournament settings:', updates);
+      await TournamentService.updateTournament(tournamentId, updates)
+      
+      // Update current tournament if it's the one being edited
+      if (currentTournament && currentTournament.id === tournamentId) {
+        setCurrentTournament(prev => prev ? { ...prev, ...updates } : null)
+      }
+      
+      // Reload tournaments to get fresh data
+      await loadTournaments()
+      
+      toast({
+        title: "Configuración actualizada",
+        description: "Los cambios se han guardado exitosamente",
+      })
+      
+    } catch (err) {
+      console.error('❌ Error updating tournament:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Error updating tournament';
+      setError(errorMessage);
+      
+      toast({
+        title: "Error de actualización",
+        description: errorMessage,
+        variant: "destructive"
+      })
+      
+      throw err;
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const deleteTournament = async (tournamentId: string) => {
     try {
       setIsLoading(true)
@@ -286,6 +324,7 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       createTournament,
       joinTournament,
       updateTournamentState,
+      updateTournament,
       leaveTournament,
       loadTournaments,
       deleteTournament,

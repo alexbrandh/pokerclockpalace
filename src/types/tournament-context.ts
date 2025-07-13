@@ -21,6 +21,7 @@ export interface SupabaseTournamentContextType {
   createTournament: (structure: TournamentStructure, city: string) => Promise<string>
   joinTournament: (tournamentId: string) => Promise<void>
   updateTournamentState: (updates: Partial<TournamentState>) => Promise<void>
+  updateTournament: (tournamentId: string, updates: any) => Promise<void>
   leaveTournament: () => void
   loadTournaments: () => Promise<void>
   deleteTournament: (tournamentId: string) => Promise<void>

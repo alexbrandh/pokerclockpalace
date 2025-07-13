@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Plus, Search, Play, Pause, Users, Trophy, Clock, QrCode, AlertTriangle, Database, LogOut, User, Trash2, Loader2 } from 'lucide-react'
+import { Plus, Search, Play, Pause, Users, Trophy, Clock, QrCode, AlertTriangle, Database, LogOut, User, Trash2, Loader2, Settings, Moon, Sun } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -38,6 +38,13 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'paused' | 'finished'>('all')
   const [deletingTournamentId, setDeletingTournamentId] = useState<string | null>(null)
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('darkMode')
+      return saved ? JSON.parse(saved) : false
+    }
+    return false
+  })
 
   console.log('Dashboard rendering...');
   console.log('Tournaments count:', tournaments.length);
@@ -51,6 +58,11 @@ export default function Dashboard() {
     console.log('Dashboard mounted, loading tournaments...');
     loadTournaments()
   }, [])
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDarkMode)
+    localStorage.setItem('darkMode', JSON.stringify(isDarkMode))
+  }, [isDarkMode])
 
   const filteredTournaments = tournaments.filter(tournament => {
     const matchesSearch = tournament.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -96,6 +108,10 @@ export default function Dashboard() {
     }
   }
 
+  const handleEditTournament = (tournamentId: string) => {
+    navigate(`/tournament/${tournamentId}?tab=settings`)
+  }
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
       'created': 'outline',
@@ -133,32 +149,41 @@ export default function Dashboard() {
 
   if (isLoading && tournaments.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando torneos...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Cargando torneos...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header with User Info */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
               Panel de Torneos
             </h1>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               Gestiona y supervisa todos tus torneos de poker ({tournaments.length} torneos)
             </p>
           </div>
           
-          {/* User Info & Logout */}
+          {/* User Info & Controls */}
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className="flex items-center gap-2"
+            >
+              {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}
+            </Button>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <User className="w-4 h-4" />
               <span>{user?.email}</span>
             </div>
@@ -176,12 +201,12 @@ export default function Dashboard() {
 
         {/* Supabase Configuration Warning */}
         {!isSupabaseConfigured && (
-          <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+          <div className="mb-6 p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
             <div className="flex items-start gap-3">
-              <Database className="w-5 h-5 text-orange-600 mt-0.5" />
+              <Database className="w-5 h-5 text-orange-600 dark:text-orange-400 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-orange-800">Modo Demo - Base de Datos No Configurada</h3>
-                <p className="text-orange-700 text-sm mt-1">
+                <h3 className="font-semibold text-orange-800 dark:text-orange-200">Modo Demo - Base de Datos No Configurada</h3>
+                <p className="text-orange-700 dark:text-orange-300 text-sm mt-1">
                   Actualmente estás usando datos de prueba. Para guardar torneos reales, 
                   configura las variables de entorno de Supabase.
                 </p>
@@ -193,7 +218,7 @@ export default function Dashboard() {
         {/* Actions Bar */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
               placeholder="Buscar por nombre, ciudad o código..."
               value={searchTerm}
@@ -217,7 +242,7 @@ export default function Dashboard() {
             ))}
           </div>
 
-          <Button onClick={() => navigate('/tournament/new')} className="bg-green-600 hover:bg-green-700">
+          <Button onClick={() => navigate('/tournament/new')} className="bg-green-600 hover:bg-green-700 text-white">
             <Plus className="w-4 h-4 mr-2" />
             Nuevo Torneo
           </Button>
@@ -225,12 +250,12 @@ export default function Dashboard() {
 
         {/* Error Display */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5" />
+              <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-red-800">Error</h3>
-                <p className="text-red-600 text-sm mt-1">{error}</p>
+                <h3 className="font-semibold text-red-800 dark:text-red-200">Error</h3>
+                <p className="text-red-600 dark:text-red-300 text-sm mt-1">{error}</p>
               </div>
             </div>
           </div>
@@ -239,18 +264,18 @@ export default function Dashboard() {
         {/* Tournaments Grid */}
         {filteredTournaments.length === 0 ? (
           <div className="text-center py-12">
-            <Clock className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">
+            <Clock className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-foreground mb-2">
               {searchTerm || filterStatus !== 'all' ? 'No se encontraron torneos' : 'No hay torneos creados'}
             </h3>
-            <p className="text-gray-500 mb-6">
+            <p className="text-muted-foreground mb-6">
               {searchTerm || filterStatus !== 'all' 
                 ? 'Intenta ajustar los filtros de búsqueda'
                 : 'Crea tu primer torneo para comenzar'
               }
             </p>
             {!searchTerm && filterStatus === 'all' && (
-              <Button onClick={() => navigate('/tournament/new')} className="bg-green-600 hover:bg-green-700">
+              <Button onClick={() => navigate('/tournament/new')} className="bg-green-600 hover:bg-green-700 text-white">
                 <Plus className="w-4 h-4 mr-2" />
                 Crear Primer Torneo
               </Button>
@@ -264,8 +289,8 @@ export default function Dashboard() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <CardTitle className="text-lg mb-1">{tournament.name}</CardTitle>
-                      <p className="text-sm text-gray-600">{tournament.city}</p>
-                      <p className="text-xs text-gray-400 mt-1">ID: {tournament.id}</p>
+                      <p className="text-sm text-muted-foreground">{tournament.city}</p>
+                      <p className="text-xs text-muted-foreground mt-1">ID: {tournament.id}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       {getStatusIcon(tournament.status)}
@@ -278,26 +303,26 @@ export default function Dashboard() {
                   {/* Tournament Info */}
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <p className="text-gray-500">Buy-in</p>
+                      <p className="text-muted-foreground">Buy-in</p>
                       <p className="font-semibold">${tournament.buy_in}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Prize Pool</p>
+                      <p className="text-muted-foreground">Prize Pool</p>
                       <p className="font-semibold">${tournament.guaranteed_prize_pool}</p>
                     </div>
                   </div>
 
                   {/* Access Code */}
-                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <div className="flex items-center justify-between p-2 bg-muted rounded">
                     <div>
-                      <p className="text-xs text-gray-500">Código de Acceso</p>
+                      <p className="text-xs text-muted-foreground">Código de Acceso</p>
                       <p className="font-mono font-bold text-lg">{tournament.access_code}</p>
                     </div>
-                    <QrCode className="w-5 h-5 text-gray-400" />
+                    <QrCode className="w-5 h-5 text-muted-foreground" />
                   </div>
 
                   {/* Created Info */}
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-muted-foreground">
                     Creado {formatDistanceToNow(new Date(tournament.created_at), { 
                       addSuffix: true, 
                       locale: es 
@@ -312,6 +337,15 @@ export default function Dashboard() {
                     >
                       <Users className="w-4 h-4 mr-2" />
                       Supervisar
+                    </Button>
+                    
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      onClick={() => handleEditTournament(tournament.id)}
+                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                    >
+                      <Settings className="w-4 h-4" />
                     </Button>
                     
                     <AlertDialog>

@@ -1,23 +1,38 @@
 
 import React, { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useSupabaseTournament } from '@/contexts/SupabaseTournamentContext'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Settings } from 'lucide-react'
 import { TournamentClock } from '@/components/TournamentClock'
 import { RealtimeConnectionStatus } from '@/components/RealtimeConnectionStatus'
+import { TournamentSettings } from '@/components/TournamentSettings'
+import { useHotkeys } from 'react-hotkeys-hook'
 
 export default function TournamentView() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { joinTournament, currentTournament, isLoading, error } = useSupabaseTournament()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const { joinTournament, currentTournament, isLoading, error, updateTournament } = useSupabaseTournament()
   const [showBackButton, setShowBackButton] = useState(true)
+  const [showSettings, setShowSettings] = useState(false)
 
   useEffect(() => {
     if (id) {
       joinTournament(id).catch(console.error)
     }
   }, [id])
+
+  useEffect(() => {
+    // Check if settings tab is requested via URL
+    if (searchParams.get('tab') === 'settings') {
+      setShowSettings(true)
+      // Remove the tab parameter from URL after opening modal
+      const newParams = new URLSearchParams(searchParams)
+      newParams.delete('tab')
+      setSearchParams(newParams, { replace: true })
+    }
+  }, [searchParams])
 
   useEffect(() => {
     // Hide back button when tournament is running (fullscreen mode)
@@ -27,6 +42,16 @@ export default function TournamentView() {
       setShowBackButton(true)
     }
   }, [currentTournament?.isRunning, currentTournament?.isPaused])
+
+  // Hotkeys
+  useHotkeys('d', () => navigate('/'), { preventDefault: true })
+  useHotkeys('s', () => setShowSettings(true), { preventDefault: true })
+
+  const handleUpdateTournament = async (updates: any) => {
+    if (currentTournament && updateTournament) {
+      await updateTournament(currentTournament.id, updates)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -93,6 +118,15 @@ export default function TournamentView() {
 
       {/* Tournament Clock */}
       <TournamentClock />
+
+      {/* Tournament Settings Modal */}
+      {showSettings && currentTournament && (
+        <TournamentSettings
+          tournament={currentTournament}
+          onClose={() => setShowSettings(false)}
+          onUpdate={handleUpdateTournament}
+        />
+      )}
     </div>
   )
 }

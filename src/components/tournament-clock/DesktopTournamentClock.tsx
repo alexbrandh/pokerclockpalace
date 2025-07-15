@@ -70,53 +70,64 @@ export function DesktopTournamentClock({
       <div className="h-screen flex items-center justify-center px-8 relative">
         {/* Golden Dividers */}
         <div className="absolute inset-0 pointer-events-none">
-          {/* Vertical dividers for 4-column layout */}
-          <div className="absolute left-1/4 top-16 bottom-16 w-px bg-gradient-to-b from-transparent via-yellow-400/30 to-transparent"></div>
-          <div className="absolute left-1/2 top-16 bottom-16 w-px bg-gradient-to-b from-transparent via-yellow-400/30 to-transparent"></div>
-          <div className="absolute right-1/4 top-16 bottom-16 w-px bg-gradient-to-b from-transparent via-yellow-400/30 to-transparent"></div>
+          {/* Vertical dividers */}
+          <div className="absolute left-1/3 top-16 bottom-16 w-px bg-gradient-to-b from-transparent via-yellow-400/30 to-transparent"></div>
+          <div className="absolute right-1/3 top-16 bottom-16 w-px bg-gradient-to-b from-transparent via-yellow-400/30 to-transparent"></div>
+          
+          {/* Horizontal dividers in left column */}
+          <div className="absolute left-8 top-1/3 w-1/3 h-px bg-gradient-to-r from-transparent via-yellow-400/30 to-transparent"></div>
+          <div className="absolute left-8 bottom-1/3 w-1/3 h-px bg-gradient-to-r from-transparent via-yellow-400/30 to-transparent"></div>
+          
+          {/* Horizontal dividers in right column */}
+          <div className="absolute right-8 top-1/3 w-1/3 h-px bg-gradient-to-r from-transparent via-yellow-400/30 to-transparent"></div>
         </div>
 
-        {/* Four Column Layout - Better space utilization */}
-        <div className="grid grid-cols-4 gap-12 w-full max-w-8xl h-full">
+        {/* Three Column Layout */}
+        <div className="grid grid-cols-3 gap-16 w-full max-w-7xl h-full">
           
-          {/* Left Column - Players & Entries */}
-          <div className="flex flex-col justify-center space-y-8">
-            <div className="text-center">
-              <div className="text-yellow-400 text-xl font-semibold uppercase tracking-wide mb-4">Players</div>
-              <div className="text-white text-6xl font-bold">{tournament.players}</div>
+          {/* Left Column - Tournament Stats */}
+          <div className="flex flex-col justify-between py-16">
+            {/* Top Section - Players, Entries, Reentries in a row */}
+            <div className="grid grid-cols-3 gap-6 text-center">
+              <div>
+                <div className="text-yellow-400 text-lg font-semibold uppercase tracking-wide mb-3">Players</div>
+                <div className="text-white text-5xl font-bold">{tournament.players}</div>
+              </div>
+              <div>
+                <div className="text-yellow-400 text-lg font-semibold uppercase tracking-wide mb-3">Entries</div>
+                <div className="text-white text-5xl font-bold">{tournament.entries}</div>
+              </div>
+              <div>
+                <div className="text-yellow-400 text-lg font-semibold uppercase tracking-wide mb-3">Re-entries</div>
+                <div className="text-white text-5xl font-bold">{tournament.reentries}</div>
+              </div>
             </div>
+            
+            {/* Center Section - Prize Pool (Prominent) */}
             <div className="text-center">
-              <div className="text-yellow-400 text-xl font-semibold uppercase tracking-wide mb-4">Entries</div>
-              <div className="text-white text-6xl font-bold">{tournament.entries}</div>
-            </div>
-            <div className="text-center">
-              <div className="text-yellow-400 text-xl font-semibold uppercase tracking-wide mb-4">Re-entries</div>
-              <div className="text-white text-6xl font-bold">{tournament.reentries}</div>
-            </div>
-          </div>
-
-          {/* Second Column - Prize Pool & Stats */}
-          <div className="flex flex-col justify-center space-y-8">
-            <div className="text-center">
-              <div className="text-yellow-400 text-2xl font-semibold uppercase tracking-wide mb-6">Prize Pool</div>
+              <div className="text-yellow-400 text-3xl font-semibold uppercase tracking-wide mb-6">Prize Pool</div>
               <div className="text-yellow-400 text-7xl font-bold">${tournament.currentPrizePool?.toLocaleString()}</div>
             </div>
-            <div className="text-center">
-              <div className="text-yellow-400 text-lg font-semibold uppercase tracking-wide mb-3">Total Chips</div>
-              <div className="text-white text-4xl font-bold">{totalChips.toLocaleString()}</div>
-            </div>
-            <div className="text-center">
-              <div className="text-yellow-400 text-lg font-semibold uppercase tracking-wide mb-3">Average Stack</div>
-              <div className="text-white text-4xl font-bold">
-                {Math.round(averageStack / 1000)}k
-                {!currentLevel?.isBreak && averageStackInBBs > 0 && (
-                  <div className="text-lg text-gray-300 mt-2">({averageStackInBBs} BBs)</div>
-                )}
+            
+            {/* Bottom Section - Total and Average in a row */}
+            <div className="grid grid-cols-2 gap-6 text-center">
+              <div>
+                <div className="text-yellow-400 text-lg font-semibold uppercase tracking-wide mb-3">Total Chips</div>
+                <div className="text-white text-4xl font-bold">{totalChips.toLocaleString()}</div>
+              </div>
+              <div>
+                <div className="text-yellow-400 text-lg font-semibold uppercase tracking-wide mb-3">Average Stack</div>
+                <div className="text-white text-4xl font-bold">
+                  {Math.round(averageStack / 1000)}k
+                  {!currentLevel?.isBreak && averageStackInBBs > 0 && (
+                    <div className="text-lg text-gray-300 mt-2">({averageStackInBBs} BBs)</div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Third Column - Timer */}
+          {/* Center Column - Timer */}
           <div className="flex items-center justify-center h-full">
             <AdvancedTimer
               timeRemaining={tournament.timeRemaining}
@@ -130,8 +141,8 @@ export function DesktopTournamentClock({
             />
           </div>
 
-          {/* Fourth Column - Level Info & Prizes */}
-          <div className="flex flex-col justify-center space-y-8">
+          {/* Right Column - Level Info and Prizes */}
+          <div className="flex flex-col justify-between py-16 space-y-8">
             {/* Current Level */}
             <div className="text-center">
               <div className="text-yellow-400 text-2xl font-semibold uppercase tracking-wide mb-4">

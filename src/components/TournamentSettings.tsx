@@ -21,37 +21,14 @@ interface TournamentSettingsProps {
 export function TournamentSettings({ tournament, onClose, onUpdate }: TournamentSettingsProps) {
   const { soundSettings, updateSoundSettings, playSound } = useSoundSystem();
   const [activeTab, setActiveTab] = useState('general');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   
   console.log('TournamentSettings - Received tournament:', tournament);
   
   const [localData, setLocalData] = useState(() => {
-    const data = {
-      name: '',
-      city: '',
-      buy_in: 0,
-      staff_fee: 0,
-      guaranteed_prize_pool: 0,
-      double_stack_allowed: false,
-      early_entry_bonus: false,
-      prize_pool_visible: true,
-      levels: [],
-      payout_structure: [50, 30, 20],
-      players: 0,
-      entries: 0,
-      reentries: 0,
-      double_entries: 0,
-      late_registration_levels: 4,
-    };
-    console.log('TournamentSettings - Initial empty localData:', data);
-    return data;
-  });
-
-  // Update localData when tournament data becomes available
-  useEffect(() => {
     if (tournament && Object.keys(tournament).length > 0) {
-      console.log('TournamentSettings - Updating with tournament data:', tournament);
-      const data = {
+      console.log('TournamentSettings - Initializing with tournament data:', tournament);
+      return {
         name: tournament?.name || '',
         city: tournament?.city || '',
         buy_in: tournament?.buy_in || 0,
@@ -70,20 +47,64 @@ export function TournamentSettings({ tournament, onClose, onUpdate }: Tournament
         max_players: tournament?.max_players || 100,
         ...tournament
       };
-      setLocalData(data);
-      setIsLoading(false);
-      console.log('TournamentSettings - Updated localData:', data);
+    }
+    console.log('TournamentSettings - No tournament data, using defaults');
+    return {
+      name: '',
+      city: '',
+      buy_in: 0,
+      staff_fee: 0,
+      guaranteed_prize_pool: 0,
+      double_stack_allowed: false,
+      early_entry_bonus: false,
+      prize_pool_visible: true,
+      levels: [],
+      payout_structure: [50, 30, 20],
+      players: 0,
+      entries: 0,
+      reentries: 0,
+      double_entries: 0,
+      late_registration_levels: 4,
+    };
+  });
+
+  // Update localData when tournament data changes
+  useEffect(() => {
+    if (tournament && Object.keys(tournament).length > 0) {
+      console.log('TournamentSettings - Tournament changed, updating data:', tournament);
+      setLocalData({
+        name: tournament?.name || '',
+        city: tournament?.city || '',
+        buy_in: tournament?.buy_in || 0,
+        staff_fee: tournament?.staff_fee || 0,
+        guaranteed_prize_pool: tournament?.guaranteed_prize_pool || 0,
+        double_stack_allowed: tournament?.double_stack_allowed || false,
+        early_entry_bonus: tournament?.early_entry_bonus || false,
+        prize_pool_visible: tournament?.prize_pool_visible !== false,
+        levels: tournament?.levels || [],
+        payout_structure: tournament?.payout_structure || [50, 30, 20],
+        players: tournament?.players || 0,
+        entries: tournament?.entries || 0,
+        reentries: tournament?.reentries || 0,
+        double_entries: tournament?.double_entries || 0,
+        late_registration_levels: tournament?.late_registration_levels || 4,
+        max_players: tournament?.max_players || 100,
+        ...tournament
+      });
     }
   }, [tournament]);
 
   const handleSave = async () => {
     try {
       console.log('TournamentSettings - Saving data:', localData);
+      setIsLoading(true);
       await onUpdate(localData);
       console.log('TournamentSettings - Save successful');
       onClose();
     } catch (error) {
       console.error('Error saving tournament settings:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -112,7 +133,7 @@ export function TournamentSettings({ tournament, onClose, onUpdate }: Tournament
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="bg-card rounded-xl border border-border w-full max-w-2xl max-h-[90vh] overflow-hidden"
+        className="bg-card rounded-xl border border-border w-full max-w-4xl max-h-[90vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -128,14 +149,8 @@ export function TournamentSettings({ tournament, onClose, onUpdate }: Tournament
 
         {/* Content */}
         <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
-          {isLoading ? (
-            <div className="flex items-center justify-center p-8">
-              <Loader2 className="w-8 h-8 animate-spin" />
-              <span className="ml-2">Cargando datos del torneo...</span>
-            </div>
-          ) : (
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-5 mx-6 mt-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-5 mx-6 mt-4">
               <TabsTrigger value="general">
                 <Settings className="w-4 h-4 mr-1" />
                 General
@@ -210,7 +225,7 @@ export function TournamentSettings({ tournament, onClose, onUpdate }: Tournament
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center justify-between p-4 border border-border rounded-lg">
+                  <div className="flex items-center justify-between p-4 border border-border rounded-lg">
                     <div>
                       <Label>Double Stack Permitido</Label>
                       <p className="text-sm text-muted-foreground">Permite entrada con doble stack</p>
@@ -235,7 +250,7 @@ export function TournamentSettings({ tournament, onClose, onUpdate }: Tournament
               </TabsContent>
 
               <TabsContent value="levels" className="space-y-6">
-                <div className="bg-muted border border-border rounded-lg p-4">
+                <div className="bg-muted/50 border border-border rounded-lg p-4">
                   <h3 className="text-lg font-semibold text-card-foreground mb-4">Estructura de Niveles</h3>
                   <EnhancedLevelEditor 
                     levels={localData.levels || []} 
@@ -315,20 +330,23 @@ export function TournamentSettings({ tournament, onClose, onUpdate }: Tournament
                   onPlaySound={playSound}
                 />
               </TabsContent>
-              </div>
+            </div>
 
-              {/* Save Button */}
-              <div className="flex justify-end gap-2 p-6 pt-4 border-t border-border">
-                <Button variant="outline" onClick={onClose}>
-                  Cancelar
-                </Button>
-                <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700 text-white">
+            {/* Save Button */}
+            <div className="flex justify-end gap-2 p-6 pt-4 border-t border-border">
+              <Button variant="outline" onClick={onClose} disabled={isLoading}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSave} disabled={isLoading} className="bg-green-600 hover:bg-green-700 text-white">
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
                   <Save className="w-4 h-4 mr-2" />
-                  Guardar Cambios
-                </Button>
-              </div>
-            </Tabs>
-          )}
+                )}
+                Guardar Cambios
+              </Button>
+            </div>
+          </Tabs>
         </div>
       </motion.div>
     </motion.div>

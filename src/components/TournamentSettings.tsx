@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Settings, Volume2, Trophy, Users, Clock, DollarSign, Save } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Settings, Volume2, Trophy, Users, Clock, DollarSign, Save, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SoundSettings } from '@/components/SoundSettings';
 import { EnhancedLevelEditor } from '@/components/level-editor/EnhancedLevelEditor';
+import { AdvancedPrizeDistributionStep } from '@/components/wizard/steps/AdvancedPrizeDistributionStep';
 import { TournamentLevel } from '@/types/tournament';
 import { useSoundSystem } from '@/hooks/useSoundSystem';
 
@@ -20,31 +21,60 @@ interface TournamentSettingsProps {
 export function TournamentSettings({ tournament, onClose, onUpdate }: TournamentSettingsProps) {
   const { soundSettings, updateSoundSettings, playSound } = useSoundSystem();
   const [activeTab, setActiveTab] = useState('general');
+  const [isLoading, setIsLoading] = useState(true);
   
   console.log('TournamentSettings - Received tournament:', tournament);
   
   const [localData, setLocalData] = useState(() => {
     const data = {
-      name: tournament?.name || '',
-      city: tournament?.city || '',
-      buy_in: tournament?.buy_in || 0,
-      staff_fee: tournament?.staff_fee || 0,
-      guaranteed_prize_pool: tournament?.guaranteed_prize_pool || 0,
-      double_stack_allowed: tournament?.double_stack_allowed || false,
-      early_entry_bonus: tournament?.early_entry_bonus || false,
-      prize_pool_visible: tournament?.prize_pool_visible !== false,
-      levels: tournament?.levels || [],
-      payout_structure: tournament?.payout_structure || [50, 30, 20],
-      players: tournament?.players || 0,
-      entries: tournament?.entries || 0,
-      reentries: tournament?.reentries || 0,
-      double_entries: tournament?.double_entries || 0,
-      late_registration_levels: tournament?.late_registration_levels || 4,
-      ...tournament
+      name: '',
+      city: '',
+      buy_in: 0,
+      staff_fee: 0,
+      guaranteed_prize_pool: 0,
+      double_stack_allowed: false,
+      early_entry_bonus: false,
+      prize_pool_visible: true,
+      levels: [],
+      payout_structure: [50, 30, 20],
+      players: 0,
+      entries: 0,
+      reentries: 0,
+      double_entries: 0,
+      late_registration_levels: 4,
     };
-    console.log('TournamentSettings - Initial localData:', data);
+    console.log('TournamentSettings - Initial empty localData:', data);
     return data;
   });
+
+  // Update localData when tournament data becomes available
+  useEffect(() => {
+    if (tournament && Object.keys(tournament).length > 0) {
+      console.log('TournamentSettings - Updating with tournament data:', tournament);
+      const data = {
+        name: tournament?.name || '',
+        city: tournament?.city || '',
+        buy_in: tournament?.buy_in || 0,
+        staff_fee: tournament?.staff_fee || 0,
+        guaranteed_prize_pool: tournament?.guaranteed_prize_pool || 0,
+        double_stack_allowed: tournament?.double_stack_allowed || false,
+        early_entry_bonus: tournament?.early_entry_bonus || false,
+        prize_pool_visible: tournament?.prize_pool_visible !== false,
+        levels: tournament?.levels || [],
+        payout_structure: tournament?.payout_structure || [50, 30, 20],
+        players: tournament?.players || 0,
+        entries: tournament?.entries || 0,
+        reentries: tournament?.reentries || 0,
+        double_entries: tournament?.double_entries || 0,
+        late_registration_levels: tournament?.late_registration_levels || 4,
+        max_players: tournament?.max_players || 100,
+        ...tournament
+      };
+      setLocalData(data);
+      setIsLoading(false);
+      console.log('TournamentSettings - Updated localData:', data);
+    }
+  }, [tournament]);
 
   const handleSave = async () => {
     try {
@@ -98,8 +128,14 @@ export function TournamentSettings({ tournament, onClose, onUpdate }: Tournament
 
         {/* Content */}
         <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-5 mx-6 mt-4">
+          {isLoading ? (
+            <div className="flex items-center justify-center p-8">
+              <Loader2 className="w-8 h-8 animate-spin" />
+              <span className="ml-2">Cargando datos del torneo...</span>
+            </div>
+          ) : (
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-5 mx-6 mt-4">
               <TabsTrigger value="general">
                 <Settings className="w-4 h-4 mr-1" />
                 General
@@ -209,38 +245,14 @@ export function TournamentSettings({ tournament, onClose, onUpdate }: Tournament
               </TabsContent>
 
               <TabsContent value="prizes" className="space-y-6">
-                <div className="flex items-center justify-between p-4 border border-border rounded-lg">
-                  <div>
-                    <Label>Premios Visibles</Label>
-                    <p className="text-sm text-muted-foreground">Mostrar estructura de premios a los jugadores</p>
-                  </div>
-                  <Switch
-                    checked={localData.prize_pool_visible !== false}
-                    onCheckedChange={(checked) => updateData('prize_pool_visible', checked)}
-                  />
-                </div>
-
-                <div>
-                  <Label>Estructura de Porcentajes (%)</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
-                    {(localData.payout_structure || [50, 30, 20]).map((percentage: number, index: number) => (
-                      <div key={index}>
-                        <Label className="text-xs text-muted-foreground">Lugar {index + 1}</Label>
-                        <Input
-                          type="number"
-                          value={percentage}
-                          onChange={(e) => {
-                            const newStructure = [...(localData.payout_structure || [])];
-                            newStructure[index] = +e.target.value;
-                            updateData('payout_structure', newStructure);
-                          }}
-                          min="0"
-                          max="100"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <AdvancedPrizeDistributionStep 
+                  data={localData}
+                  onUpdate={(updates) => {
+                    Object.keys(updates).forEach(key => {
+                      updateData(key, updates[key]);
+                    });
+                  }}
+                />
               </TabsContent>
 
               <TabsContent value="players" className="space-y-6">
@@ -303,19 +315,20 @@ export function TournamentSettings({ tournament, onClose, onUpdate }: Tournament
                   onPlaySound={playSound}
                 />
               </TabsContent>
-            </div>
+              </div>
 
-            {/* Save Button */}
-            <div className="flex justify-end gap-2 p-6 pt-4 border-t border-border">
-              <Button variant="outline" onClick={onClose}>
-                Cancelar
-              </Button>
-              <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700 text-white">
-                <Save className="w-4 h-4 mr-2" />
-                Guardar Cambios
-              </Button>
-            </div>
-          </Tabs>
+              {/* Save Button */}
+              <div className="flex justify-end gap-2 p-6 pt-4 border-t border-border">
+                <Button variant="outline" onClick={onClose}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700 text-white">
+                  <Save className="w-4 h-4 mr-2" />
+                  Guardar Cambios
+                </Button>
+              </div>
+            </Tabs>
+          )}
         </div>
       </motion.div>
     </motion.div>

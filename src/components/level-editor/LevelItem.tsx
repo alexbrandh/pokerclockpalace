@@ -5,6 +5,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { GripVertical, Coffee, Clock, Minus } from 'lucide-react';
 import { TournamentLevel } from '@/types/tournament';
 
@@ -65,27 +66,44 @@ export function LevelItem({ level, index, onUpdate, onRemove }: LevelItemProps) 
               min="1"
             />
           </div>
-          <div className="w-24">
+          <div className="flex items-center gap-2">
             <Label className="text-xs text-gray-500">Color Up</Label>
-            <Input
-              type="number"
-              value={level.colorUpAmount || 0}
-              onChange={(e) => onUpdate({ colorUpAmount: +e.target.value })}
-              placeholder="0"
-              className="text-sm h-8"
-              min="0"
+            <Switch
+              checked={!!(level.colorUpAmount && level.colorUpAmount > 0)}
+              onCheckedChange={(checked) => {
+                if (checked) {
+                  onUpdate({ colorUpAmount: 100, colorUpFrom: '25' });
+                } else {
+                  onUpdate({ colorUpAmount: 0, colorUpFrom: '' });
+                }
+              }}
             />
           </div>
-          <div className="w-20">
-            <Label className="text-xs text-gray-500">De</Label>
-            <Input
-              type="text"
-              value={level.colorUpFrom || ''}
-              onChange={(e) => onUpdate({ colorUpFrom: e.target.value })}
-              placeholder="25"
-              className="text-sm h-8"
-            />
-          </div>
+          {level.colorUpAmount && level.colorUpAmount > 0 && (
+            <>
+              <div className="w-24">
+                <Label className="text-xs text-gray-500">Cantidad</Label>
+                <Input
+                  type="number"
+                  value={level.colorUpAmount || 0}
+                  onChange={(e) => onUpdate({ colorUpAmount: +e.target.value })}
+                  placeholder="100"
+                  className="text-sm h-8"
+                  min="0"
+                />
+              </div>
+              <div className="w-20">
+                <Label className="text-xs text-gray-500">Ficha</Label>
+                <Input
+                  type="text"
+                  value={level.colorUpFrom || ''}
+                  onChange={(e) => onUpdate({ colorUpFrom: e.target.value })}
+                  placeholder="25"
+                  className="text-sm h-8"
+                />
+              </div>
+            </>
+          )}
         </div>
       ) : (
         <div className="flex items-center gap-3 flex-1">

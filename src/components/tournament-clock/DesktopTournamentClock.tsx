@@ -1,11 +1,9 @@
-
 import React from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { AdvancedTimer } from '@/components/timer/AdvancedTimer';
 import { FloatingControls } from '@/components/FloatingControls';
 import { PrizeInfo } from '@/components/PrizeInfo';
 import { TournamentState } from '@/types/tournament';
-
 interface DesktopTournamentClockProps {
   tournament: TournamentState;
   currentLevel: any;
@@ -26,7 +24,6 @@ interface DesktopTournamentClockProps {
   undoLastAction: () => void;
   setShowSettings: (show: boolean) => void;
 }
-
 export function DesktopTournamentClock({
   tournament,
   currentLevel,
@@ -43,31 +40,47 @@ export function DesktopTournamentClock({
   resetLevel,
   addPlayer,
   eliminatePlayer,
-  addReentry, // Added missing prop
+  addReentry,
+  // Added missing prop
   undoLastAction,
   setShowSettings
 }: DesktopTournamentClockProps) {
-  
   // Desktop hotkeys (including the missing reentry shortcut)
-  useHotkeys('space', () => toggleTimer(), { preventDefault: true });
-  useHotkeys('n', () => nextLevel(), { preventDefault: true });
-  useHotkeys('r', () => resetLevel(), { preventDefault: true });
-  useHotkeys('s', () => setShowSettings(true), { preventDefault: true });
-  useHotkeys('d', () => window.location.href = '/', { preventDefault: true });
-  useHotkeys('ctrl+b', () => addPlayer(), { preventDefault: true });
-  useHotkeys('x', () => eliminatePlayer(), { preventDefault: true });
-  useHotkeys('ctrl+r', () => addReentry(), { preventDefault: true }); // Added missing reentry shortcut
-  useHotkeys('ctrl+z', () => undoLastAction(), { preventDefault: true });
-  useHotkeys('m', () => setShowFloatingControls(!showFloatingControls), { preventDefault: true });
-
+  useHotkeys('space', () => toggleTimer(), {
+    preventDefault: true
+  });
+  useHotkeys('n', () => nextLevel(), {
+    preventDefault: true
+  });
+  useHotkeys('r', () => resetLevel(), {
+    preventDefault: true
+  });
+  useHotkeys('s', () => setShowSettings(true), {
+    preventDefault: true
+  });
+  useHotkeys('d', () => window.location.href = '/', {
+    preventDefault: true
+  });
+  useHotkeys('ctrl+b', () => addPlayer(), {
+    preventDefault: true
+  });
+  useHotkeys('x', () => eliminatePlayer(), {
+    preventDefault: true
+  });
+  useHotkeys('ctrl+r', () => addReentry(), {
+    preventDefault: true
+  }); // Added missing reentry shortcut
+  useHotkeys('ctrl+z', () => undoLastAction(), {
+    preventDefault: true
+  });
+  useHotkeys('m', () => setShowFloatingControls(!showFloatingControls), {
+    preventDefault: true
+  });
   const totalChips = (tournament.entries + tournament.reentries) * tournament.structure.initialStack;
   const averageStack = tournament.players > 0 ? totalChips / tournament.players : 0;
-  const averageStackInBBs = currentLevel && !currentLevel.isBreak ? 
-    Math.round(averageStack / currentLevel.bigBlind) : 0;
-
-  return (
-    <>
-      <div className="h-screen flex items-center justify-center px-8 relative">
+  const averageStackInBBs = currentLevel && !currentLevel.isBreak ? Math.round(averageStack / currentLevel.bigBlind) : 0;
+  return <>
+      <div className="h-screen flex items-center justify-center relative px-[5px]">
         {/* Golden Dividers */}
         <div className="absolute inset-0 pointer-events-none">
           {/* Vertical dividers */}
@@ -86,7 +99,7 @@ export function DesktopTournamentClock({
         <div className="grid grid-cols-3 gap-16 w-full max-w-7xl h-full">
           
           {/* Left Column - Tournament Stats */}
-          <div className="flex flex-col justify-between py-16">
+          <div className="flex flex-col justify-between py-[50px]">
             {/* Top Section - Players, Entries, Reentries in a row */}
             <div className="grid grid-cols-3 gap-6 text-center">
               <div>
@@ -119,9 +132,7 @@ export function DesktopTournamentClock({
                 <div className="text-yellow-400 text-lg font-semibold uppercase tracking-wide mb-3">Average Stack</div>
                 <div className="text-white text-4xl font-bold">
                   {Math.round(averageStack / 1000)}k
-                  {!currentLevel?.isBreak && averageStackInBBs > 0 && (
-                    <div className="text-lg text-gray-300 mt-2">({averageStackInBBs} BBs)</div>
-                  )}
+                  {!currentLevel?.isBreak && averageStackInBBs > 0 && <div className="text-lg text-gray-300 mt-2">({averageStackInBBs} BBs)</div>}
                 </div>
               </div>
             </div>
@@ -129,36 +140,20 @@ export function DesktopTournamentClock({
 
           {/* Center Column - Timer */}
           <div className="flex items-center justify-center h-full">
-            <AdvancedTimer
-              timeRemaining={tournament.timeRemaining}
-              currentLevel={currentLevel}
-              progress={progress}
-              lastMinuteAlert={lastMinuteAlert}
-              nextBreakTime={nextBreakTime}
-              currentLevelIndex={tournament.currentLevelIndex}
-              isRunning={tournament.isRunning}
-              isPaused={tournament.isPaused}
-            />
+            <AdvancedTimer timeRemaining={tournament.timeRemaining} currentLevel={currentLevel} progress={progress} lastMinuteAlert={lastMinuteAlert} nextBreakTime={nextBreakTime} currentLevelIndex={tournament.currentLevelIndex} isRunning={tournament.isRunning} isPaused={tournament.isPaused} />
           </div>
 
           {/* Right Column - Level Info and Prizes */}
-          <div className="flex flex-col justify-between py-16 space-y-8">
+          <div className="flex flex-col justify-between space-y-8 py-[26px]">
             {/* Current Level */}
             <div className="text-center">
               <div className="text-yellow-400 text-2xl font-semibold uppercase tracking-wide mb-4">
                 Level {tournament.currentLevelIndex + 1}
               </div>
               <div className="text-white text-6xl font-bold">
-                {currentLevel?.isBreak ? 
-                  `Break ${currentLevel.duration}min` :
-                  `${currentLevel?.smallBlind} / ${currentLevel?.bigBlind}`
-                }
-                {!currentLevel?.isBreak && currentLevel?.ante > 0 && (
-                  <div className="text-4xl text-gray-300 mt-2">Ante: {currentLevel.ante}</div>
-                )}
-                {currentLevel?.isBreak && currentLevel?.colorUpAmount && (
-                  <div className="text-3xl text-yellow-300 mt-2">Color Up: {currentLevel.colorUpAmount} {currentLevel.colorUpFrom}</div>
-                )}
+                {currentLevel?.isBreak ? `Break ${currentLevel.duration}min` : `${currentLevel?.smallBlind} / ${currentLevel?.bigBlind}`}
+                {!currentLevel?.isBreak && currentLevel?.ante > 0 && <div className="text-4xl text-gray-300 mt-2">Ante: {currentLevel.ante}</div>}
+                {currentLevel?.isBreak && currentLevel?.colorUpAmount && <div className="text-3xl text-yellow-300 mt-2">Color Up: {currentLevel.colorUpAmount} {currentLevel.colorUpFrom}</div>}
               </div>
             </div>
             
@@ -168,32 +163,20 @@ export function DesktopTournamentClock({
             </div>
 
             {/* Break Actions */}
-            {currentLevel?.isBreak && (
-              <div className="text-center">
-                <button
-                  onClick={skipBreak}
-                  className="bg-yellow-600 hover:bg-yellow-700 text-black px-8 py-3 rounded-lg font-medium transition-colors text-lg"
-                >
+            {currentLevel?.isBreak && <div className="text-center">
+                <button onClick={skipBreak} className="bg-yellow-600 hover:bg-yellow-700 text-black px-8 py-3 rounded-lg font-medium transition-colors text-lg">
                   Skip Break
                 </button>
-              </div>
-            )}
+              </div>}
 
             {/* Next Level */}
-            {nextLevelData && (
-              <div className="text-center">
+            {nextLevelData && <div className="text-center">
                 <div className="text-yellow-400 text-xl font-semibold uppercase tracking-wide mb-3">Next Level</div>
                 <div className="text-white text-4xl font-bold">
-                  {nextLevelData.isBreak ? 
-                    `Break ${nextLevelData.duration}min` :
-                    `${nextLevelData.smallBlind} / ${nextLevelData.bigBlind}`
-                  }
-                  {!nextLevelData.isBreak && nextLevelData.ante > 0 && (
-                    <div className="text-2xl text-gray-300 mt-2">Ante: {nextLevelData.ante}</div>
-                  )}
+                  {nextLevelData.isBreak ? `Break ${nextLevelData.duration}min` : `${nextLevelData.smallBlind} / ${nextLevelData.bigBlind}`}
+                  {!nextLevelData.isBreak && nextLevelData.ante > 0 && <div className="text-2xl text-gray-300 mt-2">Ante: {nextLevelData.ante}</div>}
                 </div>
-              </div>
-            )}
+              </div>}
           </div>
         </div>
       </div>
@@ -215,21 +198,6 @@ export function DesktopTournamentClock({
       </div>
 
       {/* Desktop Floating Controls */}
-      <FloatingControls
-        isRunning={tournament.isRunning}
-        isPaused={tournament.isPaused}
-        isOnBreak={tournament.isOnBreak}
-        onToggleTimer={toggleTimer}
-        onNextLevel={nextLevel}
-        onSkipBreak={skipBreak}
-        onResetLevel={resetLevel}
-        onAddPlayer={addPlayer}
-        onEliminatePlayer={eliminatePlayer}
-        onUndo={undoLastAction}
-        canUndo={actionHistory.length > 0}
-        playersCount={tournament.players}
-        isVisible={showFloatingControls}
-      />
-    </>
-  );
+      <FloatingControls isRunning={tournament.isRunning} isPaused={tournament.isPaused} isOnBreak={tournament.isOnBreak} onToggleTimer={toggleTimer} onNextLevel={nextLevel} onSkipBreak={skipBreak} onResetLevel={resetLevel} onAddPlayer={addPlayer} onEliminatePlayer={eliminatePlayer} onUndo={undoLastAction} canUndo={actionHistory.length > 0} playersCount={tournament.players} isVisible={showFloatingControls} />
+    </>;
 }

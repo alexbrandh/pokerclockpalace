@@ -80,7 +80,7 @@ export function DesktopTournamentClock({
   const averageStack = tournament.players > 0 ? totalChips / tournament.players : 0;
   const averageStackInBBs = currentLevel && !currentLevel.isBreak ? Math.round(averageStack / currentLevel.bigBlind) : 0;
   return <>
-      <div className="h-screen flex items-center justify-center relative px-[5px]">
+      <div className="h-screen flex items-center justify-center relative px-0">
         {/* Golden Dividers */}
         <div className="absolute inset-0 pointer-events-none">
           {/* Vertical dividers */}

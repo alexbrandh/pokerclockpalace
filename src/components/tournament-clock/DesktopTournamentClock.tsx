@@ -96,7 +96,7 @@ export function DesktopTournamentClock({
         </div>
 
         {/* Three Column Layout */}
-        <div className="grid grid-cols-3 gap-16 w-full max-w-7xl h-full">
+        <div className="grid grid-cols-3 gap-30 w-full max-w-10xl h-full mx-0 px-0">
           
           {/* Left Column - Tournament Stats */}
           <div className="flex flex-col justify-between py-[50px]">
@@ -139,7 +139,7 @@ export function DesktopTournamentClock({
           </div>
 
           {/* Center Column - Timer */}
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center justify-center h-full px-0 py-0">
             <AdvancedTimer timeRemaining={tournament.timeRemaining} currentLevel={currentLevel} progress={progress} lastMinuteAlert={lastMinuteAlert} nextBreakTime={nextBreakTime} currentLevelIndex={tournament.currentLevelIndex} isRunning={tournament.isRunning} isPaused={tournament.isPaused} />
           </div>
 

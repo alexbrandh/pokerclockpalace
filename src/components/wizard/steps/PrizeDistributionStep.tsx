@@ -472,25 +472,29 @@ export function PrizeDistributionStep({ data, onUpdate }: PrizeDistributionStepP
                   {payoutStructure.length > 0 && (
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">Current structure</Label>
-                      <div className="space-y-1">
-                        {payoutStructure.slice(0, 10).map((percentage: number, index: number) => (
-                          <div key={index} className="flex justify-between items-center py-1">
-                            <span className="text-sm">{index + 1}st place</span>
-                            <div className="flex gap-2">
-                              <span className="text-sm font-medium">{percentage.toFixed(1)}%</span>
-                              {displayPrizeMoney && (
-                                <span className="text-sm text-muted-foreground">
-                                  ${calculatePrizeAmount(percentage).toLocaleString()}
-                                </span>
-                              )}
+                      <div className="space-y-1 max-h-48 overflow-y-auto">
+                        {payoutStructure.map((percentage: number, index: number) => {
+                          const getPositionSuffix = (pos: number) => {
+                            if (pos === 1) return 'st';
+                            if (pos === 2) return 'nd';
+                            if (pos === 3) return 'rd';
+                            return 'th';
+                          };
+                          
+                          return (
+                            <div key={index} className="flex justify-between items-center py-1">
+                              <span className="text-sm">{index + 1}{getPositionSuffix(index + 1)} place</span>
+                              <div className="flex gap-2">
+                                <span className="text-sm font-medium">{percentage.toFixed(1)}%</span>
+                                {displayPrizeMoney && (
+                                  <span className="text-sm text-muted-foreground">
+                                    ${calculatePrizeAmount(percentage).toLocaleString()}
+                                  </span>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                        {payoutStructure.length > 10 && (
-                          <div className="text-sm text-muted-foreground text-center">
-                            ... and {payoutStructure.length - 10} more positions
-                          </div>
-                        )}
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -510,12 +514,19 @@ export function PrizeDistributionStep({ data, onUpdate }: PrizeDistributionStepP
                             <div>16+</div>
                           </div>
                         </div>
-                        <div className="p-2 space-y-1">
+                        <div className="p-2 space-y-1 max-h-64 overflow-y-auto">
                           {payoutStructure.map((percentage: number, index: number) => {
                             const buyIn = data.buyIn || 50;
+                            const getPositionSuffix = (pos: number) => {
+                              if (pos === 1) return 'st';
+                              if (pos === 2) return 'nd';
+                              if (pos === 3) return 'rd';
+                              return 'th';
+                            };
+                            
                             return (
                               <div key={index} className="grid grid-cols-6 gap-2 text-xs">
-                                <div className="font-medium">{index + 1}st</div>
+                                <div className="font-medium">{index + 1}{getPositionSuffix(index + 1)}</div>
                                 <div>${Math.round((buyIn * 3 * percentage) / 100)}</div>
                                 <div>${Math.round((buyIn * 5 * percentage) / 100)}</div>
                                 <div>${Math.round((buyIn * 8 * percentage) / 100)}</div>

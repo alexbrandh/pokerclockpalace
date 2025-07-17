@@ -11,7 +11,7 @@ import { TournamentTypeStep } from './steps/TournamentTypeStep';
 import { DoubleStackStep } from './steps/DoubleStackStep';
 import { EarlyEntryStep } from './steps/EarlyEntryStep';
 import { IntelligentLevelGeneratorStep } from './steps/IntelligentLevelGeneratorStep';
-import { PayoutStructureStep } from './steps/PayoutStructureStep';
+import { PrizeDistributionStep } from './steps/PrizeDistributionStep';
 
 interface TournamentWizardProps {
   onTournamentCreated: (structure: TournamentStructure, city: string) => void;
@@ -168,7 +168,7 @@ export function TournamentWizard({ onTournamentCreated }: TournamentWizardProps)
         return <IntelligentLevelGeneratorStep data={wizardData} onUpdate={updateWizardData} />;
         
       case 6:
-        return <PayoutStructureStep data={wizardData} onUpdate={updateWizardData} />;
+        return <PrizeDistributionStep data={wizardData} onUpdate={updateWizardData} />;
       
       case 7:
         return (

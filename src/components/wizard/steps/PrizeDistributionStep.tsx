@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Slider } from '@/components/ui/slider';
-import { Trophy, Plus, Minus, Settings2, Trash2 } from 'lucide-react';
+import { Trophy, Plus, Minus, Settings2, Trash2, Target } from 'lucide-react';
 
 interface PrizeDistributionStepProps {
   data: any;
@@ -124,6 +124,60 @@ export function PrizeDistributionStep({ data, onUpdate }: PrizeDistributionStepP
 
   return (
     <div className="space-y-6">
+      {/* Tournament Type Selection */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="w-5 h-5" />
+            Tournament Type
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="tournament_type">Tournament Type</Label>
+            <Select
+              value={data.tournament_type || 'regular'}
+              onValueChange={(value) => handleChange('tournament_type', value)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="regular">Regular Tournament</SelectItem>
+                <SelectItem value="satellite">Satellite</SelectItem>
+                <SelectItem value="qualifier">Qualifier</SelectItem>
+                <SelectItem value="winner_take_all">Winner Take All</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {data.tournament_type === 'satellite' && (
+            <div className="space-y-2">
+              <Label htmlFor="satellite_target">Satellite Target Tournament</Label>
+              <Input
+                id="satellite_target"
+                value={data.satellite_target || ''}
+                onChange={(e) => handleChange('satellite_target', e.target.value)}
+                placeholder="e.g. Main Event WSOP"
+              />
+            </div>
+          )}
+
+          {data.tournament_type === 'qualifier' && (
+            <div className="space-y-2">
+              <Label htmlFor="qualifier_seats">Number of Seats to Award</Label>
+              <Input
+                id="qualifier_seats"
+                type="number"
+                value={data.qualifier_seats || 1}
+                onChange={(e) => handleChange('qualifier_seats', parseInt(e.target.value) || 1)}
+                min="1"
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -205,9 +259,19 @@ export function PrizeDistributionStep({ data, onUpdate }: PrizeDistributionStepP
 
               {distributionType === 'fixed' && (
                 <div className="space-y-4">
-                  {/* Presets */}
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Load preset</Label>
+                  {/* Presets and Actions */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium">Load preset</Label>
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        onClick={() => {/* Create new payout structure logic */}}
+                        className="text-xs"
+                      >
+                        Create New Payout Structure
+                      </Button>
+                    </div>
                     <div className="grid grid-cols-4 gap-2">
                       {Object.entries(presets).map(([name, preset]) => (
                         <Button
@@ -220,6 +284,14 @@ export function PrizeDistributionStep({ data, onUpdate }: PrizeDistributionStepP
                           {name}
                         </Button>
                       ))}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button variant="outline" size="sm" className="text-xs">
+                        Load
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-xs">
+                        Save
+                      </Button>
                     </div>
                   </div>
 
@@ -419,6 +491,43 @@ export function PrizeDistributionStep({ data, onUpdate }: PrizeDistributionStepP
                             ... and {payoutStructure.length - 10} more positions
                           </div>
                         )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Distribution Matrix */}
+                  {payoutStructure.length > 0 && (guaranteedPrizePool > 0 || data.buyIn > 0) && (
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Prize Distribution Matrix</Label>
+                      <div className="border rounded-lg overflow-hidden">
+                        <div className="bg-muted p-2">
+                          <div className="grid grid-cols-6 gap-2 text-xs font-medium">
+                            <div>Players</div>
+                            <div>2-4</div>
+                            <div>5-6</div>
+                            <div>7-9</div>
+                            <div>10-15</div>
+                            <div>16+</div>
+                          </div>
+                        </div>
+                        <div className="p-2 space-y-1">
+                          {payoutStructure.map((percentage: number, index: number) => {
+                            const buyIn = data.buyIn || 50;
+                            return (
+                              <div key={index} className="grid grid-cols-6 gap-2 text-xs">
+                                <div className="font-medium">{index + 1}st</div>
+                                <div>${Math.round((buyIn * 3 * percentage) / 100)}</div>
+                                <div>${Math.round((buyIn * 5 * percentage) / 100)}</div>
+                                <div>${Math.round((buyIn * 8 * percentage) / 100)}</div>
+                                <div>${Math.round((buyIn * 12 * percentage) / 100)}</div>
+                                <div>${Math.round((buyIn * 20 * percentage) / 100)}</div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        * Based on average buy-in pools for different player counts
                       </div>
                     </div>
                   )}

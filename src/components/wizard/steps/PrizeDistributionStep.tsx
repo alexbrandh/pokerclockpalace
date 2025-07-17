@@ -122,6 +122,35 @@ export function PrizeDistributionStep({ data, onUpdate }: PrizeDistributionStepP
     return roundPrizeAmounts ? Math.round(amount / 5) * 5 : Math.round(amount);
   };
 
+  const applyDailyTournamentPayout = () => {
+    // Daily tournament payout structure based on the provided table
+    const dailyPayouts = [
+      40.000, 35.000, 32.000, 30.000, 29.750, 29.500, 29.000, 28.500, 28.000, 25.750,
+      24.000, 23.000, 22.000, 21.000, 20.000, 19.000, 18.500, 18.250, 18.100, 17.875,
+      17.850, 17.814, 17.800, 27.000, 25.000, 22.000, 19.000, 18.750, 18.750, 18.650,
+      18.500, 18.250, 17.050, 16.250, 15.450, 14.900, 14.700, 14.000, 13.750, 13.350,
+      13.250, 13.100, 12.875, 12.850, 12.800, 12.750, 19.000, 18.000, 16.000, 15.000,
+      14.750, 14.600, 13.750, 13.500, 12.000, 11.000, 10.500, 10.250, 10.000, 9.450,
+      9.250, 9.000, 8.625, 8.335, 8.000, 7.875, 14.000, 13.000, 12.500, 12.000, 11.250,
+      10.000, 9.500, 9.000, 8.750, 8.500, 8.250, 8.100, 8.100, 7.700, 7.500, 7.125,
+      7.000, 6.665, 6.400, 6.250, 9.000, 8.000, 7.500, 7.000, 6.750, 6.300, 5.750,
+      5.500, 5.250, 5.150, 5.100, 5.100, 5.000, 4.850, 4.600, 4.300, 4.000, 3.725,
+      3.500, 3.325, 7.000, 5.500, 5.500, 5.250, 4.500, 4.150, 3.500, 3.250, 3.150,
+      3.150, 3.100, 3.050, 3.000, 2.900, 2.600, 2.350, 2.300, 2.000, 1.955, 1.750,
+      4.500, 4.250, 4.150, 3.500, 3.250, 2.750, 2.500, 2.250, 2.100, 2.100, 2.000,
+      2.000, 2.000, 1.950, 1.700, 1.650, 1.600, 1.450, 1.350, 1.250, 3.250, 3.150,
+      2.750, 2.500, 2.250, 2.000, 1.900, 1.700, 1.600, 1.500, 1.450, 1.350, 1.300,
+      1.250, 1.100, 1.000, 0.975, 0.950, 0.935, 0.910, 2.500, 2.250, 2.100, 2.150,
+      2.100, 2.000, 2.000, 2.000, 1.950, 1.700, 1.650, 1.600, 1.450, 1.350, 1.250,
+      1.150, 1.050, 0.935, 0.820, 0.795
+    ];
+
+    // Get first 10 positions for standard daily tournament structure
+    const standardDailyPayouts = [40.0, 27.0, 19.0, 14.0, 9.0, 7.0, 4.5, 3.25, 2.5, 2.0];
+    
+    handleChange('payoutStructure', standardDailyPayouts);
+  };
+
   return (
     <div className="space-y-6">
       {/* Tournament Type Selection */}
@@ -293,6 +322,15 @@ export function PrizeDistributionStep({ data, onUpdate }: PrizeDistributionStepP
                         Save
                       </Button>
                     </div>
+                    <Button
+                      type="button"
+                      variant="default"
+                      size="sm"
+                      onClick={applyDailyTournamentPayout}
+                      className="w-full text-xs bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                    >
+                      Daily Tournament Payout
+                    </Button>
                   </div>
 
                   {/* Manual Payout Structure */}

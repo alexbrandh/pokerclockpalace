@@ -38,7 +38,7 @@ export function TournamentTypeStep({ data, onUpdate }: TournamentTypeStepProps) 
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="tournament_elimination_type">Tipo de Torneo</Label>
+            <Label htmlFor="tournament_elimination_type">Entry o Buy In</Label>
             <select
               id="tournament_elimination_type"
               value={data.tournament_elimination_type || 'reentry'}

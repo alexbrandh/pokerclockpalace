@@ -6,6 +6,7 @@ import { TournamentService } from '@/services/tournament-service'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
 import { usePollingOnly } from '@/hooks/usePollingOnly'
+import { secureLog, secureError, sanitizeError, validateTournamentData } from '@/utils/securityUtils'
 
 const SupabaseTournamentContext = createContext<SupabaseTournamentContextType | null>(null)
 
@@ -16,12 +17,12 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
   const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
 
-  console.log('SupabaseTournamentProvider initialized');
-  console.log('Supabase configured:', isSupabaseConfigured());
+  secureLog('SupabaseTournamentProvider initialized');
+  secureLog('Supabase configured:', isSupabaseConfigured());
 
   // Simple real-time connection
   const handleStateUpdate = useCallback((payload: any) => {
-    console.log('📡 Processing update:', payload.eventType);
+    secureLog('📡 Processing update:', payload.eventType);
     
     if (payload.new && payload.eventType !== 'DELETE') {
       const newState = payload.new as TournamentStateDB
@@ -63,6 +64,12 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
   }, [realtimeConnection.isConnected, realtimeConnection.error]);
 
   const createTournament = async (structure: any, city: string): Promise<string> => {
+    // Validate tournament data before creating
+    const validation = validateTournamentData(structure);
+    if (!validation.isValid) {
+      throw new Error(`Invalid tournament data: ${validation.errors.join(', ')}`);
+    }
+
     try {
       setIsLoading(true)
       setError(null)
@@ -77,8 +84,8 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       
       return tournamentId
     } catch (err) {
-      console.error('Error creating tournament:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Error creating tournament';
+      secureError('Error creating tournament:', err);
+      const errorMessage = sanitizeError(err);
       setError(errorMessage);
       
       toast({
@@ -98,15 +105,15 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       setIsLoading(true)
       setError(null)
 
-      console.log('🔄 Joining tournament:', tournamentId);
+      secureLog('🔄 Joining tournament:', tournamentId);
 
       const { tournament } = await TournamentService.joinTournament(tournamentId)
       setCurrentTournament(tournament)
-      console.log('✅ Tournament joined successfully');
+      secureLog('✅ Tournament joined successfully');
 
     } catch (err) {
-      console.error('❌ Error joining tournament:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Error joining tournament';
+      secureError('❌ Error joining tournament:', err);
+      const errorMessage = sanitizeError(err);
       setError(errorMessage);
       
       toast({
@@ -123,24 +130,24 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
 
   const updateTournamentState = async (updates: Partial<TournamentState>) => {
     if (!currentTournament) {
-      console.warn('No current tournament to update');
+      secureLog('No current tournament to update');
       return;
     }
 
     try {
-      console.log('🔄 Updating tournament state:', updates);
+      secureLog('🔄 Updating tournament state:', updates);
       
       // Optimistically update the local state first for immediate UI feedback
       setCurrentTournament(prev => {
         if (!prev) return null;
         const optimisticUpdate = { ...prev, ...updates };
-        console.log('⚡ Optimistic update applied');
+        secureLog('⚡ Optimistic update applied');
         return optimisticUpdate;
       });
 
       // Then persist to database (polling will pick up changes for other clients)
       await TournamentService.updateTournamentState(currentTournament.id, updates);
-      console.log('✅ Tournament state updated successfully in database');
+      secureLog('✅ Tournament state updated successfully in database');
       
       // Trigger reconnection if disconnected
       if (!realtimeConnection.isConnected) {
@@ -148,8 +155,8 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       }
       
     } catch (err) {
-      console.error('❌ Error updating tournament state:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Error updating tournament';
+      secureError('❌ Error updating tournament state:', err);
+      const errorMessage = sanitizeError(err);
       setError(errorMessage);
       
       toast({
@@ -162,9 +169,9 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       try {
         const { tournament } = await TournamentService.joinTournament(currentTournament.id);
         setCurrentTournament(tournament);
-        console.log('🔄 Reverted to server state after error');
+        secureLog('🔄 Reverted to server state after error');
       } catch (refetchErr) {
-        console.error('Error refetching tournament state:', refetchErr);
+        secureError('Error refetching tournament state:', refetchErr);
       }
       
       throw err;
@@ -172,7 +179,7 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
   }
 
   const leaveTournament = async () => {
-    console.log('👋 Leaving tournament');
+    secureLog('👋 Leaving tournament');
     setCurrentTournament(null)
     setError(null)
   }
@@ -182,19 +189,19 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       setIsLoading(true)
       setError(null)
 
-      console.log('📋 Loading tournaments from Supabase...');
+      secureLog('📋 Loading tournaments from Supabase...');
       const data = await TournamentService.loadTournaments()
       
       // Force update by creating new array reference
       setTournaments([...data])
-      console.log(`✅ Loaded ${data.length} tournaments, state updated`);
+      secureLog(`✅ Loaded ${data.length} tournaments, state updated`);
       
       // Log tournament IDs for debugging
-      console.log('Tournament IDs:', data.map(t => ({ id: t.id, name: t.name })));
+      secureLog('Tournament IDs:', data.map(t => ({ id: t.id, name: t.name })));
       
     } catch (err) {
-      console.error('❌ Error loading tournaments:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Error loading tournaments';
+      secureError('❌ Error loading tournaments:', err);
+      const errorMessage = sanitizeError(err);
       setError(errorMessage);
       
       toast({
@@ -212,7 +219,7 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       setIsLoading(true)
       setError(null)
       
-      console.log('🔄 Updating tournament settings:', updates);
+      secureLog('🔄 Updating tournament settings:', updates);
       await TournamentService.updateTournament(tournamentId, updates)
       
       // Update current tournament if it's the one being edited
@@ -229,8 +236,8 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       })
       
     } catch (err) {
-      console.error('❌ Error updating tournament:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Error updating tournament';
+      secureError('❌ Error updating tournament:', err);
+      const errorMessage = sanitizeError(err);
       setError(errorMessage);
       
       toast({
@@ -250,28 +257,28 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       setIsLoading(true)
       setError(null)
 
-      console.log('🗑️ Starting tournament deletion process for:', tournamentId);
+      secureLog('🗑️ Starting tournament deletion process for:', tournamentId);
       
       // Store the tournament name for the success message
       const tournamentToDelete = tournaments.find(t => t.id === tournamentId);
       const tournamentName = tournamentToDelete?.name || 'Tournament';
       
-      console.log(`🔄 Deleting tournament: ${tournamentName}`);
+      secureLog(`🔄 Deleting tournament: ${tournamentName}`);
       
       // Call the deletion service
       await TournamentService.deleteTournament(tournamentId)
       
-      console.log('✅ Tournament deletion service completed');
+      secureLog('✅ Tournament deletion service completed');
       
       // Immediately remove from local state for instant UI feedback
       setTournaments(prev => {
         const updated = prev.filter(t => t.id !== tournamentId);
-        console.log(`⚡ Optimistically removed tournament from local state. Remaining: ${updated.length}`);
+        secureLog(`⚡ Optimistically removed tournament from local state. Remaining: ${updated.length}`);
         return updated;
       });
       
       // Force reload tournaments to ensure consistency with database
-      console.log('🔄 Reloading tournaments to verify deletion...');
+      secureLog('🔄 Reloading tournaments to verify deletion...');
       await loadTournaments()
       
       // Verify the tournament was actually deleted
@@ -279,19 +286,19 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
       const wasDeleted = !remainingTournaments.find(t => t.id === tournamentId);
       
       if (wasDeleted) {
-        console.log('🎉 Tournament deletion verified successfully');
+        secureLog('🎉 Tournament deletion verified successfully');
         toast({
           title: "Torneo eliminado",
           description: `El torneo "${tournamentName}" se ha eliminado exitosamente`,
         })
       } else {
-        console.error('❌ Tournament deletion verification failed');
+        secureError('❌ Tournament deletion verification failed');
         throw new Error('Tournament still exists after deletion attempt');
       }
       
     } catch (err) {
-      console.error('❌ Error deleting tournament:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Error deleting tournament';
+      secureError('❌ Error deleting tournament:', err);
+      const errorMessage = sanitizeError(err);
       setError(errorMessage);
       
       // Reload tournaments to restore correct state if deletion failed
@@ -310,7 +317,7 @@ export function SupabaseTournamentProvider({ children }: { children: React.React
   }
 
   useEffect(() => {
-    console.log('🚀 SupabaseTournamentProvider mounted, loading tournaments...');
+    secureLog('🚀 SupabaseTournamentProvider mounted, loading tournaments...');
     loadTournaments()
   }, [])
 

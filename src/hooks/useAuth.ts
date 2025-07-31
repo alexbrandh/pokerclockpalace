@@ -12,7 +12,10 @@ export function useAuth() {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email)
+        // Development logging only
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Auth state changed:', event, session?.user?.email)
+        }
         setSession(session)
         setUser(session?.user ?? null)
         setIsLoading(false)
@@ -32,7 +35,11 @@ export function useAuth() {
   const signOut = async () => {
     const { error } = await supabase.auth.signOut()
     if (error) {
-      console.error('Error signing out:', error.message)
+      // Log error securely without exposing sensitive data
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error signing out:', error.message)
+      }
+      // Could add user-friendly toast notification here
     }
   }
 

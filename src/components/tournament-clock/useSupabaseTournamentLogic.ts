@@ -25,12 +25,14 @@ export function useSupabaseTournamentLogic() {
   const { toggleTimer, nextLevel, skipBreak, resetLevel } = useTournamentActions();
   const { addPlayer, eliminatePlayer, addReentry } = useTournamentPlayerActions();
 
-  console.log('🎯 Tournament logic state:', {
-    hasCurrentTournament: !!currentTournament,
-    connectionStatus: realtimeConnection.status,
-    isConnected: realtimeConnection.isConnected,
-    error: error || realtimeConnection.error
-  });
+  // Development logging only
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🎯 Tournament logic state:', {
+      hasCurrentTournament: !!currentTournament,
+      connectionStatus: realtimeConnection.status,
+      isConnected: realtimeConnection.isConnected
+    });
+  }
 
   return {
     tournament: currentTournament ? {

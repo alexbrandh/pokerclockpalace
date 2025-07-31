@@ -1,8 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { ref, onValue, set, push } from 'firebase/database';
-import { signInAnonymously } from 'firebase/auth';
-import { database, auth } from '@/lib/firebase';
 import { TournamentState, TournamentStructure } from '@/types/tournament';
+import { secureLog, secureError } from '@/utils/securityUtils';
 
 interface TournamentContextType {
   tournament: TournamentState | null;
@@ -78,52 +76,28 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
     const defaultTournament = createDefaultTournament();
     dispatch({ type: 'SET_TOURNAMENT', payload: defaultTournament });
     
-    // Try to connect to Firebase, but continue without it if it fails
-    signInAnonymously(auth)
-      .then(() => {
-        console.log('Connected to Firebase');
-        setIsConnected(true);
-        setError(null);
-      })
-      .catch((error) => {
-        console.warn('Firebase connection failed, working offline:', error);
-        setIsConnected(false);
-        setError('Trabajando en modo offline');
-      });
+    // This context is now local-only for fallback purposes
+    // Main app should use SupabaseTournamentContext
+    setIsConnected(false);
+    setError('Modo local - Use SupabaseTournamentContext para funcionalidad completa');
+    
+    secureLog('TournamentContext initialized in local mode');
   }, []);
 
-  useEffect(() => {
-    if (!currentTournamentId || !isConnected) return;
-
-    const tournamentRef = ref(database, `tournaments/${currentTournamentId}`);
-    const unsubscribe = onValue(tournamentRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        dispatch({ type: 'SET_TOURNAMENT', payload: data });
-      }
-    });
-
-    return unsubscribe;
-  }, [currentTournamentId, isConnected]);
+  // This context is now local-only, no external sync needed
 
   const updateTournament = (updates: Partial<TournamentState>) => {
     if (!tournament) return;
     
-    const updatedTournament = { ...tournament, ...updates };
-    
-    // Update local state immediately
+    // Update local state only - this is now a fallback context
     dispatch({ type: 'UPDATE_TOURNAMENT', payload: updates });
     
-    // Try to sync with Firebase if connected
-    if (currentTournamentId && isConnected) {
-      set(ref(database, `tournaments/${currentTournamentId}`), updatedTournament)
-        .catch(console.error);
-    }
+    secureLog('Local tournament updated', { tournamentId: tournament.id });
   };
 
   const createTournament = (structure: TournamentStructure) => {
     const newTournament: TournamentState = {
-      id: Date.now().toString(), // Fallback ID if Firebase is not available
+      id: `local-${Date.now()}`, // Local-only ID
       structure,
       currentLevelIndex: 0,
       timeRemaining: structure.levels[0]?.duration * 60 || 0,
@@ -137,21 +111,11 @@ export function TournamentProvider({ children }: { children: React.ReactNode }) 
       startTime: Date.now()
     };
 
-    if (isConnected) {
-      // Try to use Firebase
-      const tournamentRef = push(ref(database, 'tournaments'));
-      newTournament.id = tournamentRef.key!;
-      set(tournamentRef, newTournament)
-        .then(() => {
-          setCurrentTournamentId(newTournament.id);
-          dispatch({ type: 'SET_TOURNAMENT', payload: newTournament });
-        })
-        .catch(console.error);
-    } else {
-      // Work offline
-      setCurrentTournamentId(newTournament.id);
-      dispatch({ type: 'SET_TOURNAMENT', payload: newTournament });
-    }
+    // Local-only creation
+    setCurrentTournamentId(newTournament.id);
+    dispatch({ type: 'SET_TOURNAMENT', payload: newTournament });
+    
+    secureLog('Local tournament created', { tournamentId: newTournament.id });
   };
 
   const joinTournament = (tournamentId: string) => {
